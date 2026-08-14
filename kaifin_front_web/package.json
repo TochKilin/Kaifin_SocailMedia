@@ -1,0 +1,41 @@
+{
+  "name": "kaifin_front_web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "format": "prettier --write --experimental-cli src/"
+  },
+  "dependencies": {
+    "@lottiefiles/dotlottie-vue": "^0.11.23",
+    "@rive-app/canvas": "^2.39.2",
+    "@rive-app/webgl2": "^2.39.2",
+    "axios": "^1.18.1",
+    "bootstrap": "^5.3.8",
+    "bootstrap-vue-next": "^0.45.8",
+    "cropperjs": "^2.1.1",
+    "dompurify": "^3.4.13",
+    "gsap": "^3.15.0",
+    "highlight.js": "^11.11.1",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.38",
+    "vue-router": "^5.1.0",
+    "vue-sonner": "^2.0.9"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/test-utils": "^2.4.11",
+    "jsdom": "^29.1.1",
+    "prettier": "3.8.4",
+    "vite": "^8.0.16",
+    "vite-plugin-vue-devtools": "^8.1.2",
+    "vitest": "^4.1.9"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  }
+}

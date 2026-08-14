@@ -1,0 +1,284 @@
+package user
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
+
+	"github.com/go-playground/validator"
+	"github.com/gofiber/fiber/v3"
+	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
+
+	"kaifin_clone_api/internal/admin/websocket"
+	constants "kaifin_clone_api/pkg/constants"
+	response "kaifin_clone_api/pkg/http"
+	"kaifin_clone_api/pkg/share"
+	"kaifin_clone_api/pkg/translate"
+	"kaifin_clone_api/pkg/utls"
+)
+
+type UserHandler struct {
+	Service UserService
+	ws      *websocket.WebSocketManager
+}
+
+func NewUserHandler(dbpool *sqlx.DB, rdb *redis.Client, ws *websocket.WebSocketManager) *UserHandler {
+	return &UserHandler{
+		Service: NewUserServiceImpl(dbpool, rdb),
+		ws:      ws,
+	}
+}
+
+func (h *UserHandler) Show(c fiber.Ctx) error {
+	// ទាញចេញជា slide array put to struct((share.UserContext))
+	if uCtx, ok := c.Locals("UserContext").(share.UserContext); ok {
+		b, _ := json.MarshalIndent(uCtx, "", "  ")
+		h.Service.SetUserCtx(&uCtx) //
+		fmt.Println("jwt_data:", string(b))
+	}
+	// h.Service.SetUserCtx(uCtx)
+	var usersShowRequest UserShowRequest
+	v := utls.NewValidator()
+	if err := usersShowRequest.bind(c, v); err != nil {
+		msg, err_msg := translate.TranslateWithError(c, "invalid_request")
+		if err_msg != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(
+				response.NewResponseError(
+					err_msg.ErrorString(),
+					constants.Translate_Failed,
+					err_msg.Err,
+				),
+			)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError(
+				msg,
+				constants.Invalid_request,
+				err,
+			),
+		)
+	}
+	users, e := h.Service.Show(usersShowRequest)
+	if e != nil {
+		msg, e_msg := translate.TranslateWithError(c, e.MessageID)
+		if e_msg != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(
+				response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+			)
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(msg, constants.Generic_error, e.Err),
+		)
+	}
+	msg, e_msg := translate.TranslateWithError(c, "users_retrieved")
+	if e_msg != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+		)
+	}
+	return c.Status(fiber.StatusOK).JSON(
+		response.NewResponseWithPaing(msg, constants.Generic_success, users, usersShowRequest.PageOption.Page, usersShowRequest.PageOption.Perpage, users.Total),
+	)
+}
+
+func (h *UserHandler) ShowOne(c fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		msg, _ := translate.TranslateWithError(c, "invalid_user_id")
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError(msg, constants.Generic_invalid, err),
+		)
+	}
+	user, e := h.Service.ShowOne(id)
+	if e != nil {
+		msg, e_msg := translate.TranslateWithError(c, e.MessageID)
+		if e_msg != nil {
+			return c.Status(fiber.StatusNotFound).JSON(
+				response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+			)
+		}
+		return c.Status(fiber.StatusNotFound).JSON(
+			response.NewResponseError(msg, constants.Generic_notFound, e.Err),
+		)
+	}
+	msg, e_msg := translate.TranslateWithError(c, "user_retrieved")
+	if e_msg != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+		)
+	}
+	return c.Status(fiber.StatusOK).JSON(
+		response.NewResponse(msg, constants.Generic_success, user),
+	)
+}
+
+func (h *UserHandler) Create(c fiber.Ctx) error {
+	if uCtx, ok := c.Locals("UserContext").(share.UserContext); ok {
+		b, _ := json.MarshalIndent(uCtx, "", "  ")
+		h.Service.SetUserCtx(&uCtx) //
+		fmt.Println("jwt_data:", string(b))
+	}
+	req := &CreateUserRequest{}
+	v := utls.NewValidator()
+	if err := req.bind(c, v); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError("Invalid request body", constants.Generic_invalid, err),
+		)
+	}
+	if err := v.Validate(req); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			fe := ve[0]
+			msg, _ := translate.TranslateWithError(c, "validation_"+fe.Tag(),
+				map[string]any{
+					"Field": fe.Field(),
+					"Param": fe.Param(),
+				})
+			return c.Status(fiber.StatusBadRequest).JSON(
+				response.NewResponseError(msg, constants.Generic_invalid, err),
+			)
+		}
+		return err
+	}
+
+	// var createdBy int64 = 1
+	e := h.Service.Create(req)
+	if e != nil {
+		msg, e_msg := translate.TranslateWithError(c, e.MessageID)
+		if e_msg != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(
+				response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+			)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError(msg, constants.Generic_error, e.Err),
+		)
+	}
+	msg, e_msg := translate.TranslateWithError(c, "user_created")
+	if e_msg != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+		)
+	}
+	return c.Status(fiber.StatusCreated).JSON(
+		response.NewResponse(msg, constants.Generic_success, true),
+	)
+}
+
+func (h *UserHandler) Update(c fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		msg, _ := translate.TranslateWithError(c, "invalid_user_id")
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError(msg, constants.Generic_invalid, err),
+		)
+	}
+	req := &UpdateUserRequest{}
+	if err := c.Bind().Body(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError("Invalid request body", constants.Generic_invalid, err),
+		)
+	}
+	var updatedBy int64 = 1
+
+	user, e := h.Service.Update(id, req, updatedBy)
+	if e != nil {
+		msg, e_msg := translate.TranslateWithError(c, e.MessageID)
+		if e_msg != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(
+				response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+			)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError(msg, constants.Generic_error, e.Err),
+		)
+	}
+	msg, e_msg := translate.TranslateWithError(c, "user_updated")
+	if e_msg != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+		)
+	}
+	return c.Status(fiber.StatusOK).JSON(
+		response.NewResponse(msg, constants.Generic_success, user),
+	)
+}
+
+func (h *UserHandler) Delete(c fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		msg, _ := translate.TranslateWithError(c, "invalid_user_id")
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError(msg, constants.Generic_invalid, err),
+		)
+	}
+	var deletedBy int64 = 1
+
+	if e := h.Service.Delete(id, deletedBy); e != nil {
+		msg, e_msg := translate.TranslateWithError(c, e.MessageID)
+		if e_msg != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(
+				response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+			)
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(msg, constants.Generic_error, e.Err),
+		)
+	}
+	msg, e_msg := translate.TranslateWithError(c, "user_deleted")
+	if e_msg != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+		)
+	}
+	return c.Status(fiber.StatusOK).JSON(
+		response.NewResponse(msg, constants.Generic_success, nil),
+	)
+}
+
+func (h *UserHandler) GetUserFormCreate(c fiber.Ctx) error {
+	form := h.Service.GetCreateForm()
+	msg, e_msg := translate.TranslateWithError(c, "form_create_retrieved")
+	if e_msg != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+		)
+	}
+	return c.Status(fiber.StatusOK).JSON(
+		response.NewResponse(msg, constants.Generic_success, form),
+	)
+}
+
+func (h *UserHandler) GetUserFormUpdate(c fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		msg, _ := translate.TranslateWithError(c, "invalid_user_id")
+		return c.Status(fiber.StatusBadRequest).JSON(
+			response.NewResponseError(msg, constants.Generic_invalid, err),
+		)
+	}
+	user, e := h.Service.GetUpdateForm(id)
+	if e != nil {
+		msg, e_msg := translate.TranslateWithError(c, e.MessageID)
+		if e_msg != nil {
+			return c.Status(fiber.StatusNotFound).JSON(
+				response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+			)
+		}
+		return c.Status(fiber.StatusNotFound).JSON(
+			response.NewResponseError(msg, constants.Generic_notFound, e.Err),
+		)
+	}
+
+	msg, e_msg := translate.TranslateWithError(c, "form_update_retrieved")
+	if e_msg != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
+		)
+	}
+	return c.Status(fiber.StatusOK).JSON(
+		response.NewResponse(msg, constants.Generic_success, user),
+	)
+}

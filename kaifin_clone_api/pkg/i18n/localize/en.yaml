@@ -1,0 +1,130 @@
+loginSessionMissing: "Login session missing"
+login_failed: "Login Failed"
+user_not_found: "User not found"
+
+# module auth
+invalid_request: "Invalid request"
+login_success: "Login Success"
+
+show_users_success: "Users retrieved successfully"
+cannot_fetch_users: "Cannot fetch users"
+
+users_retrieved: "Users retrieved successfully"
+user_retrieved: "User retrieved successfully"
+
+database_error: "A database error occurred"
+
+user_created: "User created successfully"
+user_name_taken: "This username is already taken"
+
+user_deleted: "User deleted successfully"
+
+user_updated: "User updated successfully"
+
+form_create_retrieved: "User creation form schema retrieved successfully."
+form_update_retrieved: "User update form schema retrieved successfully."
+invalid_password: "Invalid password"
+
+posts_retrieved: "Posts retrieved successfully"
+
+invalid: "Invalid"
+invalid_post_type: "Invalid post type"
+
+invalid_menu_title: "Invalid menu title"
+invalid_menu_id: "Invalid menu ID"
+menu_not_found: "Menu not found"
+menu_created: "Menu created successfully"
+menu_updated: "Menu updated successfully"
+menu_deleted: "Menu deleted successfully"
+menus_retrieved: "Menus retrieved successfully"
+
+
+communities_retrieved: "Communities retrieved successfully"
+
+story_created: "Story created successfully"
+stories_retrieved: "Stories retrieved successfully"
+story_deleted: "Story deleted successfully"
+invalid_story_id: "Invalid story ID"
+
+media_required: "Media file is required"
+upload_failed: "File upload failed"
+invalid: "Invalid data"
+story_not_found: "Story not found"
+
+bookmark_toggled: "Bookmark updated successfully"
+
+cannot_fetch_followers: "Cannot fetch followers"
+
+unauthorized: "Unauthorized"
+follow_status_updated: "Follow status updated successfully"
+follow_status_retrieved: "Follow status retrieved successfully"
+
+cannot_follow_self: "You cannot follow yourself"
+
+story_reaction_saved: "Reaction saved successfully"
+story_reactions_retrieved: "Story reactions retrieved successfully"
+story_reaction_deleted: "Reaction removed successfully"
+invalid_story_id: "Invalid story ID"
+
+
+my_sticker_sets_retrieved: "My sticker sets retrieved successfully"
+sticker_set_removed: "Sticker set removed successfully"
+pack_added: "Sticker pack added successfully"
+sticker_packs_retrieved: "Sticker packs retrieved successfully"
+stickers_retrieved: "Stickers retrieved successfully"
+sticker_created: "Sticker created successfully"
+
+templates_retrieved: "Templates retrieved successfully"
+template_created: "Template created successfully"
+
+
+templates_retrieved: "Templates retrieved successfully"
+
+post_shared: "Post shared successfully"
+
+post_created: "Post created successfully"
+posts_retrieved: "Posts retrieved successfully"
+post_updated: "Post updated successfully"
+post_deleted: "Post deleted successfully"
+post_not_found: "Post not found"
+post_not_found_or_forbidden: "Post not found or you don't have permission to modify it"
+song_required_for_standard_post: "A song is required for a standard post"
+empty_post: "A post must have either content or a song"
+
+song_created: "Song created successfully"
+songs_retrieved: "Songs retrieved successfully"
+song_updated: "Song updated successfully"
+song_deleted: "Song deleted successfully"
+song_not_found: "Song not found"
+song_not_found_or_forbidden: "Song not found or you don't have permission to modify it"
+
+playlist_created: "Playlist created successfully"
+playlists_retrieved: "Playlists retrieved successfully"
+playlist_updated: "Playlist updated successfully"
+playlist_deleted: "Playlist deleted successfully"
+playlist_not_found: "Playlist not found"
+playlist_not_found_or_forbidden: "Playlist not found or you don't have permission to modify it"
+
+playlist_song_added: "Song added to playlist successfully"
+playlist_song_removed: "Song removed from playlist successfully"
+
+
+
+
+invalid_quote_id: "Invalid quote ID"
+quote_not_found: "Quote not found"
+quote_not_found_or_forbidden: "Quote not found or you don't have permission to modify it"
+
+quote_created: "Quote created successfully"
+quotes_retrieved: "Quotes retrieved successfully"
+quote_retrieved: "Quote retrieved successfully"
+quote_updated: "Quote updated successfully"
+quote_deleted: "Quote deleted successfully"
+
+cannot_fetch_quotes: "Cannot fetch quotes"
+
+
+reaction_added: "Reaction added successfully"
+reaction_removed: "Reaction removed successfully"
+reaction_types_retrieved: "Reaction types retrieved successfully"
+view_tracked: "View tracked successfully"

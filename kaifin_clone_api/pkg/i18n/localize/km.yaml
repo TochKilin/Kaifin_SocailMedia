@@ -1,0 +1,135 @@
+loginSessionMissing: "គ្មាន login_session"
+login_failed: "ចូលប្រព័ន្ធកម្មវិធី បរាជ័យ"
+user_not_found: "មិនមានអ្នកប្រើប្រាស់"
+
+# module auth
+invalid_request: "ការចូលប្រើមិនត្រឹមត្រូវ"
+login_success: "ចូលប្រព័ន្ធកម្មវិធី ជោគជ័យ"
+
+# Users Module
+show_users_success: "ទាញយកបញ្ជីអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+show_user_success: "ទាញយកព័ត៌មានអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+
+create_user_success: "បង្កើតអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+update_user_success: "កែប្រែអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+delete_user_success: "លុបអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+
+cannot_fetch_users: "មិនអាចទាញយកបញ្ជីអ្នកប្រើប្រាស់បាន"
+cannot_fetch_user: "មិនអាចទាញយកព័ត៌មានអ្នកប្រើប្រាស់បាន"
+
+cannot_create_user: "មិនអាចបង្កើតអ្នកប្រើប្រាស់បាន"
+cannot_update_user: "មិនអាចកែប្រែអ្នកប្រើប្រាស់បាន"
+cannot_delete_user: "មិនអាចលុបអ្នកប្រើប្រាស់បាន"
+
+users_retrieved: "ទាញយកបញ្ជីអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+user_retrieved: "ទាញយកព័ត៌មានអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+
+database_error: "មានកំហុសមូលដ្ឋានទិន្នន័យបានកើតឡើង"
+
+user_deleted: "លុបអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+user_updated: "កែប្រែទិន្នន័យអ្នកប្រើប្រាស់ដោយជោគជ័យ"
+
+"form_create_retrieved": "ទាញយកទម្រង់សម្រាប់បង្កើតអ្នកប្រើប្រាស់បានជោគជ័យ។"
+form_update_retrieved: "ទាញយកទម្រង់សម្រាប់កែប្រែអ្នកប្រើប្រាស់បានជោគជ័យ។"
+
+
+invalid_password: "ពាក្យសម្ងាត់មិនត្រឹមត្រូវ"
+
+posts_retrieved: "ទាញយក Post បានជោគជ័យ"
+
+
+invalid: "មិនត្រឹមត្រូវ"
+invalid_post_type: "ប្រភេទ Post មិនត្រឹមត្រូវ"
+
+invalid_menu_title: "ចំណងជើង Menu មិនត្រឹមត្រូវ"
+invalid_menu_id: "Menu ID មិនត្រឹមត្រូវ"
+menu_not_found: "រកមិនឃើញ Menu"
+menu_created: "បង្កើត Menu ដោយជោគជ័យ"
+menu_updated: "កែប្រែ Menu ដោយជោគជ័យ"
+menu_deleted: "លុប Menu ដោយជោគជ័យ"
+menus_retrieved: "ទាញយកបញ្ជី Menu ដោយជោគជ័យ"
+
+communities_retrieved: "ទាញយកបញ្ជីសហគមន៍ដោយជោគជ័យ"
+
+# Story Module
+story_created: "បង្កើត Story ដោយជោគជ័យ"
+stories_retrieved: "ទាញយកបញ្ជី Story ដោយជោគជ័យ"
+story_deleted: "លុប Story ដោយជោគជ័យ"
+
+story_not_found: "រកមិនឃើញ Story"
+invalid_story_id: "Story ID មិនត្រឹមត្រូវ"
+
+media_required: "សូមជ្រើសរើស Media"
+upload_failed: "Upload ឯកសារបរាជ័យ"
+
+bookmark_toggled: "ផ្លាស់ប្តូរស្ថានភាពរក្សាទុកដោយជោគជ័យ"
+
+unauthorized: "មិនមានសិទ្ធិប្រើប្រាស់"
+follow_status_updated: "ផ្លាស់ប្តូរស្ថានភាព Follow បានជោគជ័យ"
+follow_status_retrieved: "ទាញយកស្ថានភាព Follow បានជោគជ័យ"
+
+cannot_follow_self: "អ្នកមិនអាច Follow ខ្លួនឯងបានទេ"
+
+
+story_reaction_saved: "រក្សាទុក reaction ដោយជោគជ័យ"
+story_reactions_retrieved: "ទាញយក reaction របស់ story ដោយជោគជ័យ"
+story_reaction_deleted: "លុប reaction ដោយជោគជ័យ"
+invalid_story_id: "លេខសម្គាល់ story មិនត្រឹមត្រូវ"
+
+my_sticker_sets_retrieve": "ទាញយក sticker sets ដោយជោគជ័យ"
+sticker_set_removed: "ដក sticker set ចេញដោយជោគជ័យ"
+pack_added: "បន្ថែម sticker pack ដោយជោគជ័យ"
+sticker_packs_retrieved: "ទាញយក sticker packs ដោយជោគជ័យ"
+stickers_retrieved: "ទាញយក stickers ដោយជោគជ័យ"
+sticker_created: "បង្កើត sticker ដោយជោគជ័យ"
+pack_created: "ទាញយក pack: ជោគជ័យ"
+
+templates_retrieved: "ទាញយក Template ដោយជោគជ័យ"
+
+post_shared: "ប្រកាសត្រូវបានចែករំលែកដោយជោគជ័យ"
+post_created: "បង្កើត Post ជោគជ័យ"
+posts_retrieved: "ទាញយក Post ជោគជ័យ"
+post_updated: "កែប្រែ Post ជោគជ័យ"
+post_deleted: "លុប Post ជោគជ័យ"
+post_not_found: "រកមិនឃើញ Post នេះទេ"
+post_not_found_or_forbidden: "រកមិនឃើញ Post នេះទេ ឬអ្នកគ្មានសិទ្ធិកែប្រែ"
+song_required_for_standard_post: "ត្រូវការចម្រៀងសម្រាប់ Post ប្រភេទ Standard"
+empty_post: "Post ត្រូវមាន Content ឬ ចម្រៀង យ៉ាងហោចណាស់មួយ"
+
+song_created: "បង្កើតចម្រៀងជោគជ័យ"
+songs_retrieved: "ទាញយកចម្រៀងជោគជ័យ"
+song_updated: "កែប្រែចម្រៀងជោគជ័យ"
+song_deleted: "លុបចម្រៀងជោគជ័យ"
+song_not_found: "រកមិនឃើញចម្រៀងនេះទេ"
+song_not_found_or_forbidden: "រកមិនឃើញចម្រៀងនេះទេ ឬអ្នកគ្មានសិទ្ធិកែប្រែ"
+
+playlist_created: "បង្កើត Playlist ជោគជ័យ"
+playlists_retrieved: "ទាញយក Playlist ជោគជ័យ"
+playlist_updated: "កែប្រែ Playlist ជោគជ័យ"
+playlist_deleted: "លុប Playlist ជោគជ័យ"
+playlist_not_found: "រកមិនឃើញ Playlist នេះទេ"
+playlist_not_found_or_forbidden: "រកមិនឃើញ Playlist នេះទេ ឬអ្នកគ្មានសិទ្ធិកែប្រែ"
+
+
+playlist_song_added: "បន្ថែមចម្រៀងចូល Playlist ជោគជ័យ"
+playlist_song_removed: "លុបចម្រៀងចេញពី Playlist ជោគជ័យ"
+
+
+
+# module quote
+
+invalid_quote_id: "លេខសម្គាល់ Quote មិនត្រឹមត្រូវ"
+quote_not_found: "រកមិនឃើញ Quote"
+quote_not_found_or_forbidden: "រកមិនឃើញ Quote ឬអ្នកមិនមានសិទ្ធិកែប្រែវាទេ"
+
+quote_created: "បានបង្កើត Quote ដោយជោគជ័យ"
+quotes_retrieved: "បានទាញយក Quotes ដោយជោគជ័យ"
+quote_retrieved: "បានទាញយក Quote ដោយជោគជ័យ"
+quote_updated: "បានធ្វើបច្ចុប្បន្នភាព Quote ដោយជោគជ័យ"
+quote_deleted: "បានលុប Quote ដោយជោគជ័យ"
+
+cannot_fetch_quotes: "មិនអាចទាញយក Quotes បានទេ"
+
+reaction_added: "បានបន្ថែម Reaction ដោយជោគជ័យ"
+reaction_removed: "បានលុប Reaction ដោយជោគជ័យ"
+reaction_types_retrieved: "បានទាញយកប្រភេទ Reaction ដោយជោគជ័យ"
