@@ -26,8 +26,6 @@ func NewPostRepoImpl(db *sqlx.DB) *PostMusicRepoImpl {
 	}
 }
 
-// ---------- Create ----------
-
 func (r *PostMusicRepoImpl) Create(userID int64, req CreatePostRequest) (*PostResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 
@@ -63,17 +61,10 @@ func (r *PostMusicRepoImpl) Create(userID int64, req CreatePostRequest) (*PostRe
 	return toPostResponse(newPost, taggedUserIDs), nil
 }
 
-// ---------- Show / List ----------
-
 func (r *PostMusicRepoImpl) Show(requesterID int64, req ShowPostRequest) (*PostListResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 	offset := (req.Page - 1) * req.Limit
 
-	// A post is visible if it's public, it's the requester's own post,
-	// or the requester is an accepted friend of the author (for
-	// audience = 'friend' posts). requesterID = 0 (no logged-in user)
-	// never matches p.user_id or a friends row, so anonymous requests
-	// naturally fall back to public posts only.
 	baseQuery := `
 		FROM music_posts p
 		LEFT JOIN friends f ON (
@@ -120,10 +111,6 @@ func (r *PostMusicRepoImpl) Show(requesterID int64, req ShowPostRequest) (*PostL
 	}, nil
 }
 
-// ---------- GetByID ----------
-// Used internally (and available to other modules, e.g. comments/likes)
-// to check ownership or existence before acting on a post.
-
 func (r *PostMusicRepoImpl) GetByID(id int64) (*Post, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 
@@ -136,8 +123,6 @@ func (r *PostMusicRepoImpl) GetByID(id int64) (*Post, *error_responses.ErrorResp
 	}
 	return &p, nil
 }
-
-// ---------- Update ----------
 
 func (r *PostMusicRepoImpl) Update(id int64, userID int64, req UpdatePostRequest) (*PostResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
@@ -163,9 +148,7 @@ func (r *PostMusicRepoImpl) Update(id int64, userID int64, req UpdatePostRequest
 		req.Content, req.Type, req.Audience, req.DisableComments, id, userID,
 	).StructScan(&updated)
 	if err != nil {
-		// Either the row doesn't exist, or it exists but belongs to
-		// someone else — both surface as the same "not yours" error so
-		// we don't leak which one it was.
+
 		return nil, msg.NewErrorResponse("post_not_found_or_forbidden", err)
 	}
 
@@ -192,8 +175,6 @@ func (r *PostMusicRepoImpl) Update(id int64, userID int64, req UpdatePostRequest
 	return toPostResponse(updated, taggedUserIDs), nil
 }
 
-// ---------- Delete ----------
-
 func (r *PostMusicRepoImpl) Delete(id int64, userID int64) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 
@@ -203,8 +184,6 @@ func (r *PostMusicRepoImpl) Delete(id int64, userID int64) *error_responses.Erro
 	}
 	defer tx.Rollback()
 
-	// No ON DELETE CASCADE was declared on these FKs in the schema, so
-	// child rows are removed explicitly before the post itself.
 	if _, err := tx.Exec(`DELETE FROM music_post_tags WHERE music_post_id = $1`, id); err != nil {
 		return msg.NewErrorResponse("database_error", err)
 	}
@@ -232,8 +211,6 @@ func (r *PostMusicRepoImpl) Delete(id int64, userID int64) *error_responses.Erro
 	}
 	return nil
 }
-
-// ---------- shared helpers ----------
 
 func insertTags(tx *sqlx.Tx, postID int64, ownerID int64, taggedUserIDs []int64) ([]int64, error) {
 	result := make([]int64, 0, len(taggedUserIDs))

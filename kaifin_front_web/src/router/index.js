@@ -6,12 +6,10 @@ import Home from "@/components/frontend/home/home.vue"
 import MainProfileContainer from "@/components/frontend/social_profile/MainProfileContainer.vue"
 import HomeCourse from "@/components/frontend/course/home/HomeCourse.vue"
 import EducationalGames from "@/components/frontend/educational_game/EducationalGames.vue"
-// import Home from "@/components/frontend/aticle/home/Home.vue"
 import Article from "@/components/frontend/article/Article.vue"
 import MyLearning from "@/components/frontend/my_learning/MyLearning.vue"
 import Music from "@/components/frontend/music/Music.vue"
-// import Quotes from "@/components/frontend/quotes/quotes.vue"
-import AboutUs from "@/components/frontend/about_us/AboutUs.vue"
+import AboutUs from "@/components/frontend/about_us/About.vue"
 import Contact from "@/components/frontend/contact/Contact.vue"
 import ProfileInstructor from "@/components/frontend/home/ProfileInstructor/ProfileInstructor.vue"
 import CreateCourse from "@/components/frontend/home/ProfileInstructor/CreateCourse.vue"
@@ -25,25 +23,19 @@ import PaymentMethod from "@/components/frontend/course/home/PaymentMethod.vue"
 import About from "@/components/frontend/about_us/About.vue"
 import Quotes from "@/components/frontend/quotes/Quotes.vue"
 import GroupDetail from "@/components/frontend/sidebar_left_feed/GroupDetail.vue"
-// import Quotes from "@/components/frontend/quotes/quotes.vue"
-
-
+import Chart from "@/components/frontend/chart/chart.vue"
 
 const router = createRouter({
-
     history:createWebHistory(),
-
     routes:[
         {
             path:"/",
             redirect:"/login"
         },
-
         {
             path:"/login",
             component:Login
         },
-
         {
             path:"/register",
             component:Register
@@ -53,12 +45,10 @@ const router = createRouter({
          path:"/feed",
          component:Feed
         },
-
         {
             path:"/home",
             component:Home
         },
-         // ===== PROFILE ROUTES =====
         {
             path: "/profile/:id",
             component: MainProfileContainer,
@@ -79,10 +69,6 @@ const router = createRouter({
             path: "/my-learning",
             component: MyLearning,
         },
-        // {
-        //     path: "/music",
-        //     component: Music,
-        // },
         {
             path: "/quote",
             component: Quotes,
@@ -110,24 +96,24 @@ const router = createRouter({
             component: HoleUP,
         },
         {
-        path: '/course/:id',
-        name: 'AddCardCourse',
-        component: AddCardCourse
+            path: '/course/:id',
+            name: 'AddCardCourse',
+            component: AddCardCourse
         },
         {
-        path: '/shopping-cart', 
-        name: 'ShoppingCartCourse',
-        component: ShoppingCartCourse
+            path: '/shopping-cart', 
+            name: 'ShoppingCartCourse',
+            component: ShoppingCartCourse
         },
         {
-        path: '/qrcode-course',
-        name: 'QrCodeCourse', // <-- This name must match exactly what you pass to router.push()
-        component: QrCodeCourse
+            path: '/qrcode-course',
+            name: 'QrCodeCourse', 
+            component: QrCodeCourse
         },
         {
-        path: '/course-detail/:id',
-        name: 'CourseDetail',
-        component: CourseDetail
+            path: '/course-detail/:id',
+            name: 'CourseDetail',
+            component: CourseDetail
         },
         {
             path: '/more-course-instructor',
@@ -143,10 +129,12 @@ const router = createRouter({
             path: '/group/:id', 
             name: 'GroupDetail', 
             component: GroupDetail
+        },
+        {
+            path: '/chart', 
+            name: 'Chart', 
+            component: Chart
         }
-
-
-
 
     ]
 

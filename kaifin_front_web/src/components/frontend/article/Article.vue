@@ -4,45 +4,48 @@ import NavBar from '../navbar/NavBar.vue'
 import CreateArticle from './CreateArticle.vue'
 import ArticleDetail from './ArticleDetail.vue'
 
-// backend base URL — used for every API call, no Vite proxy required
+// Backend local host
 const API_BASE = 'http://localhost:7070'
 
 const selectedArticle = ref(null)
 
-const currentView = ref('home')       // 'home' | 'following' | 'code' | 'read' | 'ranking' | 'detail'
+// Category static
+const currentView = ref('home')      
 const activeTab = ref('Popular')
-const showCreateModal = ref(false)
 const showCreatePage = ref(false)
 
-// ============ Article options dropdown ============
+// Article option dropdown
 const openOptionsMenuId = ref(null)
 
+// Open sub menu
 function toggleOptionsMenu(articleId) {
   openOptionsMenuId.value = openOptionsMenuId.value === articleId ? null : articleId
 }
 
+// Colape opttion menu
 function closeOptionsMenu() {
   openOptionsMenuId.value = null
 }
 
+// No interested handler
 function handleNotInterested(article) {
   closeOptionsMenu()
-  // TODO: call API / remove from feed
   articles.value = articles.value.filter(a => a.id !== article.id)
 }
 
+// Handler block user;
 function handleBlockUser(article) {
   closeOptionsMenu()
-  // TODO: call API to block author
   articles.value = articles.value.filter(a => a.author !== article.author)
 }
 
+// Handle Reports
 function handleReport(article) {
   closeOptionsMenu()
-  // TODO: open report modal / call API
   console.log('Reported article:', article.id)
 }
 
+// All function click 
 function handleGlobalClick(event) {
   if (openOptionsMenuId.value !== null) {
     const el = event.target.closest('.options-menu-wrap')
@@ -50,6 +53,7 @@ function handleGlobalClick(event) {
   }
 }
 
+// Mound api rest
 onMounted(() => {
   window.addEventListener('click', handleGlobalClick)
   fetchArticles()
@@ -59,9 +63,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('click', handleGlobalClick)
 })
 
-// ============ Code Life submenu ============
+// Categorky form choose 'all' | 'backend' | 'frontend' | 'ai' | 'tools'
 const showCodeSubmenu = ref(false)
-const activeCodeCategory = ref('all') // 'all' | 'backend' | 'frontend' | 'ai' | 'tools'
+const activeCodeCategory = ref('all') 
 
 const codeSubcategories = [
   { key: 'backend', label: 'Back End' },
@@ -85,13 +89,13 @@ const handleCreateArticle = () => {
   showCreatePage.value = true
 }
 
-// ============ Real article data from API ============
+// Article api
 
 const articles = ref([])
 const isLoadingArticles = ref(false)
 const articlesError = ref('')
 
-// resolve backend-relative image paths ("articles/xxx.jpg") into a usable full URL
+// Fetch api image show to card
 function resolveImageUrl(path) {
   if (!path) return 'https://picsum.photos/seed/default/200'
   if (path.startsWith('http://') || path.startsWith('https://')) return path
@@ -99,7 +103,7 @@ function resolveImageUrl(path) {
   return `${API_BASE}/uploads/${path}`
 }
 
-// map an article object as returned by the feed API (Show) into the shape the template expects
+// Map article object
 function mapApiArticle(a) {
   return {
     id: a.id,
@@ -117,12 +121,7 @@ function mapApiArticle(a) {
   }
 }
 
-// map an article object as returned by the detail API (Detail) into the shape
-// ArticleDetail.vue expects. Matches the Go `Article` / `ArticleBlock` structs exactly:
-//   Article:      id, user_id, user_name, profile_images, title, summary, cover_image,
-//                 category, code_subcategory, visibility, status, views_count, created_at,
-//                 updated_at, like_count, liked, comment_count, save_count, saved, tags, blocks
-//   ArticleBlock: id, article_id, block_type ('text'|'image'), title, content, position, created_at
+// Article show detail
 function mapApiArticleDetail(a) {
   return {
     id: a.id,
@@ -142,7 +141,6 @@ function mapApiArticleDetail(a) {
     liked: a.liked || false,
     saved: a.saved || false,
     tags: a.tags || [],
-    // block_type/content (backend names) -> type/value (ArticleDetail.vue names)
     contentBlocks: (a.blocks || []).map(b => ({
       type: b.block_type,
       title: b.title || '',
@@ -151,6 +149,7 @@ function mapApiArticleDetail(a) {
   }
 }
 
+// Category detail
 function categoryParamFor(view) {
   switch (view) {
     case 'following': return 'following'
@@ -161,9 +160,10 @@ function categoryParamFor(view) {
   }
 }
 
+// Fetch article api
 async function fetchArticles(view = currentView.value) {
   const category = categoryParamFor(view)
-  if (!category) return // ranking/detail don't need a feed fetch
+  if (!category) return 
 
   isLoadingArticles.value = true
   articlesError.value = ''
@@ -175,8 +175,6 @@ async function fetchArticles(view = currentView.value) {
     })
 
     const token = localStorage.getItem('token')
-
-    // Full backend URL — no Vite proxy dependency
     const res = await fetch(`${API_BASE}/api/v1/front/articles/show?${params.toString()}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
@@ -192,12 +190,11 @@ async function fetchArticles(view = currentView.value) {
       throw new Error(data?.message || `Request failed with status ${res.status}`)
     }
 
-    // Show() returns ArticlesResponse -> { articles, total, page, per_page }
     const list = data?.data?.articles || []
     articles.value = list.map(mapApiArticle)
   } catch (err) {
     console.error(err)
-    articlesError.value = err.message || 'មិនអាចទាញអត្ថបទបានទេ'
+    articlesError.value = err.message || 'No data'
     articles.value = []
   } finally {
     isLoadingArticles.value = false
@@ -213,7 +210,7 @@ watch(currentView, (view) => {
   }
 })
 
-// ============ Article detail (real fetch, no hardcoding) ============
+// Article Detail load
 
 const isLoadingDetail = ref(false)
 const detailError = ref('')
@@ -240,25 +237,27 @@ async function openArticleDetail(article) {
       throw new Error(data?.message || `Request failed with status ${res.status}`)
     }
 
-    // Detail() returns *Article directly -> response.data IS the Article object
+    // Detail return object
     const a = data?.data
     if (!a) throw new Error('Article not found')
 
     selectedArticle.value = mapApiArticleDetail(a)
   } catch (err) {
     console.error(err)
-    detailError.value = err.message || 'មិនអាចទាញអត្ថបទបានទេ'
+    detailError.value = err.message || 'Can not fetch des'
   } finally {
     isLoadingDetail.value = false
   }
 }
 
+// Create new article
 const submitArticle = (createdArticle) => {
   if (!createdArticle) return
   articles.value.unshift(mapApiArticle(createdArticle))
   showCreatePage.value = false
 }
 
+// File post article
 const filteredArticles = computed(() => {
   if (currentView.value === 'code' && activeCodeCategory.value !== 'all') {
     return articles.value.filter(a => a.subcategory === activeCodeCategory.value)
@@ -266,6 +265,7 @@ const filteredArticles = computed(() => {
   return articles.value
 })
 
+// Feed tile 
 const feedTitle = computed(() => {
   switch (currentView.value) {
     case 'following': return 'Following'
@@ -275,26 +275,12 @@ const feedTitle = computed(() => {
   }
 })
 
-// ============ Ranking (real fetch, no hardcoding) ============
-// Backend: GET /articles/show supports generic sorting via
-// ShowArticlesRequest.Sorts []share.Sort, bound from query params shaped
-// like sorts[0][property]=like_count&sorts[0][direction]=desc.
-// article_repo.go whitelists sortable properties to: created_at,
-// views_count, like_count, title — see articleSortColumns in the repo.
-//
-// NOTE: verify this query-param shape actually binds into req.Sorts on
-// your Fiber setup (log u.Sorts inside ShowArticlesRequest.bind() to
-// confirm) — Fiber's query struct binding for slices-of-structs varies by
-// version/config. If it doesn't bind, try the dot-notation fallback:
-// sorts[0].property / sorts[0].direction instead.
-
+// Ranking object 
 const rankingArticlesList = ref([])
 const isLoadingRanking = ref(false)
 const rankingError = ref('')
 
-// ranking list shape used by the template: id, title, username, userProfile,
-// views, comments, saves, likes — mapped from the same Article API shape
-// used elsewhere on this page.
+// Map ranking
 function mapApiArticleRanking(a) {
   return {
     id: a.id,
@@ -304,10 +290,11 @@ function mapApiArticleRanking(a) {
     views: String(a.views_count ?? 0),
     comments: String(a.comment_count ?? 0),
     saves: String(a.save_count ?? 0),
-    likes: a.like_count ?? 0, // numeric: template does `item.likes++` and shows `{{ item.likes }}k`
+    likes: a.like_count ?? 0, 
   }
 }
 
+// Get Ranking api
 async function fetchRanking() {
   isLoadingRanking.value = true
   rankingError.value = ''
@@ -316,13 +303,9 @@ async function fetchRanking() {
       page: '1',
       per_page: '15',
     })
-    // Sort by like_count desc. Swap property to 'views_count' if you'd
-    // rather rank by views instead of likes.
     params.append('sorts[0][property]', 'like_count')
     params.append('sorts[0][direction]', 'desc')
-
     const token = localStorage.getItem('token')
-
     const res = await fetch(`${API_BASE}/api/v1/front/articles/show?${params.toString()}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
@@ -434,16 +417,19 @@ const topAuthors = ref([
   },
 ])
 
+// Author card
 const authorsCardAfterIndex = computed(() => {
   const len = filteredArticles.value.length
   if (len < 2) return -1
   return Math.floor(len / 2) - 1
 })
 
+// Toggle follow
 const toggleFollow = (author) => {
   author.isFollowing = !author.isFollowing
 }
 
+// Detail author
 const detailAuthorInfo = computed(() => {
   const art = selectedArticle.value
   if (!art) return null
@@ -458,12 +444,13 @@ const detailAuthorInfo = computed(() => {
   }
 })
 
+// Toggle Detail author
 function toggleDetailAuthorFollow() {
   if (!selectedArticle.value) return
   selectedArticle.value.authorIsFollowing = !selectedArticle.value.authorIsFollowing
 }
 
-// Table of contents សម្រាប់អត្ថបទដែលកំពុងបើក — ទាញពី contentBlocks ពិត (មិន hardcode)
+// Detail item
 const detailTocItems = computed(() => {
   const art = selectedArticle.value
   if (!art || !art.contentBlocks) return []
@@ -545,25 +532,20 @@ const toRoman = (num) => {
 
         <!-- Main Content Area -->
         <main class="main-content">
-          <!-- DETAIL PAGE VIEW (real fetch — no hardcoding) -->
+          <!-- Detail page preview-->
           <template v-if="currentView === 'detail'">
-            <p v-if="isLoadingDetail" class="state-msg">កំពុងផ្ទុកអត្ថបទ...</p>
+            <p v-if="isLoadingDetail" class="state-msg">waiting...</p>
             <p v-else-if="detailError" class="state-msg" style="color:#dc2626;">{{ detailError }}</p>
-            <ArticleDetail 
-              v-else-if="selectedArticle"
-              :key="selectedArticle.id"
-              :articleData="selectedArticle" 
-              @back="currentView = 'home'" 
-            />
+            <ArticleDetail  v-else-if="selectedArticle" :key="selectedArticle.id" :articleData="selectedArticle"  @back="currentView = 'home'"   />
           </template>
-          <!-- RANKING PAGE VIEW (real fetch — no hardcoding) -->
+          <!-- Ranking preview -->
           <template v-else-if="currentView === 'ranking'">
             <div class="content-header">
               <h1>Top of Article</h1>
             </div>
 
             <div class="articles-list">
-              <p v-if="isLoadingRanking" class="state-msg">កំពុងផ្ទុក...</p>
+              <p v-if="isLoadingRanking" class="state-msg">Waitng...</p>
               <p v-else-if="rankingError" class="state-msg" style="color:#dc2626;">{{ rankingError }}</p>
               <p v-else-if="!rankingArticlesList.length" class="state-msg">No ranked articles yet</p>
 
@@ -613,7 +595,7 @@ const toRoman = (num) => {
             </div>
           </template>
 
-          <!-- DEFAULT FEEDS VIEW -->
+          <!-- Defualt feed previews-->
           <template v-else>
             <!-- Search and Create Bar -->
             <h2 class="feed-title-label">{{ feedTitle }}</h2>
@@ -628,20 +610,16 @@ const toRoman = (num) => {
               </button>
             </header>
 
-            <!-- Filter Tabs with SVG Icons -->
+            <!-- Fitler icons-->
             <div class="filter-tabs">
-              <button
-                @click="activeTab = 'Popular'"
-                :class="['tab-item', { active: activeTab === 'Popular' }]">
+              <button @click="activeTab = 'Popular'" :class="['tab-item', { active: activeTab === 'Popular' }]">
                 <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 Popular
               </button>
-              <button
-                @click="activeTab = 'The Latest'"
-                :class="['tab-item', { active: activeTab === 'The Latest' }]">
+              <button @click="activeTab = 'The Latest'" :class="['tab-item', { active: activeTab === 'The Latest' }]">
                 <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
@@ -649,7 +627,7 @@ const toRoman = (num) => {
               </button>
             </div>
 
-            <!-- Article Feed -->
+            <!-- Article feed -->
             <div class="feed-list">
               <p v-if="isLoadingArticles" class="state-msg">waiting...</p>
               <p v-else-if="articlesError" class="state-msg" style="color:#dc2626;">{{ articlesError }}</p>
@@ -668,7 +646,7 @@ const toRoman = (num) => {
                     </div>
                   </div>
 
-                  <!-- Author & Metadata -->
+                  <!-- Author and Metadata -->
                   <div class="article-footer" @click.stop>
                     <div class="author-info">
                       <div class="avatar">
@@ -706,7 +684,7 @@ const toRoman = (num) => {
                     </div>
                   </div>
 
-                  <!-- Tags (hidden on Code Life) -->
+                  <!-- Tags hiden life code -->
                   <div class="tag-list" v-if="currentView !== 'code'">
                     <span v-for="(tag, tidx) in article.tags" :key="tidx" class="tag">
                       #{{ tag }}
@@ -715,10 +693,7 @@ const toRoman = (num) => {
                 </article>
 
                 <!-- Top authors card -->
-                <div
-                  v-if="currentView === 'home' && idx === authorsCardAfterIndex"
-                  class="top-authors-card"
-                >
+                <div v-if="currentView === 'home' && idx === authorsCardAfterIndex" class="top-authors-card" >
                   <div class="top-authors-header">
                     <span class="top-authors-title">Top authors</span>
                     <svg class="scroll-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -747,11 +722,7 @@ const toRoman = (num) => {
                         <span class="author-stat-pill">{{ a.followers }} Follower</span>
                       </div>
                       <div class="author-card-rank">Top {{ i + 1 }}</div>
-                      <button
-                        class="author-card-follow"
-                        :class="{ following: a.isFollowing }"
-                        @click="toggleFollow(a)"
-                      >
+                      <button  class="author-card-follow"  :class="{ following: a.isFollowing }"  @click="toggleFollow(a)" >
                         {{ a.isFollowing ? 'Following ✓' : 'Follow' }}
                       </button>
                     </div>
@@ -762,7 +733,7 @@ const toRoman = (num) => {
           </template>
         </main>
 
-        <!-- Right Sidebar (Widgets) -->
+        <!-- Right sidebar categoru -->
         <aside class="sidebar-right">
           <template v-if="currentView === 'detail' && detailAuthorInfo">
             <div class="detail-author-card">
@@ -784,11 +755,7 @@ const toRoman = (num) => {
               </div>
 
               <div class="detail-author-actions">
-                <button
-                  class="detail-follow-btn"
-                  :class="{ following: detailAuthorInfo.isFollowing }"
-                  @click="toggleDetailAuthorFollow"
-                >
+                <button class="detail-follow-btn"  :class="{ following: detailAuthorInfo.isFollowing }" @click="toggleDetailAuthorFollow"  >
                   {{ detailAuthorInfo.isFollowing ? 'Following ✓' : 'Follow' }}
                 </button>
                 <button class="detail-more-btn">•••</button>
@@ -809,7 +776,7 @@ const toRoman = (num) => {
               </ul>
             </div>
 
-            <!-- List Article Widget -->
+            <!-- List article -->
             <div class="widget-card">
               <div class="widget-title">
                 <span class="widget-title-flex">
@@ -826,7 +793,7 @@ const toRoman = (num) => {
               </div>
             </div>
 
-            <!-- Recommended Authors Widget -->
+            <!-- Recommended authors -->
             <div class="widget-card">
               <div class="widget-title">
                 <span class="widget-title-flex">
@@ -847,7 +814,7 @@ const toRoman = (num) => {
               </div>
             </div>
 
-            <!-- Top Topics Widget -->
+            <!-- Top topics -->
             <div class="widget-card">
               <div class="widget-title">
                 <span class="widget-title-flex">
@@ -867,7 +834,7 @@ const toRoman = (num) => {
             </div>
           </template>
 
-          <!-- DEFAULT: List Article / Authors / Topics widgets -->
+          <!-- Default list article author-->
           <template v-else>
             <!-- List Article Widget -->
             <div class="widget-card">
@@ -886,7 +853,7 @@ const toRoman = (num) => {
               </div>
             </div>
 
-            <!-- Authors Widget -->
+            <!-- Authors recomend -->
             <div class="widget-card">
               <div class="widget-title">
                 <span class="widget-title-flex">
@@ -907,7 +874,7 @@ const toRoman = (num) => {
               </div>
             </div>
 
-            <!-- Top Topics Widget -->
+            <!-- Top topics -->
             <div class="widget-card">
               <div class="widget-title">
                 <span class="widget-title-flex">
@@ -940,7 +907,8 @@ const toRoman = (num) => {
 </template>
 
 <style scoped>
-/* Reset & Global Themes */
+
+/* Global main*/
 .app-container {
   min-height: 100vh;
   background-color: #F7F4F2;
@@ -949,8 +917,6 @@ const toRoman = (num) => {
   display: flex;
   justify-content: center;
   padding-top: 12px;
-
-
   align-items: flex-start;
 }
 
@@ -963,6 +929,7 @@ const toRoman = (num) => {
   align-items: start;
 }
 
+/* Sidelar left container */
 .sidebar-left, .widget-card, .article-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
@@ -1046,6 +1013,7 @@ const toRoman = (num) => {
   margin-left: auto;
 }
 
+/* Main container  */
 .main-content {
     min-width: 0;
   background: transparent;
@@ -1082,6 +1050,7 @@ const toRoman = (num) => {
   border: none;
 }
 
+/* Search item  */
 .search-box {
   position: relative;
   width: 70%;
@@ -1204,6 +1173,7 @@ const toRoman = (num) => {
   padding: 24px 0;
 }
 
+/* Article card  */
 .article-card {
   padding: 20px;
   display: flex;
@@ -1325,6 +1295,7 @@ const toRoman = (num) => {
   height: 16px;
 }
 
+/* Option btn  */
 .options-btn {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -1365,7 +1336,7 @@ const toRoman = (num) => {
   color: #1976D2;
 }
 
-/* Ranking Card Specific Styles */
+/* Ranking cards*/
 .ranking-card-item {
   display: flex;
   flex-direction: row;
@@ -1483,7 +1454,7 @@ const toRoman = (num) => {
   background-color: #155fa8;
 }
 
-/* Right Sidebar */
+/* Right sidebar */
 .sidebar-right {
   display: flex;
   flex-direction: column;
@@ -1622,6 +1593,7 @@ max-height: calc(100vh - 92px);
   color: #ffffff;
 }
 
+/* Author card  */
 .topic-img-wrapper {
   width: 26px;
   height: 26px;
@@ -1816,6 +1788,8 @@ max-height: calc(100vh - 92px);
   color: #ffffff;
 }
 
+/* Model create aritcle  */
+
 .create-page-overlay {
   position: absolute;
   top: 60px;
@@ -1833,7 +1807,7 @@ max-height: calc(100vh - 92px);
 
 
 
-/* Detail view: Author card + TOC — navy theme like the mockup */
+/* Card detail autor  */
 .detail-author-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;

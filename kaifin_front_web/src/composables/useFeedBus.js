@@ -4,7 +4,6 @@ const listeners = new Set()
 export function usePostShareBus() {
   function onPostShared(callback) {
     listeners.add(callback)
-    // returns an unsubscribe function — call this in onUnmounted()
     return () => listeners.delete(callback)
   }
 

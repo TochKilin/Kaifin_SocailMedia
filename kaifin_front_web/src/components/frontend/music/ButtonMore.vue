@@ -50,19 +50,15 @@ const handleAction = (action) => {
   switch (action) {
     case 'remove':
       console.log('Removing from profile...')
-      // Add your logic for removing here
       break
     case 'edit':
       console.log('Editing details...')
-      // Add your logic for editing here
       break
     case 'delete':
       console.log('Deleting item...')
-      // Add your logic for deleting here
       break
     case 'private':
       console.log('Making private...')
-      // Add your logic for making private here
       break
   }
 }
@@ -70,7 +66,6 @@ const handleAction = (action) => {
 
 <style scoped>
 .menu-container {
-  /* ប្រើពណ៌សលាយប្រផេះស្រាលបែប Modern Glassmorphism / Clean Card */
   background-color: #ffffff;
   position: absolute;
   top: 18px;
@@ -96,9 +91,8 @@ const handleAction = (action) => {
 }
 
 .menu-item:hover {
-  /* ពេល hover ចេញពណ៌ប្រផេះខ្ចីស្រទន់ */
   background-color: #f3f4f6; 
-  transform: translateX(2px); /* ឱ្យវាខ្សឹបផ្លាស់ទីបន្តិចពេល hover បន្ថែមភាព creative */
+  transform: translateX(2px); 
 }
 
 .icon-wrapper {
@@ -118,13 +112,12 @@ const handleAction = (action) => {
 }
 
 .menu-text {
-  color: #334155; /* ពណ៌អត្ថបទប្រផេះចាស់ដិតច្បាស់ល្អ មិនមែនខ្មៅស្រឡូន */
+  color: #334155; 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 12px;
   font-weight: 500;
 }
 
-/* Icon Styles សម្រាប់រចនាប័ទ្មថ្មី */
 .icon-circle {
   width: 16px;
   height: 16px;
@@ -143,11 +136,11 @@ const handleAction = (action) => {
 
 .edit-icon,
 .private-icon {
-  color: #64748b; /* ពណ៌ අicon ធម្មតា */
+  color: #64748b; 
 }
 
 .delete-icon {
-  color: #ef4444; /* ពណ៌ក្រហមប្រណិត */
+  color: #ef4444; 
 }
 
 .menu-item:hover .delete-icon,
@@ -156,6 +149,6 @@ const handleAction = (action) => {
 }
 
 .delete-text {
-  color: #ef4444; /* ពណ៌ក្រហមសម្រាប់ Delete */
+  color: #ef4444; 
 }
 </style>

@@ -1,9 +1,6 @@
 <template>
   <div
-    class="engage-card"
-  
-   
-  >
+    class="engage-card">
     <div class="engage-list">
       <div
         v-for="(person, idx) in visibleUsers"
@@ -39,7 +36,6 @@
         </button>
       </div>
     </div>
-
     <button v-if="hasMore" class="see-more-btn" @click="showMore">
       <span>See more</span>
       <svg viewBox="0 0 24 24" class="see-more-icon">
@@ -69,11 +65,6 @@ const props = defineProps({
   },
 })
 
-// keep-open / request-close let the parent's hover-close-timer
-// know the cursor moved INTO this popover instead of leaving the
-// whole trigger+popover area — without this, mouseleave on the
-// trigger fires before mouseenter on the popover is caught, so the
-// popover closes the instant the cursor crosses the gap between them.
 const emit = defineEmits(['like', 'keep-open', 'request-close'])
 
 const visibleCount = ref(props.pageSize)
@@ -115,8 +106,6 @@ function toggleLike(id) {
   width: 200px;
   
 }
-
-
 
 .engage-list {
   display: flex;

@@ -65,10 +65,7 @@ defineProps({
 })
 
 const emit = defineEmits(['toggle', 'close'])
-
 const dropdownRef = ref(null)
-
-// មុខងារសម្រាប់ផ្ទៀងផ្ទាត់ពេលចុចក្រៅ Dropdown
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
     emit('close')

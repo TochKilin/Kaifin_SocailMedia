@@ -10,8 +10,6 @@ import (
 	"kaifin_clone_api/pkg/utls"
 )
 
-// Post maps to the `music_posts` table (renamed so it never collides
-// with your existing generic `posts` / post-feed table).
 type Post struct {
 	ID              int64     `json:"id" db:"id"`
 	UserID          int64     `json:"user_id" db:"user_id"`
@@ -23,7 +21,6 @@ type Post struct {
 	CreatedAt       time.Time `json:"created_at" db:"created_at"`
 }
 
-// PostTag maps to `music_post_tags` — "Tag friend name" on a post.
 type PostTag struct {
 	ID           int64     `json:"id" db:"id"`
 	PostID       int64     `json:"post_id" db:"music_post_id"`
@@ -50,11 +47,6 @@ type PostListResponse struct {
 	Limit int            `json:"limit"`
 }
 
-// ---------- Create ----------
-// Covers: Share to News Feed, Tag friend, Audience/Privacy, Disable
-// comments, Standard/Status post. "Send as message" and "Copy link" are
-// separate actions (see the message/share modules), not part of create.
-
 type CreatePostRequest struct {
 	SongID          *int64  `json:"song_id"`
 	Content         string  `json:"content"`
@@ -80,8 +72,6 @@ func (r *CreatePostRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	return nil
 }
 
-// validateBusinessRules holds rules a plain struct-tag `validate` can't
-// express (e.g. "song_id required only when type=standard").
 func (r *CreatePostRequest) validateBusinessRules() *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 
@@ -93,11 +83,6 @@ func (r *CreatePostRequest) validateBusinessRules() *error_responses.ErrorRespon
 	}
 	return nil
 }
-
-// ---------- Update ----------
-// All fields are pointers so a field left out of the request body is
-// left untouched (partial update). TaggedUserIDs: nil = leave tags as
-// they are, [] = clear all tags, [...] = replace tags entirely.
 
 type UpdatePostRequest struct {
 	Content         *string  `json:"content"`
@@ -118,12 +103,9 @@ func (r *UpdatePostRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 }
 
 func (r *UpdatePostRequest) validateBusinessRules() *error_responses.ErrorResponse {
-	// No extra cross-field rule needed yet for updates — add here if
-	// your product rules grow (mirrors CreatePostRequest's method).
+
 	return nil
 }
-
-// ---------- Show / List ----------
 
 type ShowPostRequest struct {
 	Search string `query:"search"`

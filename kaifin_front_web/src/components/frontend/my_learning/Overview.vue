@@ -21,8 +21,7 @@ const handleStatClick = (type) => {
 
 <template>
   <div class="overview-container">
-    
-    <!-- Top Stats Bar (បម្លែងជាប៊ូតុងភ្ជាប់គ្នា ៣ ក្នុងប្រអប់តែមួយ) -->
+  
     <div class="stats-overview-group">
       <button class="stat-btn" @click="handleStatClick('ratings')">
         <div class="stat-header">
@@ -49,7 +48,6 @@ const handleStatClick = (type) => {
       </button>
     </div>
 
-    <!-- Metadata Row (ភ្ជាប់គ្នា ២) -->
     <div class="custom-split-card-2">
       <div class="split-meta-item">
         <div class="svg-icon-bg-small">🔄</div>
@@ -61,7 +59,6 @@ const handleStatClick = (type) => {
       </div>
     </div>
 
-    <!-- By the numbers Section (ភ្ជាប់គ្នា ៣ ក្នុងមួយជួរដេក) -->
     <div class="content-section">
       <h3 class="section-title">By the numbers</h3>
       
@@ -109,7 +106,6 @@ const handleStatClick = (type) => {
       </div>
     </div>
 
-    <!-- Features Section (ភ្ជាប់គ្នា ២) -->
     <div class="content-section">
       <h3 class="section-title">Features</h3>
       <div class="custom-split-card-2">
@@ -148,7 +144,6 @@ const handleStatClick = (type) => {
   color: #1e293b;
 }
 
-/* ប្រអប់ប៊ូតុងភ្ជាប់គ្នា ៣ សម្រាប់ Top Stats Bar */
 .stats-overview-group {
   display: flex;
   border: 1px solid #cbd5e1;

@@ -29,8 +29,6 @@ func NewArticlesRepoImpl(db *sqlx.DB) *ArticlesRepoImpl {
 	return &ArticlesRepoImpl{dbpool: db}
 }
 
-// ---------------- Create ----------------
-
 func (r *ArticlesRepoImpl) Create(article *Article, tags []string, blocks []ArticleBlock) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 	tx, err := r.dbpool.Beginx()
@@ -64,8 +62,6 @@ func (r *ArticlesRepoImpl) Create(article *Article, tags []string, blocks []Arti
 	}
 	return nil
 }
-
-// ---------------- Update ----------------
 
 func (r *ArticlesRepoImpl) Update(article *Article, tags []string, blocks []ArticleBlock) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
@@ -165,12 +161,6 @@ func (r *ArticlesRepoImpl) Delete(id int64, userID int64) *error_responses.Error
 	return nil
 }
 
-// ---------------- Show (feed) ----------------
-
-// articleSortColumns whitelists which "property" values a client may sort
-// by, and maps each one to the actual SQL expression to use. This is
-// required because req.Sorts[i].Property comes straight from the client —
-// interpolating it into SQL directly would be a SQL-injection vector.
 var articleSortColumns = map[string]string{
 	"created_at":  "a.created_at",
 	"views_count": "a.views_count",
@@ -178,9 +168,6 @@ var articleSortColumns = map[string]string{
 	"title":       "a.title",
 }
 
-// buildArticleOrderBy turns validated share.Sort entries into a safe
-// ORDER BY clause. Unknown/unsafe property names are silently skipped.
-// Falls back to "a.created_at DESC" when nothing usable was supplied.
 func buildArticleOrderBy(sorts []share.Sort) string {
 	if len(sorts) == 0 {
 		return "a.created_at DESC"
@@ -289,8 +276,6 @@ func (r *ArticlesRepoImpl) Show(req ShowArticlesRequest, userID int64) (*Article
 	}, nil
 }
 
-// ---------------- Detail ----------------
-
 func (r *ArticlesRepoImpl) Detail(id int64, userID int64) (*Article, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 
@@ -345,7 +330,6 @@ func (r *ArticlesRepoImpl) Detail(id int64, userID int64) (*Article, *error_resp
 	}
 	article.Tags = articleList[0].Tags
 
-	// Fire-and-forget view count bump (best effort, ignore error)
 	_, _ = r.dbpool.Exec(`UPDATE tbl_articles SET views_count = views_count + 1 WHERE id = $1`, id)
 
 	return &article, nil
@@ -388,8 +372,6 @@ func attachTags(db *sqlx.DB, articleList []Article) error {
 	return nil
 }
 
-// ---------------- Like ----------------
-
 func (r *ArticlesRepoImpl) ToggleLike(articleID, userID int64) (bool, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 	var exists bool
@@ -417,8 +399,6 @@ func (r *ArticlesRepoImpl) ToggleLike(articleID, userID int64) (bool, *error_res
 	return true, nil
 }
 
-// ---------------- Save ----------------
-
 func (r *ArticlesRepoImpl) ToggleSave(articleID, userID int64) (bool, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 	var exists bool
@@ -445,8 +425,6 @@ func (r *ArticlesRepoImpl) ToggleSave(articleID, userID int64) (bool, *error_res
 	}
 	return true, nil
 }
-
-// ---------------- Report ----------------
 
 func (r *ArticlesRepoImpl) Report(articleID, userID int64, reportType, text string) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}

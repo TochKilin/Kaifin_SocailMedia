@@ -26,8 +26,6 @@ func NewSongRepoImpl(db *sqlx.DB) *SongRepoImpl {
 	}
 }
 
-// ---------- Create ----------
-
 func (r *SongRepoImpl) Create(artistID int64, req CreateSongRequest) (*SongResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 
@@ -48,8 +46,6 @@ func (r *SongRepoImpl) Create(artistID int64, req CreateSongRequest) (*SongRespo
 	resp := toSongResponse(newSong)
 	return &resp, nil
 }
-
-// ---------- Show / List ----------
 
 func (r *SongRepoImpl) Show(req ShowSongRequest) (*SongListResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
@@ -88,8 +84,6 @@ func (r *SongRepoImpl) Show(req ShowSongRequest) (*SongListResponse, *error_resp
 	}, nil
 }
 
-// ---------- GetByID ----------
-
 func (r *SongRepoImpl) GetByID(id int64) (*Song, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 
@@ -102,8 +96,6 @@ func (r *SongRepoImpl) GetByID(id int64) (*Song, *error_responses.ErrorResponse)
 	}
 	return &s, nil
 }
-
-// ---------- Update ----------
 
 func (r *SongRepoImpl) Update(id int64, artistID int64, req UpdateSongRequest) (*SongResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
@@ -123,16 +115,13 @@ func (r *SongRepoImpl) Update(id int64, artistID int64, req UpdateSongRequest) (
 		req.Title, req.Duration, req.FileURL, req.CoverURL, id, artistID,
 	).StructScan(&updated)
 	if err != nil {
-		// Either the row doesn't exist, or it exists but belongs to a
-		// different artist — both surface as the same "not yours" error.
+
 		return nil, msg.NewErrorResponse("song_not_found_or_forbidden", err)
 	}
 
 	resp := toSongResponse(updated)
 	return &resp, nil
 }
-
-// ---------- Delete ----------
 
 func (r *SongRepoImpl) Delete(id int64, artistID int64) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}

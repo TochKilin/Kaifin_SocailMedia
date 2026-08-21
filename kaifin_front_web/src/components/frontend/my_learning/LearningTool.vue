@@ -83,7 +83,6 @@ const tools = ref([
 
       </div>
     </div>
-
   </div>
 </template>
 

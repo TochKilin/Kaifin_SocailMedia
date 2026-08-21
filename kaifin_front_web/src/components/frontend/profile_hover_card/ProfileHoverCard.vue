@@ -1,19 +1,17 @@
 <template>
   <div class="hover-card" @mouseenter="$emit('keep-open')" @mouseleave="$emit('close')">
     <div class="hover-cover">
-  <img v-if="profile?.coverUrl" :src="profile.coverUrl" alt="" />
-  <div v-else class="hover-cover-placeholder"></div>
-  <div class="hover-cover-gradient"></div>
-</div>
+      <img v-if="profile?.coverUrl" :src="profile.coverUrl" alt="" />
+      <div v-else class="hover-cover-placeholder"></div>
+      <div class="hover-cover-gradient"></div>
+    </div>
 
     <div class="hover-body">
       <div class="hover-avatar">
         <img v-if="profile?.avatarUrl" :src="profile.avatarUrl" alt="" />
         <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
       </div>
-
       <div v-if="isLoading" class="hover-loading">Loading...</div>
-
       <template v-else-if="profile">
         <h4 class="hover-name">{{ profile.name }}</h4>
         <p class="hover-handle">{{ profile.handle }}</p>
@@ -44,13 +42,49 @@
           </button>
         </div>
       </template>
-
       <p v-else class="hover-error">Failed to load</p>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+
+const router = useRouter()
+const API_BASE = 'http://localhost:7070/api/v1/front'
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return { Authorization: `Bearer ${token}` }
+}
+
+const isStartingChat = ref(false)
+
+async function handleStartChat(profile) {
+    console.log('CLICKED, profile:', profile) 
+      console.log('profile keys:', Object.keys(profile)) 
+  if (!profile?.id || isStartingChat.value) return
+  isStartingChat.value = true
+
+  const form = new FormData()
+  form.append('target_user_id', profile.id)
+
+  try {
+    const res = await axios.post(`${API_BASE}/chats/start`, form, {
+      headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
+    })
+    if (res.data.success) {
+      const conversationId = res.data.data.conversation_id
+      router.push({ path: '/chart', query: { open: conversationId } }) 
+    }
+  } catch (err) {
+    console.log('START CHAT ERROR:', err)
+  } finally {
+    isStartingChat.value = false
+  }
+}
+
 defineProps({
   profile: { type: Object, default: null },
   isLoading: { type: Boolean, default: false },
@@ -62,9 +96,9 @@ defineEmits(['close', 'keep-open', 'toggle-follow', 'view-profile'])
 
 <style scoped>
 .hover-card {
-  width: 280px;
+  width: 480px;
   background: #fff;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
   border: 1px solid #E7E7E7;
@@ -73,7 +107,7 @@ defineEmits(['close', 'keep-open', 'toggle-follow', 'view-profile'])
 }
 .hover-cover {
   width: 100%;
-  height: 90px;
+  height: 80px;
   background: #EFF6FB;
   overflow: hidden;
 }
@@ -118,7 +152,7 @@ defineEmits(['close', 'keep-open', 'toggle-follow', 'view-profile'])
 .hover-actions { display: flex; gap: 8px; }
 .hover-follow-btn, .hover-view-btn {
   flex: 1;
-  border-radius: 999px;
+  border-radius: 32px;
   font-weight: 700;
   font-size: 12.5px;
   padding: 8px 10px;
@@ -127,13 +161,28 @@ defineEmits(['close', 'keep-open', 'toggle-follow', 'view-profile'])
 }
 .hover-follow-btn { border: 2px solid #1976D2; background: #1976D2; color: #fff; }
 .hover-follow-btn.following { background: #fff; color: #8A8A8E; border-color: #E7E7E7; }
-.hover-view-btn { border: 2px solid #E7E7E7; background: #fff; color: #2B2B2B; }
+.hover-view-btn { border: 1px solid #E7E7E7; background: #fff; color: #2B2B2B; }
 
 .hover-loading, .hover-error { font-size: 13px; color: #8A8A8E; padding: 20px 0; text-align: center; }
 .hover-cover {
   position: relative;   /* ត្រូវបន្ថែម ដើម្បីឱ្យ gradient absolute ដំណើរការត្រឹមត្រូវ */
 }
-
+.hover-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  color: #333;
+  flex-shrink: 0;
+}
+.hover-chat-btn:hover {
+  background: #f2f2f2;
+}
 
 
 </style>

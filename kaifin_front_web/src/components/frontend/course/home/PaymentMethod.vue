@@ -2,12 +2,8 @@
   <div>
     <NavBar/>
     <div class="page-wrapper">
-      
-      <!-- ================= BANK MODAL FORM ================= -->
       <div class="modal-overlay" v-if="isModalOpen" @click.self="closeBankModal">
         <div class="modal-box">
-
-          <!-- Thumbnail & Course Description inside Modal (Added here) -->
           <div class="modal-course-highlight-box">
             <div class="modal-course-thumb-wrapper">
               <img :src="bannerData.thumbnail" :alt="bannerData.title" class="modal-course-thumb-img" />
@@ -88,7 +84,6 @@
       </div>
 
       <div class="payment-container">
-        
         <!-- Start Learning with Kaifin Label Header -->
         <div class="demo-header-label">
           Start Learning with <span class="highlight-name">Kaifin</span>
@@ -118,7 +113,6 @@
               $100.00/year <span class="old-price">$300.00 for first year</span>
             </div>
           </div>
-
           <div 
             class="plan-card" 
             :class="{ active: selectedPlan === 'monthly' }"
@@ -178,7 +172,6 @@
         <!-- Payment Method Section -->
         <div class="form-group">
           <label class="form-label">Payment Method</label>
-          
           <div 
             class="payment-option" 
             :class="{ 'active-option': selectedPayment === 'cards' }"
@@ -238,37 +231,64 @@
               </div>
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import NavBar from '../../navbar/NavBar.vue'
+
+const route = useRoute()
 
 import chipIcon from '@/assets/bank_card/visa.png'
 import crownIcon from '@/assets/bank_card/kb.png'
-
 import abaLogo from '@/assets/bank_card/kb.png'
 import acledaLogo from '@/assets/bank_card/wink.png'
 import kbLogo from '@/assets/bank_card/aba.png'
 import khqrLogo from '@/assets/bank_card/kh.png'
-import Eon from '@/assets/bank_card/eon.png' 
-import Ac from '@/assets/bank_card/ac.png' 
+import Eon from '@/assets/bank_card/eon.png'
+import Ac from '@/assets/bank_card/ac.png'
 import Amk from '@/assets/bank_card/amk.png'
 
+
 const bannerData = ref({
-  title: 'Access to 28,000+ top-rated courses',
-  thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&auto=format&fit=crop&q=60'
+  title: '',
+  thumbnail: ''
 })
+
+const isLoading = ref(true)
+const loadError = ref(null)
+const courseDetail = ref(null)
+
+const fetchCourseDetail = async () => {
+  isLoading.value = true
+  loadError.value = null
+  try {
+    const courseId = route.params.id
+    const res = await fetch(`/api/v1/front/courses/show/${courseId}`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const json = await res.json()
+    const course = json.data ?? json
+
+    courseDetail.value = course
+    bannerData.value = {
+      title: course.title,
+      thumbnail: course.thumbnail
+    }
+  } catch (err) {
+    console.error('Failed to load course:', err)
+    loadError.value = 'not fetch'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const selectedPlan = ref('yearly')
 const selectedPayment = ref('cards')
-
 const benefits = ref([
   'Access lessons anytime and learn at a comfortable pace that works for you.',
   'Gain useful skills through real-world examples, exercises, and hands-on projects.',
@@ -350,6 +370,10 @@ const handlePayNow = () => {
   alert('Processing payment with ' + (selectedBankObj.value ? selectedBankObj.value.name : 'Bank'))
   closeBankModal()
 }
+
+onMounted(() => {
+  fetchCourseDetail()
+})
 </script>
 
 <style scoped>
@@ -727,7 +751,6 @@ const handlePayNow = () => {
   color: #ffffff;
 }
 
-/* ================= STYLES FOR THE MODAL ================= */
 .modal-overlay {
   position: fixed;
   top: 65px;
@@ -853,7 +876,6 @@ const handlePayNow = () => {
   color: #0f172a;
 }
 
-/* ================= MODAL PLAN CARD STYLES ================= */
 .modal-plan-card {
   background-color: #ffffff;
   padding: 16px;
@@ -886,7 +908,7 @@ const handlePayNow = () => {
   color: #64748b;
 }
 
-/* ================= MODAL SUMMARY SECTION STYLES ================= */
+
 .modal-summary-section {
   position: relative;
   margin-top: 15px;
@@ -949,7 +971,6 @@ const handlePayNow = () => {
   padding-bottom: 0;
 }
 
-/* Pay Now Button (Short & Centered with border-radius 32px) */
 .pay-now-btn {
   display: block;
   width: 100%;

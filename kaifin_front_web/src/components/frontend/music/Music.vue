@@ -1,17 +1,16 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed,watch } from 'vue'
 import NavBar from '../navbar/NavBar.vue'
 import SongDetial from './SongDetial.vue'
 import ShareMenu from './ShareMenu.vue'
 import MyMusic from './MyMusic.vue'
 import MyHistory from './MyHistory.vue'
 
-const currentTab = ref('popular')
 
+const currentTab = ref('popular')
 const showPopup = ref(false)
 const selectedSong = ref(null)
 const showBanner = ref(true)
-
 const topSongs = ref([])
 const isLoading = ref(false)
 const loadError = ref(null)
@@ -24,10 +23,6 @@ const playlistDetailError = ref(null)
 
 const showAllSongs = ref(false)
 const currentPage = ref(1)
-
-// ==========================================
-// ដាក់ Mock Data សម្រាប់ History នៅត្រង់ចំណុចនេះ
-// ==========================================
 const historyPlaylists = ref([
   {
     id: 101,
@@ -212,9 +207,46 @@ const showMoreSongs = async () => {
   await fetchTopSongs()
 }
 
+let previousBodyOverflow = ''
+let previousHtmlOverflow = ''
+let previousBodyPosition = ''
+let previousBodyTop = ''
+let previousBodyWidth = ''
+let lockedScrollY = 0
+
+const lockBackgroundScroll = () => {
+  lockedScrollY = window.scrollY
+
+  previousBodyOverflow = document.body.style.overflow
+  previousHtmlOverflow = document.documentElement.style.overflow
+  previousBodyPosition = document.body.style.position
+  previousBodyTop = document.body.style.top
+  previousBodyWidth = document.body.style.width
+
+  document.documentElement.style.overflow = 'hidden'
+  document.body.style.overflow = 'hidden'
+  // Fix body in place too, so iOS Safari can't rubber-band scroll behind it
+  document.body.style.position = 'fixed'
+  document.body.style.top = `-${lockedScrollY}px`
+  document.body.style.width = '100%'
+}
+
+const unlockBackgroundScroll = () => {
+  document.documentElement.style.overflow = previousHtmlOverflow
+  document.body.style.overflow = previousBodyOverflow
+  document.body.style.position = previousBodyPosition
+  document.body.style.top = previousBodyTop
+  document.body.style.width = previousBodyWidth
+  window.scrollTo(0, lockedScrollY)
+}
+
 onMounted(() => {
   fetchTopSongs()
   fetchTopPlaylists()
+})
+
+onUnmounted(() => {
+  // unlockBackgroundScroll()
 })
 
 const openMorePopup = (song) => {
@@ -371,6 +403,8 @@ async function openPlaylistDetail(item) {
 const backToMainView = () => {
   selectedPlaylist.value = null
 }
+
+
 </script>
 
 <template>
@@ -378,7 +412,7 @@ const backToMainView = () => {
     <div class="app-music">
       <div class="container" :class="{ 'no-right-sidebar': selectedPlaylist }">
 
-        <!-- 1. Top Bar -->
+        <!-- Top Bar -->
         <header class="top-bar">
           <div class="controls">
             <button
@@ -447,7 +481,7 @@ const backToMainView = () => {
           </div>
         </header>
 
-        <!-- 2. Progress Bar Row -->
+        <!-- Progress Bar Row -->
         <div class="progress-row">
           <div class="progress-bar" @click="seek">
             <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
@@ -455,9 +489,9 @@ const backToMainView = () => {
           </div>
         </div>
 
-        <!-- 3. Left Sidebar -->
+        <!-- Left Sidebar -->
         <aside class="sidebar">
-          <div class="btn-3">
+          <div class="btn-3 card">
             <button @click="currentTab = 'popular'" :class="['nav-item', { active: currentTab === 'popular' }]">
               <span class="nav-label">
                 <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
@@ -509,7 +543,7 @@ const backToMainView = () => {
           <template v-else-if="currentTab === 'popular' && !selectedPlaylist">
 
             <!-- Top Song -->
-            <section class="box">
+            <section class="box card">
               <div class="box-header">
                 <span class="box-title">Top Song</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trend-icon"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -596,7 +630,7 @@ const backToMainView = () => {
             </section>
 
             <!-- Top Playlist -->
-            <section class="box">
+            <section class="box card">
               <div class="box-header">
                 <span class="box-title">Top Playlist</span>
               </div>
@@ -604,7 +638,7 @@ const backToMainView = () => {
                 <div 
                   v-for="item in topPlaylists" 
                   :key="item.id" 
-                  class="card"
+                  class=""
                   @click="openPlaylistDetail(item)"
                   style="cursor: pointer;"
                 >
@@ -649,7 +683,7 @@ const backToMainView = () => {
 
         </main>
 
-        <!-- 5. Right Sidebar -->
+        <!-- Right Sidebar -->
         <aside class="sidebar-right" v-if="!selectedPlaylist">
           <div class="promo-banner" v-if="showBanner">
             <button class="close-banner" @click="showBanner = false">×</button>
@@ -683,13 +717,12 @@ const backToMainView = () => {
 .app-music {
   color: #333333;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 100vh;
-  /* padding: 12px; */
+  height: 100vh;
   padding: 0;
-  /* padding-bottom: 20px; */
   box-sizing: border-box;
-
-
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Top Bar */
@@ -702,27 +735,11 @@ const backToMainView = () => {
   justify-content: space-between;
   align-items: center;
   background-color: #ffffff;
-  /* border-radius: 12px; */
-  
   padding: 15px 20px;
-  /* margin-bottom: 20px; */
-  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04); */
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
-
-/* subtle accent line — small creative touch, still just brand blue */
-/* .top-bar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #007bff, #66b2ff, #007bff);
-  background-size: 200% 100%;
-  opacity: 0.7;
-} */
 
 .controls, .right-tools {
   display: flex;
@@ -781,13 +798,6 @@ const backToMainView = () => {
   transition: border-color 0.2s, background-color 0.2s;
 }
 
-.now-playing.is-active {
-  /* border-color: #b6d9ff; */
-  /* background-color: #eef6ff; */
-  /* color: #007bff; */
-}
-
-/* tiny animated equalizer bars — replaces static icon while playing */
 .mini-eq {
   display: inline-flex;
   align-items: flex-end;
@@ -839,7 +849,7 @@ const backToMainView = () => {
   top: 50%;
   width: 10px;
   height: 10px;
-  background: #007bff;
+  background: #1976D2;
   border: 2px solid #ffffff;
   border-radius: 50%;
   transform: translate(-50%, -50%);
@@ -879,28 +889,22 @@ const backToMainView = () => {
   grid-template-columns: 180px 1fr 200px;
   gap: 4px;
   background-color: #f0f0f0;
-  padding-bottom: 20px;
   padding-left: 0;
   padding-right: 0;
-  /* height: 100vh; */
-
-  /* padding-bottom: 20px; */
-  /* padding: 12px; */
-  /* padding: 0; */
-  
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .container.no-right-sidebar {
   grid-template-columns: 180px 1fr;
 }
 
-/* Progress bar row — must span both columns like .top-bar */
 .progress-row {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 10px;
-  /* padding: 0 20px 16px; */
   font-size: 12px;
   color: #6c757d;
   margin-top: -20px;
@@ -934,7 +938,7 @@ const backToMainView = () => {
   top: 50%;
   width: 11px;
   height: 11px;
-  background: #007bff;
+  background: #1976D2;
   border: 2px solid #ffffff;
   border-radius: 50%;
   transform: translate(-50%, -50%);
@@ -946,26 +950,19 @@ const backToMainView = () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-radius: 12px; 
   padding-left: 12px; 
   height: 100%;
-  /* background-color: #ffffff; */
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .btn-3{
   display: flex;
   flex-direction: column;
   gap: 10px;
-height: 100%;
-  /* background-color: #ffffff; */
-  /* border: 1px solid #e1e4e8; */
-  border-radius: 12px; 
+  height: 100%;
   padding: 12px; 
   background-color: #ffffff;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
 
 }
 
@@ -998,7 +995,6 @@ height: 100%;
 .nav-item:hover {
   background-color: #f8f9fa;
   border-color: #d0d7de;
-  transform: translateX(2px);
 }
 
 .nav-item:hover .nav-icon {
@@ -1007,7 +1003,6 @@ height: 100%;
 }
 
 .nav-item.active {
-  /* background-color: #007bff; */
   color: #000000;
   border-color: #007bff;
 }
@@ -1016,22 +1011,23 @@ height: 100%;
   color: rgb(7, 7, 7);
 }
 
-/* Content */
 .content {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .sidebar-right {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  /* padding: 8px 0; */
   padding-right: 12px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
-/* Promo Banner (VK Import Banner) */
 .promo-banner {
   position: relative;
   background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
@@ -1134,6 +1130,7 @@ height: 100%;
   border-radius: 12px;
   padding: 20px;
   background-color: #ffffff;
+
 }
 
 .box-header {
@@ -1204,7 +1201,7 @@ height: 100%;
 .song-item {
   display: flex;
   align-items: center;
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 8px 14px;
   gap: 8px;
   transition: background-color 0.2s, transform 0.15s, box-shadow 0.15s;
@@ -1223,15 +1220,15 @@ height: 100%;
 
 .thumb {
   position: relative;
-  width: 45px;
-  height: 45px;
-  border-radius: 8px;
+  width: 65px;
+  height: 65px;
+  border-radius: 4px;
   overflow: hidden;
-  border: 1px solid #dee2e6;
+  /* border: 1px solid #dee2e6; */
   flex-shrink: 0;
+  object-fit: contain;
 }
 
-/* slow vinyl-style spin while the track is playing */
 .thumb.spinning img {
   animation: spin 6s linear infinite;
 }
@@ -1245,7 +1242,7 @@ height: 100%;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 4px;
 }
 
 .dot {
@@ -1259,7 +1256,6 @@ height: 100%;
   border: 1px solid #ffffff;
 }
 
-/* equalizer overlay shown on the currently playing thumbnail */
 .eq-overlay {
   position: absolute;
   inset: 0;
@@ -1318,7 +1314,6 @@ height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* background-color: #ffffff; */
   transition: all 0.2s;
 }
 
@@ -1345,13 +1340,12 @@ height: 100%;
   background-color: #e9ecef;
 }
 
-/* Custom Action Pop-up (Matching the provided reference image) */
 .custom-action-popup {
   position: absolute;
   right: 0;
   bottom: 38px;
   width: 180px;
-  background-color: #2d3126; /* Dark olive/brown theme from image */
+  background-color: #2d3126; 
   border: 1px solid #4a4f40;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -1416,23 +1410,7 @@ height: 100%;
 }
 
 .card {
-    border: none;
-  /* border: 1px solid #e1e4e8; */
-
-  /* border-top-left-radius: 12px; */
-  /* border-top-right-radius: 12px;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px; */
-  /* overflow: hidden; */
-  /* border-radius: 8px; */
-  /* background: #ffffff; */
-  /* transition: transform 0.2s, box-shadow 0.2s; */
-  border-radius: 8px;
-}
-
-
-.card:hover {
-  transform: translateY(-3px);
+  border-radius: 12px;
 }
 
 .card-img-wrap {
@@ -1440,11 +1418,8 @@ height: 100%;
   height: 120px;
   aspect-ratio: 1 / 1;
   border-radius: 8px;
-  /* border-radius: 12px; */
-  /* border-bottom: 1px solid #e1e4e8; */
 }
 
-/* play button overlay revealed on hover */
 .card-play-overlay {
   position: absolute;
   inset: 0;
@@ -1512,7 +1487,7 @@ height: 100%;
   min-width: 38px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  background-color: #f1f6fb;
+  background-color: transparent;
   border: 1px solid #e2e8f0;
   padding: 3px 8px;
   border-radius: 12px;
@@ -1612,7 +1587,7 @@ height: 100%;
 
 @media (max-width: 1024px) {
   .container {
-    grid-template-columns: 200px 1fr; /* លុប Column ខាងស្តាំពេល Viewport តូច */
+    grid-template-columns: 200px 1fr; 
   }
   .sidebar-right {
     display: none;

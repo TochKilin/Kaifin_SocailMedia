@@ -1,12 +1,17 @@
+
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import NavBar from '../navbar/NavBar.vue'
 import CourseDetaile from './CourseDetaile.vue'
 import AIAssistant from './AIAssistant.vue'
 
-// ==========================================
-// PARENT & DETAIL STATES
-// ==========================================
+const BASE_URL = 'http://localhost:7070'
+
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 const selectedCourse = ref(null)
 
 const handleOpenDetail = (course) => {
@@ -17,9 +22,7 @@ const handleBack = () => {
   selectedCourse.value = null
 }
 
-// ==========================================
-// AI ASSISTANT STATES
-// ==========================================
+
 const aiQuery = ref('')
 const aiMessages = ref([
   { sender: 'ai', text: 'សួស្តី! ខ្ញុំជា AI Assistant របស់អ្នក។ តើមានចម្ងល់អ្វីទាក់ទងនឹងមេរៀននេះដែរឬទេ?' }
@@ -30,115 +33,105 @@ const sendAiMessage = () => {
   aiMessages.value.push({ sender: 'user', text: aiQuery.value })
   const question = aiQuery.value
   aiQuery.value = ''
-  
+
   setTimeout(() => {
     aiMessages.value.push({ sender: 'ai', text: `ចំពោះសំណួរ "${question}" នេះ គឺទាក់ទងនឹងស្ថាបត្យកម្មប្រព័ន្ធនៃវគ្គសិក្សានេះ។` })
   }, 1000)
 }
 
-// ==========================================
-// ORIGINAL LIST STATES & DATA
-// ==========================================
-// កំណត់តម្លៃដើមឱ្យ activeTab អាចទទួលតម្លៃ 'ai-assistant' បាន
 const activeTab = ref('all')
 const searchQuery = ref('')
+const courses = ref([])
+const loading = ref(false)
+const errorMsg = ref('')
 
-const courses = ref([
-  {
-    id: 1,
-    type: 'image',
-    title: 'Advanced Vue.js Mastery',
-    description: 'Learn composition API, state management, and modern patterns.',
-    instructor: 'David Miller',
-    level: '10',
-    price: '60',
-    oldPrice: '99',
-    promo: 'Early bird promotion ends soon!',
-    mediaUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&w=600&q=80',
-    sections: [
-      { id: 2, number: '2', title: 'Composition API Deep Dive', duration: '12/12|12h:30m' },
-      { id: 3, number: '3', title: 'Advanced State Management', duration: '10/10|12h:30m' },
-      { id: 4, number: '4', title: 'Performance Optimization', duration: '13/13|12h:30m' },
-      { id: 5, number: '5', title: 'Testing & Deployment', duration: '5/5|12h:30m' }
-    ]
-  },
-  {
-    id: 2,
-    type: 'video',
-    title: 'Fullstack SaaS Architecture',
-    description: 'Build and scale production-ready SaaS apps from scratch.',
-    instructor: 'Sarah Jenkins',
-    level: '12',
-    price: '50',
-    oldPrice: '90',
-    promo: '50% Discount for limited time',
-    mediaUrl: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80',
-    sections: [
-      { id: 2, number: '2', title: 'Database Schema Design', duration: '12/12|12h:30m' },
-      { id: 3, number: '3', title: 'Authentication & Stripe Billing', duration: '10/10|12h:30m' },
-      { id: 4, number: '4', title: 'API Security & Rate Limiting', duration: '13/13|12h:30m' },
-      { id: 5, number: '5', title: 'Cloud Deployment & CI/CD', duration: '5/5|12h:30m' }
-    ]
-  },
-  {
-    id: 3,
-    type: 'book',
-    title: 'UI/UX Design Systems',
-    description: 'Master clean interface designs and component libraries.',
-    instructor: 'Alex Morgan',
-    level: '08',
-    price: '40',
-    oldPrice: '80',
-    promo: 'Free companion e-book included',
-    mediaUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80',
-    sections: [
-      { id: 2, number: '2', title: 'Color Theory & Typography', duration: '12/12|12h:30m' },
-      { id: 3, number: '3', title: 'Design System Foundations', duration: '10/10|12h:30m' },
-      { id: 4, number: '4', title: 'Component Library in Figma', duration: '13/13|12h:30m' },
-      { id: 5, number: '5', title: 'Handshake with Developers', duration: '5/5|12h:30m' }
-    ]
-  },
-  {
-    id: 4,
-    type: 'video',
-    title: 'Node.js Backend Masterclass',
-    description: 'Build secure, scalable microservices and RESTful APIs.',
-    instructor: 'Michael Chen',
-    level: '11',
-    price: '45',
-    oldPrice: '85',
-    promo: 'Includes 10 hours of video content',
-    mediaUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80',
-    sections: [
-      { id: 2, number: '2', title: 'Express & Middleware Architecture', duration: '12/12|12h:30m' },
-      { id: 3, number: '3', title: 'Microservices with gRPC', duration: '10/10|12h:30m' },
-      { id: 4, number: '4', title: 'Redis Caching & Security', duration: '13/13|12h:30m' },
-      { id: 5, number: '5', title: 'Dockerization & Scaling', duration: '5/5|12h:30m' }
-    ]
+
+const resolveMediaUrl = (raw) => {
+  if (!raw) return 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80'
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
+  return `${BASE_URL}/uploads/${raw}`
+}
+
+const normalizeCourse = (c) => ({
+  id: c.id,
+  enrollmentId: c.enrollment_id,
+  type: c.type,
+  title: c.title,
+  description: c.description,
+  instructor: c.instructor,
+  level: String(c.level ?? ''),
+  price: String(c.price ?? '0'),
+  oldPrice: c.old_price != null ? String(c.old_price) : null,
+  promo: c.promo,
+  mediaUrl: resolveMediaUrl(c.media_url),
+    videoUrl: c.preview_video_url || '',
+  progress: c.progress ?? 0,
+  enrolledAt: c.enrolled_at,
+  completedAt: c.completed_at,
+  certificateUrl: c.certificate_url,
+  sections: []
+})
+
+
+const fetchEnrolledCourses = async () => {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const token = localStorage.getItem('token')
+
+    const res = await fetch(`${BASE_URL}/api/v1/front/course-enrollments/show?page=1&limit=50`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+
+    if (res.status === 401) {
+      throw new Error('Expire jwt — please login again')
+    }
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`API ${res.status} ${res.statusText}: ${text}`)
+    }
+
+    const json = await res.json()
+    const data = json?.data ?? json
+    const list = data?.courses ?? []
+    courses.value = list.map(normalizeCourse)
+  } catch (e) {
+    console.error('Failed to fetch enrolled courses', e)
+    errorMsg.value = e.message?.includes('Expire jwt')
+      ? 'Session ផុតកំណត់ សូម login ម្តងទៀត'
+      : 'មិនអាចទាញកម្មវិធីសិក្សាដែលបានទិញបានទេ'
+  } finally {
+    loading.value = false
   }
-])
-</script>
+}
 
+const filteredCourses = computed(() => {
+  if (!searchQuery.value.trim()) return courses.value
+  const q = searchQuery.value.toLowerCase()
+  return courses.value.filter(
+    (c) =>
+      c.title.toLowerCase().includes(q) ||
+      c.description.toLowerCase().includes(q) ||
+      c.instructor.toLowerCase().includes(q)
+  )
+})
+
+onMounted(() => {
+  fetchEnrolledCourses()
+})
+</script>
 <template>
   <div class="page-wrapper">
-    <!-- រក្សា NavBar ទុកនៅខាងលើជានិច្ច -->
     <NavBar />
-
-    <!-- បើកបង្ហាញ CourseDetaile ពេលដែលបានចុចជ្រើសរើស Course ណាមួយ -->
     <CourseDetaile 
       v-if="selectedCourse" 
       :course="selectedCourse" 
       @back="handleBack" 
     />
 
-    <!-- បើមិនទាន់ជ្រើសរើសទេ បង្ហាញបញ្ជី Course ធម្មតា -->
     <div v-else>
       <div class="learning-app-layout">
-        
-        <!-- Left Sidebar Area -->
         <aside class="sidebar-left">
-          
-          <!-- Search Widget -->
           <div class="sidebar-widget search-widget">
             <div class="search-box">
               <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -148,7 +141,6 @@ const courses = ref([
             </div>
           </div>
 
-          <!-- Nav Tabs Widget -->
           <div class="sidebar-widget tabs-widget">
             <h3 class="widget-title">Navigation</h3>
             <div class="tabs-container">
@@ -162,7 +154,6 @@ const courses = ref([
                 :class="['tab-btn', { active: activeTab === 'save' }]">
                 <span>Course Save</span>
               </button>
-              <!-- បន្ថែមប៊ូតុង AI Assistant ក្នុង Tabs ខាងឆ្វេង -->
               <button 
                 @click="activeTab = 'ai-assistant'" 
                 :class="['tab-btn', { active: activeTab === 'ai-assistant' }]">
@@ -171,7 +162,6 @@ const courses = ref([
             </div>
           </div>
 
-          <!-- Filters Widget -->
           <div class="sidebar-widget filter-widget">
             <h3 class="widget-title">Filter Options</h3>
             <div class="filter-buttons">
@@ -192,10 +182,7 @@ const courses = ref([
 
         </aside>
 
-        <!-- Main Content Area (Right Side) -->
         <main class="main-content-right">
-
-          <!-- បង្ហាញ AIAssistant ប្រសិនបើជ្រើសរើស Tab ខាងឆ្វេងជា ai-assistant -->
           <div v-if="activeTab === 'ai-assistant'" class="ai-tab-view">
             <h2 class="section-title">AI Learning Assistant</h2>
             <AIAssistant 
@@ -205,20 +192,21 @@ const courses = ref([
             />
           </div>
 
-          <!-- បង្ហាញបញ្ជី Course ធម្មតា ប្រសិនបើមិនមែនជា tab ai-assistant -->
           <template v-else>
-            <!-- Banner Image Box -->
             <div class="banner-box">
               <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80" alt="Banner" class="banner-image" />
             </div>
-
-            <!-- Section Title -->
             <h2 class="section-title">My Learning</h2>
+            <div v-if="loading" class="state-msg">Waiting...</div>
+            <div v-else-if="errorMsg" class="state-msg error">{{ errorMsg }}</div>
+            <div v-else-if="filteredCourses.length === 0" class="state-msg">
+              {{ searchQuery ? 'not found' : 'your are no buy course' }}
+            </div>
 
             <!-- Course Cards Grid -->
             <div class="courses-grid">
               <div 
-                v-for="course in courses" 
+                v-for="course in filteredCourses" 
                 :key="course.id" 
                 class="course-card"
                 @click="handleOpenDetail(course)"
@@ -254,10 +242,8 @@ const courses = ref([
 
                 <!-- Clean Course Title -->
                 <h3 class="course-title-modern">{{ course.title }}</h3>
-
                 <!-- Description -->
                 <p class="description-text">{{ course.description }}</p>
-
                 <!-- Instructor Info Row -->
                 <div class="instructor-row">
                   <div class="instructor-profile">
@@ -293,13 +279,10 @@ const courses = ref([
                   <svg class="sparkle-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
                   <span>{{ course.promo }}</span>
                 </div>
-
               </div>
             </div>
           </template>
-
         </main>
-
       </div>
     </div>
   </div>
@@ -317,7 +300,6 @@ const courses = ref([
   gap: 16px;
   max-width: 1251px;
   margin: 0 auto;
-  /* padding: 16px 20px; */
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   box-sizing: border-box;
 
@@ -388,10 +370,10 @@ const courses = ref([
 .tab-btn {
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 32px;
   padding: 6px 10px;
   color: #64748b;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   text-align: left;
@@ -405,8 +387,8 @@ const courses = ref([
 }
 
 .tab-btn.active {
-  background: #eff6ff;
-  color: #1976D2;
+  background: #1976D2;
+  color: #ffffff;
   border: none;
   box-shadow: none;
 }
@@ -448,7 +430,6 @@ const courses = ref([
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background-color: #ffffff;
   padding: 12px;
 
 }
@@ -462,7 +443,7 @@ const courses = ref([
 .banner-box {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: 12px;
   height: 160px;
   overflow: hidden;
   position: relative;
@@ -491,7 +472,7 @@ const courses = ref([
 .course-card {
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 20px;
+  border-radius: 12px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -504,9 +485,8 @@ const courses = ref([
 }
 
 .course-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-2px);
   box-shadow: 0 20px 40px -15px rgba(25, 118, 210, 0.12);
-  border-color: rgba(25, 118, 210, 0.3);
 }
 
 .media-box {
@@ -639,13 +619,13 @@ const courses = ref([
 }
 
 .level-pill {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #00D262;
+  border: 1px solid #ffffff;
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 32px;
   font-size: 10.5px;
   font-weight: 600;
-  color: #64748b;
+  color: #ffffff;
 }
 
 .card-divider {
@@ -669,14 +649,19 @@ const courses = ref([
 .currency {
   font-size: 14px;
   font-weight: 800;
-  color: #1976D2;
+  color: #ef4444;
 }
 
 .current-price {
   font-size: 18px;
   font-weight: 800;
-  color: #0f172a;
+  color: #ef4444;
   letter-spacing: -0.5px;
+
+
+  text-shadow:
+    1px 1px 0 #9f2c2c,
+    2px 2px 3px rgba(0, 0, 0, 0.18);
 }
 
 .old-price {
@@ -706,7 +691,6 @@ const courses = ref([
 }
 
 .promo-banner-pill {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 6px 10px;
@@ -723,5 +707,15 @@ const courses = ref([
   height: 12px;
   color: #1976D2;
   flex-shrink: 0;
+}
+
+.state-msg {
+  text-align: center;
+  padding: 40px 0;
+  color: #64748b;
+  font-size: 14px;
+}
+.state-msg.error {
+  color: #ef4444;
 }
 </style>

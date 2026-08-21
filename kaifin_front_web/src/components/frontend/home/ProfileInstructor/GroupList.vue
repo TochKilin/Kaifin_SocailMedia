@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 import Star from "@/assets/images_course/idea.svg"
 
-// ទិន្នន័យគំរូសម្រាប់ Group Cards ទាំង ៥
 const groups = ref([
   {
     id: 1,
@@ -12,7 +11,7 @@ const groups = ref([
     friendsInfo: '3 friends are member',
     joined: false,
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzp95DKUCiLga_EeNYn0-DnvaZXhglhd8Z6tMvr0r3KjpjPcZhoWWqjlk&s=10',
-   badgeImage: Star, // ឧទាហរណ៍តំណរភ្ជាប់រូប Icon
+   badgeImage: Star, 
     friendAvatars: [
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTuNFXXEBno2JzMPycH9q7PzKk6MefqwMYkDdDXSXdxA&s=10',
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa7Dn53kJS46GLwFB9iEj8mnNgUEvBSM1_E2__EJM7wQ&s=10',
@@ -88,22 +87,14 @@ const handleJoin = (group) => {
       <h3 class="section-title">Discover Groups</h3>
       <p class="section-subtitle">Find and join groups that match your interests</p>
     </div>
-
-    <!-- Grid បង្ហាញ Card ទាំងឡាយ -->
     <div class="groups-grid">
       <div v-for="group in groups" :key="group.id" class="group-card">
-        
-        <!-- Badge មូលដែលមានរូបភាពនៅខាងក្នុង ស្ថិតនៅលើ Border -->
         <div class="badge-icon">
           <img :src="group.badgeImage" alt="Badge" class="badge-img" />
         </div>
-
-        <!-- Banner Header ជាមួយរូបភាព -->
         <div class="group-banner">
           <img :src="group.image" :alt="group.name" class="banner-img" />
         </div>
-
-        <!-- ព័ត៌មាន Group -->
         <div class="group-content">
           <h4 class="group-name">{{ group.name }}</h4>
 
@@ -124,8 +115,6 @@ const handleJoin = (group) => {
             </div>
             <span class="friends-text">{{ group.friendsInfo }}</span>
           </div>
-
-          <!-- Join Button -->
           <button 
             class="join-group-btn" 
             :class="{ 'joined': group.joined }"
@@ -135,7 +124,6 @@ const handleJoin = (group) => {
             {{ group.joined ? 'Joined' : 'Join Group' }}
           </button>
         </div>
-
       </div>
     </div>
   </div>
@@ -211,7 +199,6 @@ const handleJoin = (group) => {
   object-fit: cover;
 }
 
-/* Badge មូលនៅលើ Border ខាងស្ដាំខាងលើ */
 .badge-icon {
   position: absolute;
   top: -8px;
@@ -229,7 +216,6 @@ const handleJoin = (group) => {
   overflow: hidden;
 }
 
-/* រូបភាពខាងក្នុង Badge */
 .badge-img {
   width: 100%;
   height: 100%;

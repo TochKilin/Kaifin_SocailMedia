@@ -1,161 +1,173 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router' // 1. Import useRouter
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+import GroupCreateForm from './GroupCreateForm.vue'
+const BASE_URL = 'http://localhost:7070'
 
-const router = useRouter() // 2. បង្កើត instance របស់ router
+function resolveImageUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${BASE_URL}/uploads/${path}`
+}
 
-const props = defineProps({
-  // You can add custom props here if needed
-})
+function formatMemberCount(count) {
+  if (count == null) return '0'
+  if (count >= 1_000_000) return (count / 1_000_000).toFixed(1) + 'M'
+  if (count >= 1_000) return (count / 1_000).toFixed(1) + 'K'
+  return String(count)
+}
 
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+const router = useRouter()
 const emit = defineEmits(['create-group', 'select-group'])
 
-// State សម្រាប់គ្រប់គ្រង Tab ដែលបានជ្រើសរើស
 const activeTab = ref('Trending')
+const groups = ref([])
+const loading = ref(false)
+const errorMsg = ref('')
+const showCreateGroupModal = ref(false)
+const creatingGroup = ref(false)
+const createErrorMsg = ref('')
+
+const page = ref(1)
+const perpage = ref(20)
 
 const selectTab = (tabName) => {
   activeTab.value = tabName
+  fetchGroups()
 }
 
-// Sample data for groups
-const groups = ref([
-  {
-    id: 1,
-    name: 'Fixies Group',
-    members: '399K',
-    avatar: 'https://mediaproxy.tvtropes.org/width/1200/https://static.tvtropes.org/pmwiki/pub/images/2025_01_29_8.png',
-    isJoined: false,
-    verified: true,
-    memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIJr17LxjxPnvB6BNdzWsjjDY-l271LsmpsnXqscbc7A&s=10',
-      'https://randomuser.me/api/portraits/women/44.jpg',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc8IReG-cUvPgentGMhx_TVDmsXgjJRnJF-qqln3zZ4A&s=10'
-    ]
-  },
-  {
-    id: 2,
-    name: 'ក្រុម ឡាយលក់ឡេ',
-    members: '8.6K',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE1Q0Rh0oTqNk5wbto0QU5qgcZExtV9bGtBIB5DgNmKg&s',
-    isJoined: false,
-    verified: false,
-     memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ12FGxm5NKI8MeXEBUeP-sCv8Az1nTcY5jv6MvvK_1Og&s=10',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7Ldyjm0BBxmpQ7J1P4h9Nevn84VAKgVniUBPxBL1dqw&s=10'
-    ]
-  },
-  {
-    id: 3,
-    name: 'IT Sol',
-    members: '6K',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6v1EH9rHqZmLP2eHEkA5HyongBeWqk4N8UYhpElZJNg&s=10',
-    isJoined: false,
-    verified: false,
-    memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTw2Bv9lSLn_RcruvM8tvUAwaRleoqvGRYz1pGnr9bT2A&s=10',
-      'https://randomuser.me/api/portraits/men/21.jpg'
-    ]
-  },
-  {
-    id: 4,
-    name: 'Comedy & Laughs',
-    members: '1.1M',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8wm43Xg52qiq1kmBRDXavAVl1vvucmG9-Nre6hbBobg&s=10',
-    isJoined: false,
-    verified: false,
-    memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlvYTE0TSdoApMO06QKeJkC31rFkjiVCVBi_FDOnNVvg&s=10',
-      'https://randomuser.me/api/portraits/women/81.jpg',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa28iNNqLJdEZ7aXrMJJUkFkz1CSFxXBVyqKYyMDf7MA&s=10'
-    ]
-  },
-  {
-    id: 5,
-    name: 'កសិកម្ម',
-    members: '8K',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTb72ejD-FUB12t-ZgnZAemOE13v2YcqBJy_eb3XDKgfA&s=10',
-    isJoined: false,
-    verified: true,
-     memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSW3icLiUy4-UOpZ9cpDYSfVj6730wH_t4ku589N_Qrcw&s=10',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFQEuSgk_402rlNg2nHbIOGap1MtBGsUhtIc18tKR5IQ&s=10',
-      'https://randomuser.me/api/portraits/women/78.jpg'
-    ]
-  },
-  {
-    id: 6,
-    name: '🌷🍹 Café & Chill 🍧🎀',
-    members: '32K',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx4KUKbjL3RIhaq1FRkI87nqmbkh1k1Ycxo3Z-BdcYYw&s=10',
-    isJoined: false,
-    verified: false,
-    memberAvatars: [
-      'https://randomuser.me/api/portraits/women/33.jpg',
-      'https://randomuser.me/api/portraits/women/11.jpg',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa28iNNqLJdEZ7aXrMJJUkFkz1CSFxXBVyqKYyMDf7MA&s=10'
-    ]
-  },
-  {
-    id: 7,
-    name: 'PUMA BRANDS',
-    members: '1.9K',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxep2RSyMws-8K0uWZqxb2PcC_Tt4JUuomrJLuJHxCmA&s=10',
-    isJoined: false,
-    verified: false,
-        memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSW3icLiUy4-UOpZ9cpDYSfVj6730wH_t4ku589N_Qrcw&s=10',
-      'https://randomuser.me/api/portraits/men/21.jpg'
-    ]
-  },
-  {
-    id: 8,
-    name: 'Stalker Online Official',
-    members: '3.3K',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqG8y5wm8jODoWSPrAgVThSuZ9fBVmirAN9rx_cm2Aaw&s',
-    isJoined: false,
-    verified: false,
-     memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSW3icLiUy4-UOpZ9cpDYSfVj6730wH_t4ku589N_Qrcw&s=10',
-      'https://randomuser.me/api/portraits/men/21.jpg'
-    ]
-  },
-  {
-    id: 9,
-    name: 'Tech Insider KH',
-    members: '45K',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9rQQcbY9WMY4rCsOeDNrHX9fbIDyfg1hv2VLxsvy9OQ&s=10',
-    isJoined: false,
-    verified: true,
-        memberAvatars: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqG8y5wm8jODoWSPrAgVThSuZ9fBVmirAN9rx_cm2Aaw&s',
-      'https://randomuser.me/api/portraits/men/21.jpg'
-    ]
+const fetchGroups = async () => {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const res = await axios.get(`${BASE_URL}/api/v1/front/communities/show`, {
+      params: { page: page.value, perpage: perpage.value },
+      headers: authHeaders()
+    })
+
+    const list = res.data?.data?.communities ?? []
+
+    groups.value = list.map(c => ({
+      id: c.id,
+      name: c.name,
+      members: formatMemberCount(c.member_count),
+      avatar: resolveImageUrl(c.avatar_url) || 'https://via.placeholder.com/100',
+      isJoined: c.is_joined ?? false,
+      verified: c.is_verified ?? false,
+      memberAvatars: []
+    }))
+  } catch (err) {
+    console.error('Failed to fetch communities:', err)
+    if (err.response?.status === 401) {
+      errorMsg.value = 'Session expired. Please log in again.'
+    } else {
+      errorMsg.value = 'Failed to load groups. Please try again.'
+    }
+  } finally {
+    loading.value = false
   }
-])
-
-// 3. Function សម្រាប់បើកទៅកាន់ GroupDetail
-const goToGroupDetail = (groupId) => {
-  // ប្រសិនបើប្រើ Vue Router (បញ្ជូនទៅ Route /group/:id ឬ route name)
-  router.push({ name: 'GroupDetail', params: { id: groupId } })
-  
-  // ឬប្រសិនបើមិនប្រើ Router ទេ អ្នកអាច Emit ទៅ Parent Component បាន៖
-  // emit('select-group', groupId)
 }
 
-const handleJoin = (group) => {
+const goToGroupDetail = (groupId) => {
+  router.push({ name: 'GroupDetail', params: { id: groupId } })
+}
+
+const handleJoin = async (group) => {
+  const prevState = group.isJoined
   group.isJoined = !group.isJoined
+
+  try {
+    const res = await axios.post(
+      `${BASE_URL}/api/v1/front/communities/${group.id}/join`,
+      {},
+      { headers: authHeaders() }
+    )
+    const status = res.data?.data?.status
+    if (status === 'pending' || status === 'left') {
+      group.isJoined = false
+    }
+  } catch (err) {
+    console.error('Failed to toggle join:', err)
+    group.isJoined = prevState
+  }
 }
 
 const handleCreateGroup = () => {
+  createErrorMsg.value = ''
+  showCreateGroupModal.value = true
   emit('create-group')
 }
+
+const closeCreateGroupModal = () => {
+  showCreateGroupModal.value = false
+}
+
+function mapPrivacy(access) {
+  return access === 'public' ? 'public' : 'private'
+}
+
+const submitCreateGroup = async (payload) => {
+
+  creatingGroup.value = true
+  createErrorMsg.value = ''
+
+  try {
+    const formData = new FormData()
+    formData.append('name', payload.name)
+    formData.append('description', payload.description || '')
+    if (payload.category) {
+      formData.append('category_id', payload.category)
+    }
+    formData.append('privacy', mapPrivacy(payload.access))
+    if (payload.avatarFile) {
+      formData.append('avatar', payload.avatarFile)
+    }
+    if (payload.coverFile) {
+      formData.append('cover', payload.coverFile)
+    }
+
+    const res = await axios.post(
+      `${BASE_URL}/api/v1/front/communities/create`,
+      formData,
+      {
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
+
+    const created = res.data?.data
+    await fetchGroups()
+
+    closeCreateGroupModal()
+  } catch (err) {
+    console.error('Failed to create community:', err)
+    if (err.response?.status === 401) {
+      createErrorMsg.value = 'Session expired. Please log in again.'
+    } else if (err.response?.data?.message) {
+      createErrorMsg.value = err.response.data.message
+    } else {
+      createErrorMsg.value = 'Failed to create group. Please try again.'
+    }
+  } finally {
+    creatingGroup.value = false
+  }
+}
+
+onMounted(fetchGroups)
 </script>
 
 <template>
   <div class="group-feed-container">
     <!-- Top Navigation Bar -->
     <header class="feed-header-wrapper">
-      <!-- ផ្នែកទី ១៖ Tabs -->
       <div class="header-card tabs-card bdr-category ">
         <div class="nav-links">
           <button 
@@ -189,7 +201,6 @@ const handleCreateGroup = () => {
         </div>
       </div>
 
-      <!-- ផ្នែកទី ២៖ Search & Create Group -->
       <div class="header-card actions-card bdr-search">
         <div class="search-box">
           <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -198,15 +209,17 @@ const handleCreateGroup = () => {
         <button class="btn-create-group" @click="handleCreateGroup">
           + Create Group
         </button>
+      <GroupCreateForm v-if="showCreateGroupModal" @close="closeCreateGroupModal" @create="submitCreateGroup"/>
       </div>
     </header>
 
-    <!-- Main Content Section -->
-    <section class="suggestions-section">
+    <div v-if="loading" class="loading-state">Loading groups...</div>
+    <div v-else-if="errorMsg" class="error-state">{{ errorMsg }}</div>
+
+    <section v-else class="suggestions-section">
       <h2 class="section-title">Recommended For You</h2>
 
       <div class="groups-grid">
-        <!-- បន្ថែម @click="goToGroupDetail(group.id)" លើ group-card -->
         <div 
           v-for="group in groups" 
           :key="group.id" 
@@ -214,20 +227,16 @@ const handleCreateGroup = () => {
           @click="goToGroupDetail(group.id)"
         >
           <div class="group-avatar-wrapper" @click.stop="goToGroupDetail(group.id)">
-            <!-- Main Avatar កោង 12px -->
             <img :src="group.avatar" :alt="group.name" class="group-avatar" />
-            
-            <!-- Hover Preview Box -->
+
             <div class="hover-preview" @click.stop>
-              <!-- បន្ថែម Gradient រាងសខ្ចីៗ ពីក្រោមមកលើ -->
               <div class="preview-header" :style="{ backgroundImage: `linear-gradient(to top, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%), url(${group.avatar})` }">
                 <div class="preview-cover-actions">
                   <button class="btn-sub" @click.stop="handleJoin(group)">{{ group.isJoined ? 'Joined' : 'Join' }}</button>
                   <button class="btn-save">Bookmark</button>
                 </div>
               </div>
-              
-              <!-- Profile Thumbnail overlapping header -->
+
               <div class="preview-thumbnail-container">
                 <img :src="group.avatar" :alt="group.name" class="preview-thumbnail" />
               </div>
@@ -239,7 +248,6 @@ const handleCreateGroup = () => {
                 <div class="preview-info">
                   <span class="preview-category">Category: Social</span>
                   <div class="preview-members-wrapper">
-                    <!-- Member Avatars ក្នុង Hover Preview -->
                     <div class="stacked-avatars" v-if="group.memberAvatars.length > 0">
                       <img 
                         v-for="(avatar, index) in group.memberAvatars.slice(0, 3)" 
@@ -260,17 +268,14 @@ const handleCreateGroup = () => {
                 </div>
               </div>
             </div>
-
           </div>
-          
+
           <div class="group-info">
             <div class="group-name-row">
               <h3 class="group-name">{{ group.name }}</h3>
-              <!-- Verified Badge -->
               <svg v-if="group.verified" class="verified-icon" width="16" height="16" viewBox="0 0 24 24" fill="#1B75D2"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
             </div>
-            
-            <!-- Group Members with Stacked Avatars -->
+
             <div class="group-members-row">
               <div class="stacked-avatars" v-if="group.memberAvatars.length > 0">
                 <img 
@@ -289,10 +294,8 @@ const handleCreateGroup = () => {
               </svg>
               <span class="group-members">{{ group.members }} members</span>
             </div>
-
           </div>
 
-          <!-- Join Button ខាងក្រៅ បន្ថែម @click.stop ដើម្បីកុំឱ្យវា Trigger ទៅកាន់ function បើក Detail ពេលចុច Join -->
           <button 
             class="btn-join" 
             :class="{ joined: group.isJoined }"
@@ -313,9 +316,9 @@ const handleCreateGroup = () => {
   font-family: 'Inter', system-ui, sans-serif;
   color: #1e293b;
   margin-top: 12px;
+
 }
 
-/* Header Wrapper សម្រាប់ផ្ទុកទាំង ២ ផ្នែក */
 .feed-header-wrapper {
   display: flex;
   flex-direction: column;
@@ -335,7 +338,6 @@ const handleCreateGroup = () => {
   border-bottom: 1px solid #dddddd47;
 }
 
-/* ការឌីហ្សាញ Background ដាច់ដោយឡែកពីគ្នាជា Card */
 .header-card {
   background-color: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -452,6 +454,7 @@ const handleCreateGroup = () => {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
 }
 
 .section-title {
@@ -461,7 +464,6 @@ const handleCreateGroup = () => {
   color: #0f172a;
 }
 
-/* Groups Grid Layout */
 .groups-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -478,7 +480,7 @@ const handleCreateGroup = () => {
   transition: all 0.2s ease;
   gap: 16px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-  cursor: pointer; /* បន្ថែម Mouse Pointer ឱ្យដឹងថាមើលទៅអាចចុចបាន */
+  cursor: pointer; 
 }
 
 .group-card:hover {
@@ -497,7 +499,7 @@ const handleCreateGroup = () => {
   cursor: pointer;
 }
 
-/* Profile Avatar កោង 12px */
+
 .group-avatar {
   width: 100%;
   height: 100%;
@@ -530,7 +532,6 @@ const handleCreateGroup = () => {
   flex-shrink: 0;
 }
 
-/* Group Members Row & Stacked Avatars */
 .group-members-row {
   display: flex;
   align-items: center;
@@ -567,10 +568,10 @@ const handleCreateGroup = () => {
   margin: 0;
 }
 
-/* Join Button ខាងក្រៅ */
+
 .btn-join {
-  background-color: #1B75D2;
-  color: #ffffff;
+  background-color: #F4F1EC;
+  color: #000;
   border: none;
   border-radius: 20px;
   padding: 8px 20px;
@@ -582,7 +583,8 @@ const handleCreateGroup = () => {
 }
 
 .btn-join:hover {
-  background-color: #155bb5;
+  background-color: #e8e6e3;
+  color: #000;
 }
 
 .btn-join.joined {
@@ -590,7 +592,7 @@ const handleCreateGroup = () => {
   color: #ffffff;
 }
 
-/* Hover Preview Box Styles */
+
 .hover-preview {
   position: absolute;
   top: 95%; 
@@ -626,7 +628,6 @@ const handleCreateGroup = () => {
   padding: 12px;
 }
 
-/* Action Buttons */
 .preview-cover-actions {
   position: absolute;
   right: 12px;
@@ -635,7 +636,6 @@ const handleCreateGroup = () => {
   gap: 8px;
 }
 
-/* Thumbnail Container overlapping header */
 .preview-thumbnail-container {
   position: absolute;
   top: 75px; 

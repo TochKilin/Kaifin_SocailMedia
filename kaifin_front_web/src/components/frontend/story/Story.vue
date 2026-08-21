@@ -15,7 +15,7 @@
     <p v-else-if="error" class="state-msg error">{{ error }}</p>
 
     <div class="story-item" v-for="group in groupedStories" :key="group.userId" @click="openStoryGroup(group)">
-      <button class="btn-circle btn-eye-story">
+      <button class="btn-circle btn-eye-story" :class="{ 'is-viewed': group.isViewed }">
         <div class="icon-wrapper avatar-wrapper">
           <img v-if="group.thumbType === 'image' && group.thumbUrl" :src="group.thumbUrl" alt="" class="story-avatar" />
           <video v-else-if="group.thumbType === 'video' && group.thumbUrl" :src="group.thumbUrl" class="story-avatar" muted preload="metadata"></video>
@@ -134,25 +134,27 @@
 
     <div class="action-wrap-single">
       <button class="action-btn btn-com" @click="onStoryComment">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="6" cy="12" r="1.2" fill="currentColor" stroke="none"/>
-          <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
-          <circle cx="18" cy="12" r="1.2" fill="currentColor" stroke="none"/>
-          <path d="M21 12c0 4.4-4 8-9 8-1.2 0-2.4-.2-3.4-.6L3 21l1.7-4.3A7.6 7.6 0 0 1 3 12c0-4.4 4-8 9-8s9 3.6 9 8Z"/>
-        </svg>
+       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="1.5"></circle>
+      <circle cx="19" cy="12" r="1.5"></circle>
+      <circle cx="5" cy="12" r="1.5"></circle>
+       </svg>
         <span class="count-total">18.2k</span>
       </button>
       <span class="action-tooltip">Comment</span>
     </div>
 
       <div class="action-wrap-single">
-        <button class="action-btn btn-com" @click="onStoryShare">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 14 4 9l5-5"/>
-            <path d="M4 9h9a7 7 0 0 1 7 7v2"/>
-          </svg>
+        <!-- <button class="action-btn btn-com" @click="onStoryShare">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+    <polyline points="16 6 12 2 8 6"/>
+    <line x1="12" y1="2" x2="12" y2="15"/>
+  </svg>
+
+
           <span class="count-total">22.2k</span>
-        </button>
+        </button> -->
         <span class="action-tooltip">Share</span>
       </div>
       </div>
@@ -161,18 +163,6 @@
       </div>
     </div>
   </div>
-
-
-
-
-
-
-
-
-
-
-
-
 </template>
 
 <script setup>
@@ -265,15 +255,12 @@ async function loadReactionsForStory(story) {
   const currentUserId = getCurrentUserId()   // ត្រូវមាន function នេះ ឬសរសេរបន្ថែម
   const data = await fetchStoryReactions(story.id)
   if (!data) return
-
-  // summary: [{ reaction_type: 'heart', count: 12 }, ...]
   const counts = {}
   for (const s of data.summary || []) {
     counts[s.reaction_type] = s.count
   }
   story.reactionCounts = counts
 
-  // ស្វែងរក reaction របស់ user ខ្លួនឯងក្នុងបញ្ជី reactions
   const mine = (data.reactions || []).find(r => r.user_id === currentUserId)
   story.reaction = mine ? mine.reaction_type : null
 }
@@ -297,7 +284,6 @@ function getCurrentUserId() {
   }
 }
 
-
 const groupedStories = computed(() => {
   const map = new Map()
 
@@ -320,6 +306,7 @@ const groupedStories = computed(() => {
       ...group,
       thumbUrl: latest.mediaUrl,
       thumbType: latest.mediaType,
+       isViewed: viewedUserIds.value.has(group.userId),
     }
   })
 })
@@ -363,6 +350,7 @@ async function onFilePicked(e) {
       const data = await res.json().catch(() => null)
       throw new Error(data?.message || `Upload failed (${res.status})`)
     }
+    triggerStreakCheckIn()
     await loadStories()
   } catch (err) {
     console.error('Story upload failed', err)
@@ -407,6 +395,8 @@ function openStoryGroup(group) {
   activeIndex.value = 0
   startAutoAdvance()
   loadReactionsForStory(currentStory.value)
+
+   viewedUserIds.value.add(group.userId)
 }
 
 function closeStory() {
@@ -459,6 +449,17 @@ function resolveAvatarUrl(raw) {
   return `${BASE_URL}/uploads/${raw}`
 }
 
+async function triggerStreakCheckIn() {
+  try {
+    await fetch(`${BASE_URL}/api/v1/front/levels/checkin`, {
+      method: 'POST',
+      headers: { ...authHeaders() },
+    })
+  } catch (err) {
+    console.error('Streak check-in failed', err)
+  }
+}
+
 
 
 const props = defineProps({
@@ -466,33 +467,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['react', 'comment', 'share'])
  
-// const REACTIONS = [
-//   {
-//     key: 'share',
-//     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a7 7 0 0 1 7 7v2"/></svg>`,
-//   },
-//   {
-//     key: 'heart',
-//     icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-10-9.1C.4 8.6 2 5 5.6 5 8 5 10 6.4 12 9c2-2.6 4-4 6.4-4C22 5 23.6 8.6 22 11.9 19.5 16.4 12 21 12 21Z"/></svg>`,
-//   },
-//   {
-//     key: 'smile',
-//     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M8.3 13.8c1 1.4 2.3 2.1 3.7 2.1s2.7-.7 3.7-2.1"/><circle cx="8.7" cy="9.8" r="1" fill="currentColor" stroke="none"/><circle cx="15.3" cy="9.8" r="1" fill="currentColor" stroke="none"/></svg>`,
-//   },
-//   {
-//     key: 'neutral',
-//     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M8.3 15h7.4"/><circle cx="8.7" cy="9.8" r="1" fill="currentColor" stroke="none"/><circle cx="15.3" cy="9.8" r="1" fill="currentColor" stroke="none"/></svg>`,
-//   },
-//   {
-//     key: 'more',
-//     icon: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`,
-//   },
-//     {
-//     key: 'more',
-//     icon: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`,
-//   },
-// ]
-
 const REACTIONS = [
   {
     key: "heart",
@@ -535,8 +509,6 @@ function keepPickerOpen() {
 function onHeartClick() {
   pick(REACTIONS.find((r) => r.key === 'heart'))
 }
-
-
  
 async function pick(r, event) {
   flyEmoji(r.image, event)
@@ -549,7 +521,6 @@ async function pick(r, event) {
   const previousReaction = story.reaction
   const previousCounts = { ...story.reactionCounts }
 
-  // Optimistic update
   if (isUnreact) {
     story.reaction = null
     story.reactionCounts[r.key] = Math.max((story.reactionCounts[r.key] || 1) - 1, 0)
@@ -587,7 +558,6 @@ async function pick(r, event) {
     }
   } catch (err) {
     console.error('React to story failed', err)
-    // Rollback ប្រសិនបើ API error
     story.reaction = previousReaction
     story.reactionCounts = previousCounts
   }
@@ -600,12 +570,12 @@ function formatCount(n) {
 
 function onStoryComment() {
   console.log('Comment on story', currentStory.value?.id)
-  // TODO: បើក comment UI សម្រាប់ story
+
 }
 
 function onStoryShare() {
   console.log('Share story', currentStory.value?.id)
-  // TODO: share logic
+
 }
 
 
@@ -638,7 +608,7 @@ function flyEmoji(imgSrc, event) {
 
   const tl = gsap.timeline()
 
-  // ហោះទៅកណ្ដាល
+
   tl.to(emoji, {
     duration: 3.5,
     x: endX,
@@ -648,20 +618,20 @@ function flyEmoji(imgSrc, event) {
     ease: "power3.out"
   })
 
-  // ប៉ោង
+
   .to(emoji, {
     scale: 2.8,
     duration: 0.15,
     ease: "back.out(4)"
   })
 
-  // ត្រឡប់តិច
+
   .to(emoji, {
     scale: 2.2,
     duration: 0.1
   })
 
-  // ផ្ទុះ
+  
   .call(() => {
 
     for (let i = 0; i < 18; i++) {
@@ -693,7 +663,7 @@ function flyEmoji(imgSrc, event) {
 
   })
 
-  // Emoji បាត់
+
   .to(emoji, {
     opacity: 0,
     scale: 3,
@@ -704,6 +674,8 @@ function flyEmoji(imgSrc, event) {
   })
 
 }
+
+const viewedUserIds = ref(new Set())
 
 onMounted(() => {
   loadStories()
@@ -1122,10 +1094,9 @@ onUnmounted(() => {
   position: absolute;
   /* right: 10px; */
   top: 50%;
-  right: -63px; 
+  right: -55px; 
   transform: translateY(-50%);
-  /* background: #ffff; */
-  /* border: 1.5px solid rgba(255, 255, 255, 0.35); */
+
   border-radius: 999px;
   padding: 10px 8px;
   display: flex;
@@ -1135,7 +1106,8 @@ onUnmounted(() => {
   z-index: 25;
   /* backdrop-filter: blur(4px); */
     gap: 6px;
-    /* background-color: red; */
+
+
 }
  
 .action-wrap {
@@ -1157,16 +1129,18 @@ onUnmounted(() => {
   pointer-events: auto;
   flex-direction: column;
   height: auto;
-    gap: 4px;
+  gap: 4px;
+  
   
 }
 
 .action-btn img{
-  width: 50px;
-  height: 50px;
+  width: 38px;
+  height: 38px;
   background-color: #1A1A19;
-  border-radius: 14px;
+  border-radius: 50%;
   /* border: 1px solid #ffff; */
+
 }
 
 .count-total {
@@ -1174,22 +1148,29 @@ onUnmounted(() => {
   font-weight: 600;
   color: #fff;
   line-height: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);   /* ជួយឲ្យលេខមើលច្បាស់លើផ្ទៃខាងក្រោយផ្សេងៗ */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); 
+}
+
+.action-btn .btn-com svg{
+  width: 11px;
+  height: 11px;
 }
 
 .action-btn .btn-com{
-  width: 50px;
-  height: 50px;
-  /* background-color: #1A1A19; */
-  border-radius: 14px;
-  /* border: 1.5px solid #ffff; */
+  width: 38px;
+  height: 38px;
+  border-radius: 50%px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
 }
  
 .action-btn svg {
-  width: 50px;
-  height: 50px;
-  /* border: 1.5px solid #ffff; */
-  border-radius: 14px;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   background-color: #1A1A19;
 }
  
@@ -1208,7 +1189,7 @@ onUnmounted(() => {
   height: 100%;
 }
  
-/* Reaction picker — pops out to the LEFT of the bar (matches wireframe) */
+
 .reaction-picker {
   position: absolute;
   right: calc(100% + 10px);
@@ -1266,7 +1247,7 @@ onUnmounted(() => {
 
 .action-tooltip {
   position: absolute;
-  right: calc(100% + 10px);   /* ចេញខាងឆ្វេង button (ចូលក្នុងទិសដៅ story) */
+  right: calc(100% + 10px);  
   top: 50%;
   transform: translateY(-50%) translateX(6px);
   background: #1976D2;
@@ -1283,7 +1264,7 @@ onUnmounted(() => {
   z-index: 30;
 }
 
-/* small arrow pointing to button */
+
 .action-tooltip::after {
   content: '';
   position: absolute;
@@ -1306,6 +1287,17 @@ onUnmounted(() => {
   pointer-events:none;
   overflow:hidden;
   z-index:9999;
+}
+
+
+.btn-eye-story.is-viewed {
+  background-color: #D0C3BD;
+  border-color: #fff;
+  box-shadow: 0 0 0 3px #D0C3BD;
+}
+
+.story-item:hover .btn-eye-story.is-viewed {
+  box-shadow: 0 0 0 3px #d1d5db;
 }
 
 

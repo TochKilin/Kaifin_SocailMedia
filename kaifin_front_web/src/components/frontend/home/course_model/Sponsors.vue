@@ -2,7 +2,7 @@
   <div class="sponsors-section">
     <div class="container">
       
-      <!-- SECTION HEADER -->
+      <!-- Sponsore-->
       <div class="section-header">
         <div class="header-left">
           <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -22,11 +22,9 @@
         </button>
       </div>
 
-      <!-- AUTO SCROLL CONTAINER -->
+      <!-- Auoto scroll-->
       <div class="sponsors-scroll-container">
         <div class="sponsors-row">
-          
-          <!-- Duplicate array twice for seamless infinite scrolling loop -->
           <template v-for="loop in 2" :key="loop">
             <div 
               v-for="sponsor in sponsors" 
@@ -49,10 +47,8 @@
               </div>
             </div>
           </template>
-
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -61,8 +57,6 @@
 import { ref } from 'vue';
 
 const emit = defineEmits(['viewAll', 'cardClick', 'cooperate']);
-
-// Mock Data សម្រាប់ស្ថាប័នឧបត្ថម្ភ
 const sponsors = ref([
   {
     id: 1,
@@ -100,31 +94,24 @@ function handleCardClick(name) {
 
 function handleCooperate(name) {
   emit('cooperate', name);
-  alert(`ការស្នើសហការជាមួយ ${name} បានជោគជ័យ!`);
+  alert(`sponsore request ${name} success!`);
 }
 </script>
 
 <style scoped>
 .sponsors-section {
   margin-top: 15px;
-  /* background-color: #f8fafc; */
-  /* font-family: 'Hanuman', 'Khmer OS Battambang', sans-serif; */
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color: #1e293b;
 }
 
-/* Main White Container */
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  /* background: #ffffff; */
   border-radius: 24px;
   padding: 24px;
-  /* border: 1px solid #e2e8f0; */
-  /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); */
 }
 
-/* Header Styling */
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -182,7 +169,6 @@ function handleCooperate(name) {
   height: 16px;
 }
 
-/* Scroll Container Setup */
 .sponsors-scroll-container {
   width: 100%;
   overflow: hidden;
@@ -191,7 +177,6 @@ function handleCooperate(name) {
   padding: 4px 0;
 }
 
-/* Infinite Scroll Animation */
 .sponsors-row {
   display: flex;
   gap: 16px;
@@ -212,7 +197,6 @@ function handleCooperate(name) {
   }
 }
 
-/* Horizontal Banner Card Style with Background Image Support */
 .sponsor-banner {
   width: 300px;
   flex-shrink: 0;
@@ -230,7 +214,6 @@ function handleCooperate(name) {
   background-position: center;
 }
 
-/* Optional Overlay to make text readable if background image is too bright */
 .banner-overlay {
   position: absolute;
   top: 0;

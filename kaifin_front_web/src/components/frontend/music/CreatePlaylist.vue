@@ -38,11 +38,11 @@
               Public Playlist
             </span>
             <EditDetailsModal 
-  v-if="isEditModalOpen" 
-  :playlistData="playlistData"
-  @close="isEditModalOpen = false"
-  @save="handleUpdatePlaylist"
-/>
+              v-if="isEditModalOpen" 
+              :playlistData="playlistData"
+              @close="isEditModalOpen = false"
+              @save="handleUpdatePlaylist"
+            />
             <input 
               type="text" 
               class="playlist-name-input" 
@@ -255,11 +255,9 @@ import Dropdown from './Dropdown.vue'
 import EditDetailsModal from './EditDetailsModal.vue'
 
 const emit = defineEmits(['back'])
-
 const fileInputRef = ref(null)
 const menuWrapperRef = ref(null)
 const isMenuOpen = ref(false)
-
 const isEditModalOpen = ref(false)
 
 const playlistData = ref({
@@ -662,7 +660,6 @@ onUnmounted(() => {
   border-radius: 50%;
 }
 
-/* Menu Popup Styles */
 .menu-container {
   background-color: #ffffff;
   position: absolute;

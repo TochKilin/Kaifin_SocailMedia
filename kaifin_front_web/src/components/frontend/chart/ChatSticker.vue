@@ -1,36 +1,23 @@
 <template>
   <div class="chat-sticker-container">
-    
-    <!-- 📌 1. Category Icons Header (ដាក់នៅខាងលើជា Header) -->
     <div class="sticker-top-tabs">
-      <button 
-        v-for="cat in categories" 
-        :key="cat.id"
+      <button
+        v-for="pack in packs"
+        :key="pack.id"
         class="category-icon-btn"
-        :class="{ 
-          'avatar-cat-btn': cat.id === 'cat',
-          'active': currentCategory === cat.id 
-        }"
-        @click="selectCategory(cat.id)"
-        :title="cat.title"
+        :class="{ active: currentPackId === pack.id }"
+        @click="selectPack(pack.id)"
+        :title="pack.name"
       >
-        <template v-if="cat.id === 'cat'">
-          <img :src="cat.icon" class="cat-avatar" alt="Cat" />
-        </template>
-        <template v-else>
-          <span v-html="cat.icon"></span>
-        </template>
+        <svg class="cat-avatar" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.4h7.6z" />
+        </svg>
       </button>
+      <div v-if="packsLoading" class="sticker-tabs-loading">...</div>
     </div>
-
-    <!-- 📌 2. Main Content Wrapper -->
     <div class="main-content-wrapper">
-      
-      <!-- Grid រូបភាពស្ទីឃ័រ និងប៊ូតុង + -->
       <div class="sticker-grid-content">
         <div class="sticker-grid">
-          
-          <!-- ប៊ូតុងសញ្ញា (+) -->
           <div class="sticker-item add-sticker-grid-btn" @click="handleAddStickerClick" title="Add Sticker">
             <div class="add-icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -40,23 +27,33 @@
             </div>
           </div>
 
-          <!-- បញ្ជីរាយនាមស្ទីឃ័រតាម Category នីមួយៗ -->
-          <div 
-            v-for="(sticker, index) in currentStickers" 
-            :key="index"
+          <input
+            type="file"
+            ref="stickerFileInputRef"
+            accept="image/png,image/webp,image/gif,image/jpeg,image/jpg,image/svg+xml"
+            style="display: none;"
+            @change="handleStickerFileSelected"
+          />
+
+          <div v-if="uploadingSticker" class="sticker-item sticker-uploading-placeholder">
+            <span>...</span>
+          </div>
+
+          <div v-if="stickersLoading" class="sticker-grid-loading">Loading...</div>
+          <div v-else-if="currentStickers.length === 0" class="sticker-grid-empty">No stickers</div>
+          <div
+            v-for="sticker in currentStickers"
+            :key="sticker.id"
             class="sticker-item"
             @click="selectSticker(sticker)"
           >
-            <img :src="sticker.url" :alt="'Sticker ' + index" />
+            <img :src="sticker.url" :alt="'Sticker ' + sticker.id" />
           </div>
-
         </div>
       </div>
-
-      <!-- Footer Tabs -->
       <div class="sticker-tabs-footer">
-        <button 
-          v-for="(tab, index) in tabs" 
+        <button
+          v-for="(tab, index) in tabs"
           :key="index"
           class="sticker-tab-btn"
           :class="{ active: currentTab === tab.id }"
@@ -65,133 +62,182 @@
           {{ tab.name }}
         </button>
       </div>
-
     </div>
-
   </div>
 </template>
 
-<script>
-import St1 from "@/assets/sticker_chat/st1.png"
-import St2 from "@/assets/sticker_chat/st2.png"
-import St3 from "@/assets/sticker_chat/st3.png"
-import St4 from "@/assets/sticker_chat/st4.png"
-import St5 from "@/assets/sticker_chat/st5.png"
-import St6 from "@/assets/sticker_chat/st6.png"
-import St7 from "@/assets/sticker_chat/st7.png"
-import St8 from "@/assets/sticker_chat/st8.png"
-import St9 from "@/assets/sticker_chat/st9.png"
-import St10 from "@/assets/sticker_chat/st10.png"
-import St11 from "@/assets/sticker_chat/st11.png"
-import St12 from "@/assets/sticker_chat/st12.png"
-import St13 from "@/assets/sticker_chat/st3.png"
-import St14 from "@/assets/sticker_chat/st14.png"
-import St15 from "@/assets/sticker_chat/st15.png"
-import St16 from "@/assets/sticker_chat/st16.png"
-import St17 from "@/assets/sticker_chat/st17.png"
-import St18 from "@/assets/sticker_chat/st18.png"
-import St19 from "@/assets/sticker_chat/st19.png"
-import St20 from "@/assets/sticker_chat/st20.png"
-import St21 from "@/assets/sticker_chat/st21.png"
-import St22 from "@/assets/sticker_chat/st22.png"
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 
-export default {
-  name: "ChatSticker",
-  data() {
-    return {
-      currentTab: "stickers",
-      tabs: [
-        { id: "stickers", name: "Stickers" },
-        { id: "cards", name: "Cards" },
-        { id: "emoticons", name: "Emoticons" },
-        { id: "constructor", name: "Constructor" }
-      ],
-      currentCategory: "liked",
-      categories: [
-        {
-          id: "history",
-          title: "History",
-          icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'
-        },
-        {
-          id: "liked",
-          title: "Favorites",
-          icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>'
-        },
-        {
-          id: "smile",
-          title: "Smiles",
-          icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>'
-        },
-        {
-          id: "cat",
-          title: "Collection",
-          icon: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=100&h=100&fit=crop"
-        },
-        {
-          id: "cool",
-          title: "Trending",
-          icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>'
-        }
-      ],
-      stickerDatabase: {
-        history: [
-          { url: St1 }, { url: St2 }, { url: St3 }, { url: St4 },
-          { url: St5 }, { url: St6 }, { url: St7 }, { url: St8 },
-          { url: St9 }, { url: St10 }, { url: St12 }, { url: St11 },
-          { url: St12 }, { url: St13 }, { url: St14 }, { url: St15 }, { url: St16 }
-        ],
-        liked: [
-          { url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=150&h=150&fit=crop" },
-          { url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=150&h=150&fit=crop" },
-          { url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=150&h=150&fit=crop" },
-          { url: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=150&h=150&fit=crop" }
-        ],
-        smile: [
-          { url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=150&h=150&fit=crop" },
-          { url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=150&h=150&fit=crop" }
-        ],
-        cat: [
-          { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=100&h=100&fit=crop" },
-          { url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=100&h=100&fit=crop" },
-          { url: "https://images.unsplash.com/photo-1563089145-599997674d42?w=100&h=100&fit=crop" }
-        ],
-        cool: [
-          { url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=150&h=150&fit=crop" },
-          { url: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=150&h=150&fit=crop" }
-        ]
-      }
-    };
-  },
-  computed: {
-    currentStickers() {
-      return this.stickerDatabase[this.currentCategory] || [];
-    }
-  },
-  methods: {
-    selectCategory(catId) {
-      this.currentCategory = catId;
-    },
-    selectSticker(sticker) {
-      this.$emit("select-sticker", sticker);
-    },
-    handleAddStickerClick() {
-      console.log("Add new sticker clicked!");
-    }
+const emit = defineEmits(['select-sticker'])
+const API_BASE = 'http://localhost:7070/api/v1/front'
+const FILE_BASE = 'http://localhost:7070'
+
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return { Authorization: `Bearer ${token}` }
+}
+
+function resolveImage(path) {
+  if (!path) return ''
+  if (/^(https?:|blob:|data:)/.test(path)) return path
+  if (/^\/?image\//.test(path)) {
+    const clean = path.startsWith('/') ? path : `/${path}`
+    return `${API_BASE}${clean}`
   }
-};
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${FILE_BASE}/uploads${cleanPath}`
+}
+
+
+const currentTab = ref('stickers')
+const tabs = [
+  { id: 'stickers', name: 'Stickers' },
+  { id: 'cards', name: 'Cards' },
+  { id: 'emoticons', name: 'Emoticons' },
+  { id: 'constructor', name: 'Constructor' },
+]
+
+const packs = ref([])
+const packsLoading = ref(false)
+const currentPackId = ref(null)
+
+async function fetchPacks() {
+  packsLoading.value = true
+  try {
+    const res = await axios.get(`${API_BASE}/stickers/packs`, {
+      headers: authHeaders(),
+    })
+    if (res.data.success) {
+      packs.value = res.data.data.packs || []
+      if (packs.value.length > 0 && !currentPackId.value) {
+        selectPack(packs.value[0].id)
+      }
+    }
+  } catch (err) {
+    console.log('FETCH STICKER PACKS ERROR:', err)
+  } finally {
+    packsLoading.value = false
+  }
+}
+
+const stickersByPack = ref({}) 
+const stickersLoading = ref(false)
+
+async function fetchStickersForPack(packId, force = false) {
+  if (!force && stickersByPack.value[packId]) return 
+  stickersLoading.value = true
+  try {
+    const res = await axios.get(`${API_BASE}/stickers/show`, {
+      headers: authHeaders(),
+      params: { pack_id: packId },
+    })
+    if (res.data.success) {
+      const stickers = (res.data.data.stickers || []).map((s) => ({
+        ...s,
+        url: resolveImage(s.url),
+      }))
+      stickersByPack.value = {
+        ...stickersByPack.value,
+        [packId]: stickers,
+      }
+    }
+  } catch (err) {
+    console.log('FETCH STICKERS ERROR:', err)
+  } finally {
+    stickersLoading.value = false
+  }
+}
+
+function selectPack(packId) {
+  currentPackId.value = packId
+  fetchStickersForPack(packId)
+}
+
+const currentStickers = computed(() => stickersByPack.value[currentPackId.value] || [])
+
+function selectSticker(sticker) {
+  emit('select-sticker', sticker)
+}
+
+const stickerFileInputRef = ref(null)
+const uploadingSticker = ref(false)
+
+function handleAddStickerClick() {
+  if (!currentPackId.value) {
+    alert('សូមជ្រើសរើស pack មុននឹងបន្ថែម sticker')
+    return
+  }
+  if (stickerFileInputRef.value) {
+    stickerFileInputRef.value.click()
+  }
+}
+
+async function handleStickerFileSelected(event) {
+  const file = event.target.files?.[0]
+  event.target.value = '' 
+  if (!file || !currentPackId.value) return
+
+  const allowedTypes = [
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/jpeg',
+    'image/jpg',
+    'image/svg+xml',
+  ]
+  if (!allowedTypes.includes(file.type)) {
+    alert('please PNG, JPG, GIF, WEBP or SVG')
+    return
+  }
+
+  uploadingSticker.value = true
+  try {
+    const form = new FormData()
+    form.append('pack_id', currentPackId.value)
+    form.append('trigger_code', '') 
+    form.append('file', file)   
+
+    const res = await axios.post(`${API_BASE}/stickers/create`, form, {
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
+    if (res.data.success) {
+      await fetchStickersForPack(currentPackId.value, true)
+    } else {
+      alert(res.data.message || 'Failed to add sticker')
+    }
+  } catch (err) {
+    console.log('CREATE STICKER ERROR:', err)
+    if (err.response) {
+      alert(err.response.data?.message || 'Failed to add sticker')
+    } else {
+      alert('Server error')
+    }
+  } finally {
+    uploadingSticker.value = false
+  }
+}
+
+onMounted(() => {
+  fetchPacks()
+})
 </script>
 
 <style scoped>
 .chat-sticker-container {
   width: 640px; 
   height: 370px;
+  /* height: 100vh; */
   position: absolute;
   right: 0;
   background-color: #ffffff;
   border: 1px solid #e4e6eb;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -199,7 +245,6 @@ export default {
   box-sizing: border-box;
 }
 
-/* 📌 Category Icons Header (ដាក់នៅខាងលើជា Header) */
 .sticker-top-tabs {
   width: 100%;
   height: 52px;
@@ -252,26 +297,27 @@ export default {
   display: block;
 }
 
-/* 📌 Main Content Wrapper */
 .main-content-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background-color: #f9fafb;
+  min-height: 0;
 }
 
-/* 📌 Grid Content */
 .sticker-grid-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px;
 }
 
 .sticker-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr); /* 📌 បន្ថែមចំនួនຖັນ (Columns) ពី 5 ទៅ 6 ដើម្បីឱ្យសមាមាត្រនឹង Width ដែលធំជាងមុន */
+  grid-template-columns: repeat(6, 1fr); 
   gap: 12px;
+
 }
 
 .sticker-item {
@@ -299,7 +345,7 @@ export default {
   display: block;
 }
 
-/* 📌 ប៊ូតុងសញ្ញា (+) */
+
 .add-sticker-grid-btn {
   color: #000;
   background-color: rgba(0, 0, 0, 0.054);
@@ -319,7 +365,7 @@ export default {
   justify-content: center;
 }
 
-/* 📌 Footer Tabs */
+
 .sticker-tabs-footer {
   display: flex;
   border-top: 1px solid #e4e6eb;

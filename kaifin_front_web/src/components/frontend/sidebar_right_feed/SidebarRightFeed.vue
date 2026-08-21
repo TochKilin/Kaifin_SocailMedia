@@ -81,7 +81,7 @@
   @mouseenter="openAvatarMenu"
   @mouseleave="scheduleCloseAvatarMenu"
 >
-  <div class="avatar">
+  <div class="avatar" @click="goToProfile" style="cursor: pointer;">
     <img v-if="user.avatarUrl" :src="user.avatarUrl" alt="" />
     <svg v-else class="icon icon-lg"><use href="#pp-icon-user" /></svg>
   </div>
@@ -154,38 +154,42 @@
       </div>
     </section>
     <!-- Feed group card -->
-    <section class="card">
-      <button class="dropdown-head" @click="groupMenuOpen = !groupMenuOpen">
-        <span>{{ selectedGroup ? selectedGroup.name : 'Select Feed Group' }}</span>
-        <svg class="icon" :class="{ rotated: groupMenuOpen }"><use href="#pp-icon-chevron" /></svg>
-      </button>
-      <ul v-if="groupMenuOpen" class="dropdown-list">
-        <li v-for="g in feedGroups" :key="g.id">
-          <button @click="selectGroup(g)">{{ g.name }}</button>
-        </li>
-      </ul>
-      <hr class="divider" />
-      <p class="description">
-        {{ selectedGroup ? selectedGroup.description : 'Choose a group to see its description.' }}
-      </p>
-      <div class="stat-row">
-        <span class="stat-chip">{{ formatCount(selectedGroup?.likeCount ?? 0) }} Like</span>
-        <span class="stat-chip">{{ formatCount(selectedGroup?.commentCount ?? 0) }} comment</span>
-      </div>
-    </section>
+<section class="card">
+  <button class="dropdown-head" @click="groupMenuOpen = !groupMenuOpen" :disabled="feedGroups.length === 0">
+    <span>{{ selectedGroup ? selectedGroup.name : (loadingFeedGroups ? 'Loading...' : 'No group joined') }}</span>
+    <svg class="icon" :class="{ rotated: groupMenuOpen }"><use href="#pp-icon-chevron" /></svg>
+  </button>
+  <ul v-if="groupMenuOpen" class="dropdown-list">
+    <li v-for="g in feedGroups" :key="g.id">
+      <button @click="selectGroup(g)">{{ g.name }}</button>
+    </li>
+  </ul>
+  <hr class="divider" />
+  <p class="description">
+    {{ selectedGroup ? selectedGroup.description : 'Join a group to see its description here.' }}
+  </p>
+  <!-- ✅ ជំនួស Like/Comment ដោយ Member count + badges -->
+  <div class="stat-row" v-if="selectedGroup">
+    <span class="stat-chip">{{ formatMemberCount(selectedGroup.memberCount) }} Members</span>
+    <span class="stat-chip" v-if="selectedGroup.isVerified">✓ Verified</span>
+    <span class="stat-chip" v-if="selectedGroup.privacy === 'private'">🔒 Private</span>
+  </div>
+</section>
     <!-- Top topic card -->
-    <section class="card">
+    <section class="card border-meas">
       <div class="topic-head">
         <span class="topic-title-pill">Top Topic</span>
-        <button class="refresh-btn" title="Refresh topics" @click="refreshTopics">
-          <svg class="icon icon-sm"><use href="#pp-icon-refresh" /></svg>
+        <button class="refresh-btn" title="Refresh topics" @click="refreshTopics" :disabled="loadingTopics">
+          <svg class="icon icon-sm" :class="{ 'icon-spin': loadingTopics }">
+            <use href="#pp-icon-refresh" />
+          </svg>
           Refresh
         </button>
       </div>
       <hr class="divider" />
       <div class="topic-row" v-for="topic in topics" :key="topic.id">
         <svg class="icon icon-sm hash-icon"><use href="#pp-icon-hash" /></svg>
-        <input class="topic-input" v-model="topic.tag" placeholder="topic" />
+        <span class="topic-tag-text">{{ topic.tag }}</span>
         <button
           class="pin-btn"
           :title="topic.pinned ? 'Unpin topic' : 'Pin topic'"
@@ -216,24 +220,73 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+function goToProfile() {
+  const currentId = getCurrentUserId()
+  if (!currentId) {
+    console.error('No current user id, cannot navigate to profile')
+    return
+  }
+  router.push(`/profile/${currentId}`)
+}
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
 const showAvatarMenu = ref(false)
 let avatarMenuCloseTimer = null
 
-const props = defineProps({
-  feedGroups: {
-    type: Array,
-    default: () => [
-      { id: 1, name: 'Web Dev Cambodia', description: 'Discussions on frontend, backend, and everything web dev in Khmer & English.', likeCount: 1000, commentCount: 100 },
-      { id: 2, name: 'UI/UX Wireframes', description: 'Sketches, wireframes, and feedback on early-stage product design.', likeCount: 540, commentCount: 62 },
-      { id: 3, name: 'Vue Learners KH', description: 'A community for people learning Vue 3, Composition API, and Nuxt.', likeCount: 812, commentCount: 91 },
-    ],
-  },
-})
+const feedGroups = ref([])
+const loadingFeedGroups = ref(false)
+function resolveImageUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${BASE_URL}/uploads/${path}`
+}
+
+function formatMemberCount(count) {
+  if (count == null) return '0'
+  if (count >= 1_000_000) return (count / 1_000_000).toFixed(1) + 'M'
+  if (count >= 1_000) return (count / 1_000).toFixed(1) + 'K'
+  return String(count)
+}
+
+
+async function fetchFeedGroups() {
+  loadingFeedGroups.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/communities/show?page=1&perpage=20`, {
+      headers: { ...authHeaders() },
+    })
+    if (!res.ok) return
+    const json = await res.json()
+    const data = json?.data ?? json
+    const list = data?.communities ?? []
+
+    feedGroups.value = list
+      .filter((c) => c.is_joined === true) 
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description || 'No description',
+        memberCount: c.member_count ?? 0,     
+        isVerified: c.is_verified ?? false,   
+        privacy: c.privacy ?? 'public',       
+        avatar: resolveImageUrl(c.avatar_url),
+      }))
+
+    if (feedGroups.value.length > 0) {
+      selectedGroup.value = feedGroups.value[0]
+    }
+  } catch (e) {
+    console.error('Failed to fetch feed groups', e)
+  } finally {
+    loadingFeedGroups.value = false
+  }
+}
 
 const emit = defineEmits(['nav', 'select-group', 'refresh-topics', 'help', 'private', 'add-profile-picture', 'add-moment', 'view-moments'])
 
-// user ត្រូវផ្លាស់ប្តូរពី prop ទៅជា reactive state ដែល component fetch ដោយខ្លួនឯង
 const user = ref({
   avatarUrl: '',
   username: '',
@@ -328,87 +381,84 @@ async function loadProfile() {
   }
 }
 
-// ទាញ following / follower count
-// async function loadFollowCounts() {
-//   const currentUserId = getCurrentUserId()
-//   if (!currentUserId) return
-
-//   try {
-//     const res = await fetch(`${BASE_URL}/api/v1/front/followers/show?user_id=${currentUserId}`, {
-//       headers: { ...authHeaders() },
-//     })
-//     if (!res.ok) return
-//     const json = await res.json()
-//     const data = json?.data ?? json
-//     user.value.counts.following = data.following_count ?? 0
-//     user.value.counts.followers = data.follower_count ?? 0
-//   } catch (e) {
-//     console.error('Failed to load follow counts', e)
-//   }
-// }
-
-// ទាញ post count (សន្មតថា /posts/show ទទួល filter user_id — ត្រូវផ្ទៀងផ្ទាត់ជាមួយ backend)
-// async function loadPostCount() {
-//   const currentUserId = getCurrentUserId()
-//   if (!currentUserId) return
-
-//   try {
-//     const res = await fetch(
-//       `${BASE_URL}/api/v1/front/posts/show?page=1&perpage=1&filters[0][field]=user_id&filters[0][value]=${currentUserId}`,
-//       { headers: { ...authHeaders() } }
-//     )
-//     if (!res.ok) return
-//     const json = await res.json()
-//     const data = json?.data ?? json
-//     user.value.counts.posts = data.total ?? data.Total ?? 0
-//   } catch (e) {
-//     console.error('Failed to load post count', e)
-//   }
-// }
-
-// onMounted(async () => {
-//   await Promise.all([loadProfile(), loadFollowCounts(), loadPostCount()])
-// })
-
-// onMounted(async () => {
-//   await Promise.all([
-//     loadProfile(),
-//     loadFollowCounts(),
-//     loadPostCount()
-//   ])
-// })
-
 onMounted(() => {
   loadProfile()
+  loadStreakLevel()
+   fetchFeedGroups() 
+     fetchTopTopics()
 })
 
 const groupMenuOpen = ref(false)
-const selectedGroup = ref(props.feedGroups[0] ?? null)
+const selectedGroup = ref(null)
 
 function selectGroup(g) {
   selectedGroup.value = g
   groupMenuOpen.value = false
   emit('select-group', g)
+
+  router.push({ name: 'GroupDetail', params: { id: g.id } })
 }
 
-const topicPool = [
-  'vuejs', 'frontend', 'uiux', 'khmerdev', 'wireframe',
-  'design', 'javascript', 'webdev', 'startup', 'opensource',
-]
+function extractTagText(rawTag) {
+  const [namePart] = rawTag.split('::')
+  const m = namePart.match(/^(\p{Extended_Pictographic}\uFE0F?)/u)
+  const text = m ? namePart.slice(m[1].length) : namePart
+  return text.trim()
+}
 
-const topics = ref([
-  { id: 1, tag: 'vuejs', pinned: true },
-  { id: 2, tag: 'frontend', pinned: false },
-  { id: 3, tag: 'uiux', pinned: false },
-])
+async function fetchTopTopics() {
+  loadingTopics.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/posts/show?page=1&perpage=100`, {
+      headers: { ...authHeaders() },
+    })
+    if (!res.ok) return
+    const json = await res.json()
+    const data = json?.data ?? json
+    const list = data?.posts ?? data?.Posts ?? []
+
+    const counts = {}
+    list.forEach((p) => {
+      if (!p.tag_data) return
+      p.tag_data
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .forEach((rawTag) => {
+          const text = extractTagText(rawTag)
+          if (!text) return
+          counts[text] = (counts[text] || 0) + 1
+        })
+    })
+
+    const sorted = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+
+    // រក្សា pinned state ចាស់ (បើ tag ដដែលនៅតែលេចម្តងទៀត)
+    const prevPinned = new Map(topics.value.map((t) => [t.tag, t.pinned]))
+
+    topics.value = sorted.map(([tag], i) => ({
+      id: i + 1,
+      tag,
+      pinned: prevPinned.get(tag) ?? false,
+    }))
+  } catch (e) {
+    console.error('Failed to fetch top topics', e)
+  } finally {
+    loadingTopics.value = false
+  }
+}
+
+const topics = ref([])
+const loadingTopics = ref(false)
 
 function togglePin(topic) {
   topic.pinned = !topic.pinned
 }
 
-function refreshTopics() {
-  const shuffled = [...topicPool].sort(() => Math.random() - 0.5)
-  topics.value = topics.value.map((t, i) => ({ ...t, tag: shuffled[i] || t.tag }))
+async function refreshTopics() {
+  await fetchTopTopics()
   emit('refresh-topics', topics.value)
 }
 
@@ -487,6 +537,25 @@ async function onProfilePicPicked(e) {
   }
 }
 
+async function loadStreakLevel() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/levels/status`, {
+      headers: { ...authHeaders() },
+    })
+    if (!res.ok) {
+      console.log("Streak/Level API Error:", res.status)
+      return
+    }
+    const json = await res.json()
+    const data = json?.data ?? json
+
+    user.value.streak = data.current_streak ?? 0
+    user.value.level = data.current_level?.level ?? 1
+  } catch (e) {
+    console.error("Failed to load streak/level", e)
+  }
+}
+
 
 </script>
 
@@ -504,7 +573,7 @@ async function onProfilePicPicked(e) {
 
 scrollbar-width: none;
 
-  width: 100%;          /* ឱ្យវារត់ពេញទំហំ Column របស់ Bootstrap ស្វ័យប្រវត្តិ */
+  width: 100%;      
   max-width: 320px;
 }
 
@@ -524,6 +593,12 @@ scrollbar-width: none;
   width: 100%;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+.border-meas{
+  border: 4px solid #ECEAE4;
+  /* border: 2.5px solid #3968f345; */
+
 }
 
 .divider {
@@ -561,9 +636,7 @@ scrollbar-width: none;
 
 .username-pill {
   flex: 1;
-  /* background: #eff6fb; */
-  /* border-radius: 999px; */
-  /* padding: 11px 16px; */
+
   font-family: 'Nunito', sans-serif;
   font-weight: 700;
   font-size: 15px;
@@ -642,7 +715,7 @@ scrollbar-width: none;
   justify-content: space-between;
   /* background: #eff6fb; */
   border: none;
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 12px 14px;
   font-family: 'Nunito', sans-serif;
   font-weight: 700;
@@ -680,7 +753,7 @@ scrollbar-width: none;
 }
 
 .dropdown-list button:hover {
-  background: #eff6fb;
+  background-color: #00000008;
 }
 
 .description {
@@ -753,16 +826,11 @@ scrollbar-width: none;
   flex-shrink: 0;
 }
 
-.topic-input {
+.topic-tag-text {
   flex: 1;
-  min-width: 0;
-  /* background: #f5f6f8; */
-  border: 1px solid #e7e7e7;
-  border-radius: 999px;
-  padding: 8px 14px;
   font-size: 13px;
   color: #2b2b2b;
-  outline: none;
+  font-weight: 600;
 }
 
 .topic-input:focus {
@@ -955,5 +1023,14 @@ scrollbar-width: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.icon-spin {
+  animation: pp-spin 0.7s linear infinite;
+}
+
+@keyframes pp-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 </style>

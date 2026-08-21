@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <!-- Story Card Component (Circular Design with Border Ring & Icon Overlay) -->
+
   <div class="story-card">
     <div class="story-header">
       <h3 class="story-title">Stories</h3>
@@ -37,7 +37,6 @@
         <div class="story-circle-wrapper">
           <img v-if="story.thumbnail || story.url" :src="resolveMediaUrl(story.thumbnail || story.url)" :alt="'Story ' + index" />
           <div v-else class="story-placeholder">Story</div>
-          <!-- Eye Icon Overlay Center -->
           <div class="story-icon-overlay">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -137,7 +136,7 @@ async function fetchUserMedia() {
 
     mediaItems.value = collectedMedia.slice(0, props.limit)
   } catch (e) {
-    console.error('❌ Failed to load user media', e)
+    console.error('Failed to load user media', e)
     error.value = 'Failed to load media'
   } finally {
     isLoading.value = false
@@ -162,13 +161,12 @@ async function fetchUserStories() {
     const payload = json?.data ?? json
     const rawList = payload?.stories ?? payload?.Stories ?? []
 
-    // កំណត់យកត្រឹម 7 គ្រាប់គត់
     storyItems.value = rawList.slice(0, 7).map(s => ({
       id: s.id,
       url: s.media_url || s.image || s.url
     }))
   } catch (e) {
-    console.error('❌ Failed to load user stories', e)
+    console.error('Failed to load user stories', e)
     storyError.value = 'Failed to load stories'
   } finally {
     isStoryLoading.value = false
@@ -316,7 +314,6 @@ function viewMoreStories() {
   display: block;
 }
 
-/* Story Card Styles (Circular Design Matching Reference Image) */
 .story-card {
   background-color: #ffffff;
   border: 1px solid #edf2f7;
@@ -374,7 +371,7 @@ function viewMoreStories() {
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid #1B75D2; /* Outer blue ring like the mockup */
+  border: 3px solid #1B75D2; 
   background-color: #f1f5f9;
   box-shadow: 0 2px 6px rgba(27, 117, 210, 0.2);
   transition: transform 0.2s ease;
@@ -397,7 +394,7 @@ function viewMoreStories() {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.25); /* Semi-transparent background for contrast */
+  background-color: rgba(0, 0, 0, 0.25); 
   display: flex;
   align-items: center;
   justify-content: center;

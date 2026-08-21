@@ -24,8 +24,6 @@ func NewCommentsHandlerImpl(dbpool *sqlx.DB) *CommentsHandlerImpl {
 	}
 }
 
-// Create adds a comment to the article identified by the :id path param.
-// POST /articles/:id/comments (Supports multipart/form-data for text, images, and stickers)
 func (h *CommentsHandlerImpl) Create(c fiber.Ctx) error {
 	uCtx, ok := c.Locals("UserContext").(share.UserContext)
 	if !ok {
@@ -53,7 +51,6 @@ func (h *CommentsHandlerImpl) Create(c fiber.Ctx) error {
 	comment := &ArticleComment{}
 	comment.new(articleID, req, &uCtx)
 
-	// Save uploaded files to disk first, collect their URLs.
 	var savedImageURLs []string
 	for _, fh := range req.ImageFiles {
 		url, serr := saveCommentImage(c, fh)
@@ -80,16 +77,6 @@ func (h *CommentsHandlerImpl) Create(c fiber.Ctx) error {
 		)
 	}
 
-	// ⚠️ DO NOT do this here — it's what caused the avatar/username to
-	// only show up after a page refresh:
-	//
-	//   comment.UserName = &uCtx.UserName
-	//   comment.ProfileImage = &uCtx.UserName   // bug: username copied into the avatar field
-	//
-	// comment.UserName / comment.ProfileImage are already populated
-	// correctly straight from tbl_users inside CommentsRepoImpl.Create()
-	// (same source Show() uses), so this response already matches what a
-	// follow-up list fetch would return.
 	comment.ImageURLs = comment.SavedImageURLs
 
 	return c.Status(fiber.StatusCreated).JSON(
@@ -97,8 +84,6 @@ func (h *CommentsHandlerImpl) Create(c fiber.Ctx) error {
 	)
 }
 
-// Update edits a comment the caller owns.
-// PUT /comments/:id
 func (h *CommentsHandlerImpl) Update(c fiber.Ctx) error {
 	uCtx, ok := c.Locals("UserContext").(share.UserContext)
 	if !ok {
@@ -140,8 +125,6 @@ func (h *CommentsHandlerImpl) Update(c fiber.Ctx) error {
 	)
 }
 
-// Delete removes a comment the caller owns.
-// DELETE /comments/:id
 func (h *CommentsHandlerImpl) Delete(c fiber.Ctx) error {
 	uCtx, ok := c.Locals("UserContext").(share.UserContext)
 	if !ok {
@@ -175,8 +158,6 @@ func (h *CommentsHandlerImpl) Delete(c fiber.Ctx) error {
 	)
 }
 
-// Show lists comments for the article identified by the :id path param.
-// GET /articles/:id/comments
 func (h *CommentsHandlerImpl) Show(c fiber.Ctx) error {
 	articleID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {

@@ -25,7 +25,6 @@ const selectedReaction = ref(null)
 const reactionWrapperRef = ref(null)
 const likersPopupWrapperRef = ref(null)
 
-// Like / Share counters
 const likeCount = ref(128)
 const shareCount = ref(42)
 const hasLiked = ref(false)
@@ -698,14 +697,10 @@ const stopVoiceRecording = () => {
 }
 
 
-// Emoji / Sticker Picker State
 const showEmojiPicker = ref(false)
 const emojiPickerWrapperRef = ref(null)
 const activePickerTab = ref('stickers') // 'stickers' | 'emoji'
 const activeStickerCategory = ref('all') // 'all' | 'animated' | 'mine'
-
-// Each animated sticker belongs to a "pack" (a bundle a user downloads/owns together).
-// Packs are only used to group items inside the "Animated" tab.
 const stickerPool = ref([
   { id: 1, src: 'src/assets/animate/succ.svg', animated: false, mine: false, pack: null },
   { id: 2, src: 'src/assets/animate/cat.svg', animated: false, mine: false, pack: null },
@@ -752,8 +747,6 @@ const filteredStickers = computed(() => {
   return stickerPool.value
 })
 
-// Groups animated stickers by their "pack" name, so the Animated tab
-// renders them as separate labeled sets instead of one flat grid.
 const animatedStickerGroups = computed(() => {
   const animated = stickerPool.value.filter(s => s.animated)
   const groups = {}
@@ -803,25 +796,20 @@ const insertEmoji = (emoji) => {
   })
 }
 
-
-// អថេរគ្រប់គ្រងការបង្ហាញផ្ទាំង Create Sticker (លំនាំដើមគឺបិទ false)
 const isStickerCreatorOpen = ref(false)
 
-// Function សម្រាប់បើកផ្ទាំង ពេលគេចុចប៊ូតុង
+
 const openStickerCreator = () => {
   isStickerCreatorOpen.value = true
   
-  // បើសិនជាអ្នកមានផ្ទាំង Emoji ផ្សេងទៀតកំពុងបើក គួរតែបិទវាចោលសិន
-  // showEmojiPicker.value = false 
 }
 
-// Function សម្រាប់បិទផ្ទាំងវិញ ពេលគេចុច Cancel ឬចុចខាងក្រៅ
 const closeStickerCreator = () => {
   isStickerCreatorOpen.value = false
 }
 
 const handleToolChanged = (toolName) => {
-  // អ្នកអាចសរសេរកូដបើក Modal ឬមុខងារបន្ថែមទីនេះ អាស្រ័យលើ toolName (ឧ. text, crop, effect...)
+//
 }
 </script>
 
@@ -1444,11 +1432,11 @@ const handleToolChanged = (toolName) => {
                         Create Sticker
                       </button>
                       <CreateSticker 
-      v-if="isStickerCreatorOpen"
-      @tool-change="handleToolChanged" 
-      @create="saveSticker" 
-      @close="isStickerCreatorOpen = false" 
-    />
+                          v-if="isStickerCreatorOpen"
+                          @tool-change="handleToolChanged" 
+                          @create="saveSticker" 
+                          @close="isStickerCreatorOpen = false" 
+                        />
                     </div>
                   </div>
 
@@ -1591,7 +1579,6 @@ const handleToolChanged = (toolName) => {
         </div>
       </div>
     </div>
-
   </div>
   </div>
 </template>
@@ -1702,7 +1689,6 @@ const handleToolChanged = (toolName) => {
   display: inline-block;
 }
 
-/* Composite Like button + clickable count */
 .like-btn-group {
   display: flex;
   align-items: stretch;
@@ -1763,7 +1749,6 @@ const handleToolChanged = (toolName) => {
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Liked-by popover, shared by main like + comment likes */
 .likers-popup {
   position: absolute;
   top: 115%;

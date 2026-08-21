@@ -14,7 +14,6 @@ import (
 
 	"kaifin_clone_api/internal/admin/websocket"
 	// "kaifin_clone_api/internal/front/web/post"
-
 	constants "kaifin_clone_api/pkg/constants"
 	response "kaifin_clone_api/pkg/http"
 	"kaifin_clone_api/pkg/share"
@@ -95,9 +94,6 @@ func (h *PostHandlerImpl) Create(c fiber.Ctx) error {
 	}
 	req.Hashtags = hashtags
 
-	// ➕ Manually parse sticker_ids[] — Fiber's binder does not reliably
-	// bind bracketed keys like "sticker_ids[]" into a slice field for
-	// multipart/form-data, so we parse it directly from the form values.
 	req.StickerIDs = nil
 	stickerIDStrs := form.Value["sticker_ids[]"]
 	for _, idStr := range stickerIDStrs {
@@ -170,6 +166,7 @@ func (h *PostHandlerImpl) Create(c fiber.Ctx) error {
 			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
 		)
 	}
+
 	return c.Status(fiber.StatusCreated).JSON(
 		response.NewResponse(msg, constants.Generic_success, true),
 	)
@@ -284,42 +281,6 @@ func (h *PostHandlerImpl) View(c fiber.Ctx) error {
 		}),
 	)
 }
-
-// func (h *PostHandlerImpl) CreateShare(c fiber.Ctx) error {
-// 	uCtx, ok := c.Locals("UserContext").(share.UserContext)
-// 	if !ok {
-// 		return c.Status(fiber.StatusUnauthorized).JSON(
-// 			response.NewResponseError("Unauthorized", constants.Generic_invalid, errors.New("user context not found")),
-// 		)
-// 	}
-
-// 	req := &CreateShareRequest{}
-// 	v := utls.NewValidator()
-// 	if err := req.bind(c, v); err != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(
-// 			response.NewResponseError("Invalid request body", constants.Generic_invalid, err),
-// 		)
-// 	}
-
-// 	e := h.ps.CreateShare(req.PostID, &uCtx)
-// 	if e != nil {
-// 		msg, e_msg := translate.TranslateWithError(c, e.MessageID)
-// 		if e_msg != nil {
-// 			return c.Status(fiber.StatusInternalServerError).JSON(
-// 				response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
-// 			)
-// 		}
-// 		return c.Status(fiber.StatusBadRequest).JSON(response.NewResponseError(msg, constants.Generic_error, e.Err))
-// 	}
-
-// 	msg, e_msg := translate.TranslateWithError(c, "post_shared")
-// 	if e_msg != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(
-// 			response.NewResponseError(e_msg.Err.Error(), constants.Translate_Failed, e_msg.Err),
-// 		)
-// 	}
-// 	return c.Status(fiber.StatusOK).JSON(response.NewResponse(msg, constants.Generic_success, fiber.Map{"shared": true}))
-// }
 
 func (h *PostHandlerImpl) CreateShare(c fiber.Ctx) error {
 	uCtx, ok := c.Locals("UserContext").(share.UserContext)

@@ -78,7 +78,7 @@
 
          
 
-          <div class="picker-overlay" v-if="showEmoji" @click.self="showEmoji = false">
+     
              <div class="picker-panel" v-if="showEmoji" @mousedown.stop @click.stop>
             <div class="picker-tabs">
               <button type="button" class="picker-tab" :class="{ active: pickerTab === 'stickers' }" @click.stop="pickerTab = 'stickers'" >
@@ -103,141 +103,119 @@
                 <path d="M18 38 Q32 52 46 38" stroke="#412402" stroke-width="3.5" fill="none" stroke-linecap="round"/>
               </svg>
             </button>
-
             </div>
-
-
-
-
-
             <div class="picker-body">
 
-  <template v-if="pickerTab === 'stickers'">
+            <template v-if="pickerTab === 'stickers'">
+            <!-- All -->
+            <template v-if="stickerFilterTab === 'all'">
+              <div class="sticker-grid" v-if="filteredStickers.length">
+                <button type="button" class="sticker-item" v-for="s in filteredStickers" :key="s.id" @click.stop="addSticker(s)">
+                  <img :src="s.url" :alt="s.file_name" />
+                </button>
+              </div>
+              <div class="picker-empty" v-else>
+                No sticker Sticker...
+              </div>
+            </template>
 
-    <!-- Tab: All -->
-    <template v-if="stickerFilterTab === 'all'">
-      <div class="sticker-grid" v-if="filteredStickers.length">
-        <button type="button" class="sticker-item" v-for="s in filteredStickers" :key="s.id" @click.stop="addSticker(s)">
-          <img :src="s.url" :alt="s.file_name" />
-        </button>
-      </div>
-      <div class="picker-empty" v-else>
-        No sticker Sticker...
-      </div>
-    </template>
+            <template v-else-if="stickerFilterTab === 'mine'">
+              <div class="sticker-set-list" v-if="mySetsStickers.length">
+                <div class="sticker-set-row" v-for="set in mySetsStickers" :key="set.id">
+                  <button type="button" class="set-drag-handle" aria-label="ផ្លាស់ទីលំដាប់">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                      <line x1="4" y1="7" x2="20" y2="7"/>
+                      <line x1="4" y1="12" x2="20" y2="12"/>
+                      <line x1="4" y1="17" x2="20" y2="17"/>
+                    </svg>
+                  </button>
 
-    <!-- Tab: My stickers → sticker sets (row layout) -->
-    <template v-else-if="stickerFilterTab === 'mine'">
-      <div class="sticker-set-list" v-if="mySetsStickers.length">
-        <div class="sticker-set-row" v-for="set in mySetsStickers" :key="set.id">
-          <button type="button" class="set-drag-handle" aria-label="ផ្លាស់ទីលំដាប់">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <line x1="4" y1="7" x2="20" y2="7"/>
-              <line x1="4" y1="12" x2="20" y2="12"/>
-              <line x1="4" y1="17" x2="20" y2="17"/>
-            </svg>
-          </button>
+                  <div class="set-stickers-scroll">
+                    <button type="button" class="set-sticker-item" v-for="s in set.stickers" :key="s.id" @click.stop="addSticker(s)">
+                      <img :src="s.url" alt="" />
+                    </button>
+                  </div>
 
-          <div class="set-stickers-scroll">
-            <button type="button" class="set-sticker-item" v-for="s in set.stickers" :key="s.id" @click.stop="addSticker(s)">
-              <img :src="s.url" alt="" />
+                  <button type="button" class="set-delete-btn" @click.stop="deleteStickerSet(set.id)">
+                    Delete Set
+                  </button>
+                </div>
+              </div>
+              <div class="picker-empty" v-else>
+                No sticker set...
+              </div>
+            </template>
+
+          <template v-else-if="stickerFilterTab === 'animated'">
+            <div class="pack-grid" v-if="!showPackStickers && currentPackList.length">
+              <div class="pack-card" v-for="pack in currentPackList" :key="pack.id" @click="openPack(pack)">
+                <div class="pack-thumb">
+                  <img :src="pack.thumbnail_url" :alt="pack.name" />
+                  <span class="pack-count-badge">{{ pack.sticker_count }}</span>
+                </div>
+                <div class="pack-footer">
+                  <span class="pack-name">{{ pack.name }}</span>
+                  <button type="button" class="pack-add-btn" @click.stop="addPackToCollection(pack)">ADD</button>
+                </div>
+              </div>
+            </div>
+            <div class="picker-empty" v-else-if="!showPackStickers">
+              No sticker pack...
+            </div>
+            <template v-else>
+              <div class="pack-detail-head">
+                <button type="button" class="pack-back-btn" @click.stop="backToPacks">‹ Back</button>
+                <span class="pack-detail-title">{{ activePack?.name }}</span>
+              </div>
+              <div class="sticker-grid" v-if="stickers.length">
+                <button type="button" class="sticker-item" v-for="s in stickers" :key="s.id" @click.stop="addSticker(s)">
+                  <img :src="s.url" :alt="s.file_name" />
+                </button>
+              </div>
+              <div class="picker-empty" v-else>
+                No sticker Sticker...
+              </div>
+            </template>
+
+          </template>
+
+          <template v-else-if="stickerFilterTab === 'create'">
+            <div class="create-sticker-panel">
+              <button type="button" class="add-photo-circle" @click.stop="addStickerPack">
+                <img src="../../../assets/animate/gallary_1.svg" alt="svg">
+              </button>
+              <button type="button" class="add-photo-btn" @click="addStickerPack">
+                Add Stickers
+              </button>
+              <input ref="stickerFileInputRef" type="file" accept="image/*" hidden @change="onStickerFilePicked" />
+            </div>
+          </template>
+          <template v-else-if="stickerFilterTab === 'create'">
+
+          <div class="create-sticker-panel">
+            <button type="button" class="add-photo-circle" @click.stop="addStickerPack">
+              <img src="../../../assets/animate/gallary_1.svg" alt="svg">
             </button>
+            <button type="button" class="add-photo-btn" @click.stop="addStickerPack">
+              Add Stickers
+            </button>
+            <input ref="stickerFileInputRef" type="file" accept="image/*" hidden @change="onStickerFilePicked" />
           </div>
+        </template>
 
-          <button type="button" class="set-delete-btn" @click.stop="deleteStickerSet(set.id)">
-            Delete Set
-          </button>
-        </div>
-      </div>
-      <div class="picker-empty" v-else>
-        No sticker set...
-      </div>
-    </template>
-
-    <!-- Tab: Animated → pack-card (mock data) -->
-    <template v-else-if="stickerFilterTab === 'animated'">
-
-      <!-- Level 1: បញ្ជី pack cards -->
-      <div class="pack-grid" v-if="!showPackStickers && currentPackList.length">
-        <div class="pack-card" v-for="pack in currentPackList" :key="pack.id" @click="openPack(pack)">
-          <div class="pack-thumb">
-            <img :src="pack.thumbnail_url" :alt="pack.name" />
-            <span class="pack-count-badge">{{ pack.sticker_count }}</span>
+        </template>
+        <!-- Emoji tab -->
+        <template v-else-if="pickerTab === 'emojis'">
+          <div class="emoji-grid">
+            <button type="button" v-for="e in emojiList" :key="e" @click="addEmoji(e)">{{ e }}</button>
           </div>
-          <div class="pack-footer">
-            <span class="pack-name">{{ pack.name }}</span>
-            <button type="button" class="pack-add-btn" @click.stop="addPackToCollection(pack)">ADD</button>
-          </div>
-        </div>
-      </div>
-      <div class="picker-empty" v-else-if="!showPackStickers">
-        No sticker pack...
+        </template>
       </div>
 
-      <!-- Level 2: sticker ក្នុង pack ដែលបានជ្រើស -->
-      <template v-else>
-        <div class="pack-detail-head">
-          <button type="button" class="pack-back-btn" @click.stop="backToPacks">‹ Back</button>
-          <span class="pack-detail-title">{{ activePack?.name }}</span>
-        </div>
-        <div class="sticker-grid" v-if="stickers.length">
-          <button type="button" class="sticker-item" v-for="s in stickers" :key="s.id" @click.stop="addSticker(s)">
-            <img :src="s.url" :alt="s.file_name" />
-          </button>
-        </div>
-        <div class="picker-empty" v-else>
-          No sticker Sticker...
-        </div>
-      </template>
-
-    </template>
-
-    <!-- Tab: Create sticker -->
-    <template v-else-if="stickerFilterTab === 'create'">
-      <div class="create-sticker-panel">
-        <button type="button" class="add-photo-circle" @click.stop="addStickerPack">
-          <img src="../../../assets/animate/gallary_1.svg" alt="svg">
-        </button>
-        <button type="button" class="add-photo-btn" @click="addStickerPack">
-          Add Stickers
-        </button>
-        <input ref="stickerFileInputRef" type="file" accept="image/*" hidden @change="onStickerFilePicked" />
-      </div>
-    </template>
-    <template v-else-if="stickerFilterTab === 'create'">
-
-  <div class="create-sticker-panel">
-    <!-- <input
-      v-model="newPackName"
-      type="text"
-      placeholder="ឈ្មោះ Pack ថ្មី (ឧ. My Cute Stickers)"
-      class="pack-name-input"
-    /> -->
-    <button type="button" class="add-photo-circle" @click.stop="addStickerPack">
-      <img src="../../../assets/animate/gallary_1.svg" alt="svg">
-    </button>
-    <button type="button" class="add-photo-btn" @click.stop="addStickerPack">
-      Add Stickers
-    </button>
-    <input ref="stickerFileInputRef" type="file" accept="image/*" hidden @change="onStickerFilePicked" />
-  </div>
-</template>
-
-  </template>
-
-  <!-- Emoji tab -->
-  <template v-else-if="pickerTab === 'emojis'">
-    <div class="emoji-grid">
-      <button type="button" v-for="e in emojiList" :key="e" @click="addEmoji(e)">{{ e }}</button>
-    </div>
-  </template>
-
-</div>
 
 
-
-            <div class="picker-footer">
-              <div class="sticker-filter-row">
+      <div class="picker-footer">
+        <div class="sticker-filter-row">
       <button type="button" class="filter-chip" :class="{ active: stickerFilterTab === 'all' }" @click.stop="stickerFilterTab = 'all'">
         <!-- <img src="../../../assets/animate/more.svg" alt=""> -->
          <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -268,72 +246,39 @@
       <span>Create Sticker</span>
         <!-- <input ref="stickerFileInputRef" type="file" accept="image/*" hidden @change="onStickerFilePicked" /> -->
       </button>
-    </div>
-            <!-- <button type="button" class="add-sticker-btn" @click="addStickerPack">
-              <img src="../../../assets/animate/like1.gif" alt="">
-              Add Stickers
-              <input ref="stickerFileInputRef" type="file" accept="image/*" hidden @change="onStickerFilePicked" />
-          </button> -->
-          </div>
-          </div>
-          </div>
-
-
-
-
-
-        </div>
-
-
-
-
-
-<div class="chip-wrap" ref="pickerRef">
-  <button class="chip" :class="{ active: showPictureMenu }" @click="showPictureMenu = !showPictureMenu">
-    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>
-    Picture
-    <svg class="chevron-mini" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-  </button>
-
-  <div class="picture-dropdown" v-if="showPictureMenu" @click.stop @mousedown.stop>
-    <button type="button" class="picture-dropdown-item" @click="handlePictureSelect">
-      <svg class="picture-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="2.5"/>
-        <circle cx="9" cy="10" r="1.8"/>
-        <path d="m4 18 5-5 4 4 3-3 4 4"/>
-      </svg>
-      <span>Picture</span>
-    </button>
-    <!-- <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple hidden @change="onFilesPicked" /> -->
-
-    <button type="button" class="picture-dropdown-item" @click="handleTemplateSelect">
-      <svg class="picture-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/>
-        <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/>
-        <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/>
-        <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>
-      </svg>
-      <span>Template</span>
-    </button>
-    <!-- <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple hidden @change="onFilesPicked" /> -->
-  </div>
- 
-</div>
- <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple hidden @change="onFilesPicked" />
-
-
-        <!-- <button class="chip" @click="triggerFileInput">
+      </div>  
+      </div>
+      </div>
+      </div>
+      <div class="chip-wrap" ref="pickerRef">
+        <button class="chip" :class="{ active: showPictureMenu }" @click="showPictureMenu = !showPictureMenu">
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>
           Picture
+          <svg class="chevron-mini" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple hidden @change="onFilesPicked" />
 
-        <button class="chip" @click="triggerFileInput">
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>
-          Template
+        <div class="picture-dropdown" v-if="showPictureMenu" @click.stop @mousedown.stop>
+          <button type="button" class="picture-dropdown-item" @click="handlePictureSelect">
+            <svg class="picture-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="2.5"/>
+              <circle cx="9" cy="10" r="1.8"/>
+              <path d="m4 18 5-5 4 4 3-3 4 4"/>
+            </svg>
+            <span>Picture</span>
+          </button>
+       <!-- <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple hidden @change="onFilesPicked" /> -->
+        <button type="button" class="picture-dropdown-item" @click="handleTemplateSelect">
+          <svg class="picture-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/>
+            <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/>
+            <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/>
+            <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>
+          </svg>
+          <span>Template</span>
         </button>
-        <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple hidden @change="onFilesPicked" /> -->
-
+        </div>
+        </div>
+      <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple hidden @change="onFilesPicked" />
         <div class="chip-wrap">
           <button class="chip" :class="{ active: showLinkInput }" @click="showLinkInput = !showLinkInput">
             <svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.66 0l2.34-2.34a4 4 0 1 0-5.66-5.66L11 7"/><path d="M14 10a4 4 0 0 0-5.66 0L6 12.34a4 4 0 1 0 5.66 5.66L13 17"/></svg>
@@ -343,56 +288,39 @@
             <input v-model="linkDraft" type="text" placeholder="https://..." @keydown.enter.prevent="confirmLink"/>
             <button type="button" @click="confirmLink">✓</button>
           </div>
-          <!-- <div class="mini-input" v-if="showTopicInput" @click.stop @mousedown.stop>
-  <button type="button" class="topic-emoji-btn" @click.stop="showTopicEmojiPicker = !showTopicEmojiPicker">
-    <span v-if="topicEmojiDraft">{{ topicEmojiDraft }}</span>
-    <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01"/><path d="M8 14.5c1 1.3 2.4 2 4 2s3-.7 4-2"/></svg>
-  </button>
-  <input v-model="topicDraft" type="text" placeholder="ឈ្មោះ topic" @keydown.enter.prevent="confirmTopic"/>
-  <button type="button" @click="confirmTopic">✓</button>
-
-  <div class="topic-emoji-popover" v-if="showTopicEmojiPicker" @click.stop @mousedown.stop>
-    <button type="button" v-for="e in emojiList" :key="e" @click="topicEmojiDraft = e; showTopicEmojiPicker = false">{{ e }}</button>
-  </div>
-</div> -->
         </div>
-
         <div class="chip-wrap">
           <button class="chip" :class="{ active: showTopicInput }" @click="showTopicInput = !showTopicInput">
             <span class="hash-glyph">#</span>
             Topic
           </button>
-<div class="mini-input" v-if="showTopicInput" @click.stop @mousedown.stop>
-  <!-- Emoji -->
-  <button type="button" class="topic-emoji-btn" @click.stop="showTopicEmojiPicker = !showTopicEmojiPicker; showTopicStickerPicker = false">
-    <span v-if="topicEmojiDraft">{{ topicEmojiDraft }}</span>
-    <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01"/><path d="M8 14.5c1 1.3 2.4 2 4 2s3-.7 4-2"/></svg>
-  </button>
+          <div class="mini-input" v-if="showTopicInput" @click.stop @mousedown.stop>
+            <!-- Emoji -->
+            <button type="button" class="topic-emoji-btn" @click.stop="showTopicEmojiPicker = !showTopicEmojiPicker; showTopicStickerPicker = false">
+              <span v-if="topicEmojiDraft">{{ topicEmojiDraft }}</span>
+              <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01"/><path d="M8 14.5c1 1.3 2.4 2 4 2s3-.7 4-2"/></svg>
+            </button>
+            <button type="button" class="topic-emoji-btn" @click.stop="showTopicStickerPicker = !showTopicStickerPicker; showTopicEmojiPicker = false">
+              <img v-if="topicStickerDraft" :src="topicStickerDraft.url" class="topic-sticker-badge" alt="" />
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="m21 15-5-5L5 21"/>
+              </svg>
+            </button>
 
-  <!-- ➕ Sticker -->
-  <button type="button" class="topic-emoji-btn" @click.stop="showTopicStickerPicker = !showTopicStickerPicker; showTopicEmojiPicker = false">
-    <img v-if="topicStickerDraft" :src="topicStickerDraft.url" class="topic-sticker-badge" alt="" />
-    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="18" height="18" rx="3"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <path d="m21 15-5-5L5 21"/>
-    </svg>
-  </button>
+            <input v-model="topicDraft" type="text" placeholder="Topic name" @keydown.enter.prevent="confirmTopic"/>
+            <button type="button" @click="confirmTopic">✓</button>
 
-  <input v-model="topicDraft" type="text" placeholder="Topic name" @keydown.enter.prevent="confirmTopic"/>
-  <button type="button" @click="confirmTopic">✓</button>
-
-  <div class="topic-emoji-popover" v-if="showTopicEmojiPicker" @click.stop @mousedown.stop>
-    <button type="button" v-for="e in emojiList" :key="e" @click="topicEmojiDraft = e; topicStickerDraft = null; showTopicEmojiPicker = false">{{ e }}</button>
-  </div>
-
-  <!-- ➕ Sticker popover -->
-  <div class="topic-emoji-popover topic-sticker-popover" v-if="showTopicStickerPicker" @click.stop @mousedown.stop>
-    <button type="button" v-for="s in stickers" :key="s.id" @click="topicStickerDraft = s; topicEmojiDraft = ''; showTopicStickerPicker = false">
-      <img :src="s.url" :alt="s.file_name" />
-    </button>
-  </div>
-</div>
+            <div class="topic-emoji-popover" v-if="showTopicEmojiPicker" @click.stop @mousedown.stop>
+              <button type="button" v-for="e in emojiList" :key="e" @click="topicEmojiDraft = e; topicStickerDraft = null; showTopicEmojiPicker = false">{{ e }}</button>
+            </div>
+            <div class="topic-emoji-popover topic-sticker-popover" v-if="showTopicStickerPicker" @click.stop @mousedown.stop>
+              <button type="button" v-for="s in stickers" :key="s.id" @click="topicStickerDraft = s; topicEmojiDraft = ''; showTopicStickerPicker = false">
+                <img :src="s.url" :alt="s.file_name" />
+              </button>
+            </div>
+          </div>
         </div>
 
         <button class="chip" :class="{ active: showCode }" @click="showCode = !showCode">
@@ -409,77 +337,66 @@
       </button>
     </div>
 
+    <Teleport to="body">
+      <div class="template-modal-overlay" v-if="showTemplateModal" @click.self="showTemplateModal = false">
+        <div class="template-modal">
+          <div class="template-modal-head">
+            <span class="template-modal-title">{{ selectedTemplate ? 'Put your images' : 'Choose Template' }}</span>
+            <button type="button" class="template-modal-close" @click="showTemplateModal = false">✕</button>
+          </div>
 
+          <div class="template-modal-body">
+            <div class="template-grid" v-if="!selectedTemplate && templateList.length">
+              <button type="button" class="template-item" v-for="tpl in templateList" :key="tpl.id" @click="selectTemplatePreview(tpl)">
+                <img :src="tpl.thumbnail_url" :alt="tpl.name" />
+                <span class="template-item-name">{{ tpl.name }}</span>
+              </button>
+            </div>
+            <div class="picker-empty" v-else-if="!selectedTemplate">
+              No Template
+            </div>
+            <div class="frame-preview-wrap" v-else>
+              <canvas
+                ref="frameCanvasRef"
+                class="frame-canvas"
+                :class="{ draggable: userPhotoImg }"
+                @mousedown="onCanvasPointerDown"
+                @mousemove="onCanvasPointerMove"
+                @mouseup="onCanvasPointerUp"
+                @mouseleave="onCanvasPointerUp"
+                @touchstart.prevent="onCanvasPointerDown"
+                @touchmove.prevent="onCanvasPointerMove"
+                @touchend="onCanvasPointerUp"
+              ></canvas>
 
+              <div class="scale-control" v-if="userPhotoImg">
+                <button type="button" class="scale-reset-btn" @click="resetPhotoPosition">Reset</button>
+                <input
+                  type="range"
+                  min="0.3"
+                  max="3"
+                  step="0.01"
+                  v-model.number="photoScale"
+                  class="scale-slider"
+                />
+                <span class="scale-label">{{ Math.round(photoScale * 100) }}%</span>
+              </div>
 
-
-
-
-<!-- Template Modal — ដាក់នៅចុង composer div, ក្រៅពី action-bar -->
-<Teleport to="body">
-  <div class="template-modal-overlay" v-if="showTemplateModal" @click.self="showTemplateModal = false">
-    <div class="template-modal">
-      <div class="template-modal-head">
-        <span class="template-modal-title">{{ selectedTemplate ? 'Put your images' : 'Choose Template' }}</span>
-        <button type="button" class="template-modal-close" @click="showTemplateModal = false">✕</button>
-      </div>
-
-      <div class="template-modal-body">
-        <!-- ជំហានទី១: ជ្រើសរើស frame -->
-        <div class="template-grid" v-if="!selectedTemplate && templateList.length">
-          <button type="button" class="template-item" v-for="tpl in templateList" :key="tpl.id" @click="selectTemplatePreview(tpl)">
-            <img :src="tpl.thumbnail_url" :alt="tpl.name" />
-            <span class="template-item-name">{{ tpl.name }}</span>
-          </button>
+                <button type="button" class="add-photo-btn" @click="triggerUserPhotoInput">
+                  {{ userPhotoImg ? 'Change images' : 'Choose your images' }}
+                </button>
+                <input ref="userPhotoInputRef" type="file" accept="image/*" hidden @change="onUserPhotoPicked" />
+              </div>
+             </div>
+              <div class="template-modal-footer">
+                <button type="button" class="template-cancel-btn" @click="showTemplateModal = false">Cancel</button>
+                <button type="button" class="template-apply-btn" :disabled="!userPhotoImg" @click="applyTemplate">
+                  Use Template
+                </button>
+              </div>
         </div>
-        <div class="picker-empty" v-else-if="!selectedTemplate">
-          No Template
-        </div>
-
-        <!-- ជំហានទី២: preview + upload photo -->
-        <div class="frame-preview-wrap" v-else>
-  <canvas
-    ref="frameCanvasRef"
-    class="frame-canvas"
-    :class="{ draggable: userPhotoImg }"
-    @mousedown="onCanvasPointerDown"
-    @mousemove="onCanvasPointerMove"
-    @mouseup="onCanvasPointerUp"
-    @mouseleave="onCanvasPointerUp"
-    @touchstart.prevent="onCanvasPointerDown"
-    @touchmove.prevent="onCanvasPointerMove"
-    @touchend="onCanvasPointerUp"
-  ></canvas>
-
-  <div class="scale-control" v-if="userPhotoImg">
-    <button type="button" class="scale-reset-btn" @click="resetPhotoPosition">Reset</button>
-    <input
-      type="range"
-      min="0.3"
-      max="3"
-      step="0.01"
-      v-model.number="photoScale"
-      class="scale-slider"
-    />
-    <span class="scale-label">{{ Math.round(photoScale * 100) }}%</span>
-  </div>
-
-  <button type="button" class="add-photo-btn" @click="triggerUserPhotoInput">
-    {{ userPhotoImg ? 'Change images' : 'Choose your images' }}
-  </button>
-  <input ref="userPhotoInputRef" type="file" accept="image/*" hidden @change="onUserPhotoPicked" />
-</div>
       </div>
-
-      <div class="template-modal-footer">
-        <button type="button" class="template-cancel-btn" @click="showTemplateModal = false">Cancel</button>
-        <button type="button" class="template-apply-btn" :disabled="!userPhotoImg" @click="applyTemplate">
-          Use Template
-        </button>
-      </div>
-    </div>
-  </div>
-</Teleport>
+    </Teleport>
 
   </div>
 </template>
@@ -513,32 +430,9 @@ function splitTagIcon(tag) {
   if (m) return { icon: m[1], text: tag.slice(m[1].length) }
   return { icon: '', text: tag }
 }
-// function splitTagIcon(tag) {
-//   // ✅ ករណី tag ជា object ស្រាប់ (មាន text/icon/stickerUrl)
-//   if (tag && typeof tag === 'object') {
-//     return {
-//       icon: tag.icon || '',
-//       text: tag.text || '',
-//       stickerUrl: tag.stickerUrl || '',
-//     }
-//   }
 
-//   // ✅ ករណី tag ជា string (data ចាស់ ឬពី backend)
-//   if (typeof tag !== 'string') {
-//     return { icon: '', text: String(tag ?? ''), stickerUrl: '' }
-//   }
-
-//   const m = tag.match(/^(\p{Extended_Pictographic}\uFE0F?)/u)
-//   if (m) return { icon: m[1], text: tag.slice(m[1].length), stickerUrl: '' }
-//   return { icon: '', text: tag, stickerUrl: '' }
-// }
-
-
-
-// ➕ បន្ថែមថ្មី
 const topicStickerDraft = ref(null)
 const showTopicStickerPicker = ref(false)
-//======
 
 // const emojiList = ['😀', '😂', '😍', '🥳', '😎', '🤔', '😢', '😡', '👍', '🙏', '🔥', '🎉', '❤️', '👏', '💡', '✅']
 const emojiList = [
@@ -566,8 +460,6 @@ const selectedStickers = ref([])
 const stickerFileInputRef = ref(null)
 const isUploadingSticker = ref(false)
 const newPackName = ref('')
-const currentUploadPackId = ref(null)
-const isCreatingPack = ref(false)
 
 const showTemplateModal = ref(false)
 const selectedTemplate = ref(null)
@@ -1042,30 +934,6 @@ function confirmLink() {
   showLinkInput.value = false
 }
 
-// function confirmTopic() {
-//   const t = topicDraft.value.trim().replace(/^#/, '')
-//   if (!t) return
-//   if (!topics.value.includes(t)) topics.value.push(t)
-//   topicDraft.value = ''
-//   showTopicInput.value = false
-// }
-// function confirmTopic() {
-//   const t = topicDraft.value.trim().replace(/^#/, '')
-//   if (!t) return
-//   const tagObj = {
-//     text: t,
-//     icon: topicStickerDraft.value ? '' : topicEmojiDraft.value,
-//     stickerUrl: topicStickerDraft.value ? topicStickerDraft.value.url : '',
-//     stickerId: topicStickerDraft.value ? topicStickerDraft.value.id : null,
-//   }
-//   if (!topics.value.some(x => x.text === tagObj.text)) topics.value.push(tagObj)
-//   topicDraft.value = ''
-//   topicEmojiDraft.value = ''
-//   topicStickerDraft.value = null
-//   showTopicInput.value = false
-//   showTopicEmojiPicker.value = false
-//   showTopicStickerPicker.value = false
-// }
 function confirmTopic() {
   const t = topicDraft.value.trim().replace(/^#/, '')
   if (!t) return
@@ -1120,23 +988,14 @@ async function submitPost() {
   selectedStickers.value.forEach(sticker => {
     formData.append("sticker_ids[]", String(sticker.id))
   })
-  //topics.value.forEach(tag => {
-   // formData.append("tag_name", tag)
-  //})
-//   topics.value.forEach(tag => {
-//   formData.append("tag_name", tag.icon ? tag.icon + tag.text : tag.text)
-//   if (tag.stickerId) formData.append("tag_sticker_ids[]", String(tag.stickerId))
-// })
+
 topics.value.forEach(tag => {
-    // បញ្ជូនអត្ថបទ tag
     const fullTagName = tag.icon ? tag.icon + tag.text : tag.text
     formData.append("tag_name", fullTagName)
-
-    // បញ្ជូន Sticker ID ប្រសិនបើមាន (ជៀសវាងតម្លៃ null)
     if (tag.stickerId !== null && tag.stickerId !== undefined && tag.stickerId !== '') {
       formData.append("tag_sticker_ids[]", String(tag.stickerId))
     } else {
-      formData.append("tag_sticker_ids[]", "") // ឬទុករատតូតាម Backend តម្រូវ
+      formData.append("tag_sticker_ids[]", "") 
     }
   })
 
@@ -1157,19 +1016,16 @@ topics.value.forEach(tag => {
       return
     }
 
-    // ✅ Backend មិន return post object → សាងសង់ post ដោយប្រើ local data (optimistic UI)
+    triggerStreakCheckIn()
     const currentUserIdVal = getCurrentUserId()
     const postType = resolvePostType()
 
     const optimisticPost = {
       id: 'temp-' + Date.now(),
-      // id: Date.now(),
       userId: currentUserIdVal,
-      // avatarUrl: localStorage.getItem('avatarUrl') || '',
       avatarUrl: myAvatarUrl.value, 
       username: myUsername.value, 
         postType: postType, 
-      // username: localStorage.getItem('username') || 'You',
       datetime: new Date().toLocaleString('km-KH', {
         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
       }),
@@ -1276,13 +1132,6 @@ const filteredStickers = computed(() => {
   }
 })
 
-// import PostsCard from '../postcards/PostsCard.vue'
-
-// function handleNewPost(response) {
-//   // ទាញយក Object Post ថ្មីពី Response របស់ API រួច unshift ដាក់ពីលើគេបង្អស់
-//   const newPost = response.data?.post || response.data || response
-//   posts.value.unshift(newPost)
-// }
 
 function handleClickOutside(event) {
   if (showTopicInput.value) {
@@ -1296,6 +1145,13 @@ function handleClickOutside(event) {
     const linkEl = event.target.closest('.chip-wrap')
     if (!linkEl) {
       showLinkInput.value = false
+    }
+  }
+
+  if (showEmoji.value) {
+    const emojiEl = event.target.closest('.chip-wrap')
+    if (!emojiEl) {
+      showEmoji.value = false
     }
   }
 }
@@ -1323,6 +1179,19 @@ async function fetchMyProfile() {
     console.error('Failed to fetch my profile', e)
   }
 }
+
+async function triggerStreakCheckIn() {
+  try {
+    const token = localStorage.getItem('token')
+    await fetch(`${API_BASE}/api/v1/front/levels/checkin`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+  } catch (err) {
+    console.error('Streak check-in failed', err)
+
+  }
+}
 </script>
 
 <style scoped>
@@ -1341,6 +1210,7 @@ async function fetchMyProfile() {
   font-family: 'Inter', sans-serif;
   max-width: 640px;
   margin-top: 14px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.04);
   /* border: 1px solid#E5E7EB; */
 }
 
@@ -1348,8 +1218,8 @@ async function fetchMyProfile() {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #ffff;
-  background: rgb(25, 118, 210);
+  color: #000;
+  background: #ECEAE4;
   border-radius: 999px;
   padding: 6px 14px 6px 10px;
   margin-bottom: 12px;
@@ -1358,7 +1228,7 @@ async function fetchMyProfile() {
 .pin-icon {
   width: 15px;
   height: 15px;
-  fill: #ffff;
+  fill: #1976D2;
 }
 
 .pin-input {
@@ -1367,13 +1237,13 @@ async function fetchMyProfile() {
   outline: none;
   font-size: 13px;
   font-weight: 700;
-  color: #ffff;
+  color: #000;
   width: 130px;
   font-family: 'Nunito', sans-serif;
 }
 
 .pin-input::placeholder {
-  color: #ffff;
+  color: #000;
 }
 
 .post-text {
@@ -1545,8 +1415,8 @@ async function fetchMyProfile() {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #1976D2;
-  color: white;
+  background: #ECEAE4;
+  color: #000;
   border: none;
   font-weight: 700;
   font-size: 12px;
@@ -1636,14 +1506,14 @@ async function fetchMyProfile() {
   align-items: center;
   gap: 4px;
   border: 2px solid #1976D2;
-  background: #ffff;
+  background: #1976D2;
   font-weight: 700;
   font-size: 12px;
   padding: 7px 13px;
   border-radius: 999px;
   cursor: pointer;
   font-family: 'Nunito', sans-serif;
-  color: #2B2B2B;
+  color: #ffffff;
   transition: all 0.2s ease;
 }
 
@@ -1784,29 +1654,22 @@ async function fetchMyProfile() {
   cursor: not-allowed;
 }
 
-.picker-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  
-}
+
 
 .picker-panel {
-  position: relative;      /* ✅ លែងជា absolute ទៀត ឲ្យ flex centering របស់ .picker-overlay ដំណើរការ */
+  position: absolute;   
+      top: 44px;  
+  left: 0;
   background: #fff;
   border: 1.5px solid #E7E7E7;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  width: 92%;
-  max-width: 580px;
+   width: 580px;  
+    max-width: 90vw; 
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  z-index: 1001;            /* ✅ ខ្ពស់ជាង overlay (1000) */
+  z-index: 1001;            
   overflow: hidden;
   pointer-events: auto;
 }
@@ -2103,7 +1966,7 @@ async function fetchMyProfile() {
 }
 
 .filter-chip-create {
-  border-color: transparent;   /* ដកពណ៌ពិសេសចេញ ឲ្យដូច tab ធម្មតា */
+  border-color: transparent;   
   background: transparent;
   color: #8A6D1D;
 }
@@ -2112,10 +1975,6 @@ async function fetchMyProfile() {
   color: #B8901E;
   border-bottom: 2px solid #F2C744;
 }
-
-/* .filter-chip-create:hover {
-  background: #FCEBB0;
-} */
 
 .create-sticker-panel {
   display: flex;
@@ -2662,7 +2521,7 @@ async function fetchMyProfile() {
 .filter-chip {
   display: flex;
   align-items: center;
-  gap: 6px; /* គន្លាតរវាង icon និងអត្ថបទ */
+  gap: 6px; 
 }
 
 .filter-icon {

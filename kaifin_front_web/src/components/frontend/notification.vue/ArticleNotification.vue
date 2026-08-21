@@ -1,6 +1,6 @@
 <template>
   <div class="article-notification-container">
-    <!-- Section: New -->
+    <!-- Section New -->
     <div class="section-header">
       <h2 class="section-title">New</h2>
       <button class="see-all-btn" @click="$emit('seeAllNew')">see all</button>
@@ -57,7 +57,7 @@
           </div>
         </div>
 
-        <!-- Right Side Icon (Dots) -->
+        <!-- Right Side Icon -->
         <div class="right-icon">
           <span class="dot"></span>
           <span class="dot"></span>
@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <!-- Section: Follower -->
+    <!-- Section Follower -->
     <div class="section-header follower-header">
       <h2 class="section-title">Follower</h2>
       <button class="see-all-btn" @click="$emit('seeAllFollower')">see all</button>
@@ -77,7 +77,7 @@
         :key="'follower-' + index" 
         class="notification-card"
       >
-        <!-- User Avatar with Plus Badge Icon -->
+        <!-- User Avatar with-->
         <div class="avatar-container">
           <div class="avatar-placeholder">
             <img v-if="item.profileImage" :src="item.profileImage" alt="Avatar" class="avatar-img" />
@@ -136,110 +136,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 
-defineEmits(['seeAllNew', 'seeAllFollower', 'followBack'])
-
-const newNotifications = ref([
-  {
-    type: 'react',
-    username: 'សី សីុកា',
-    message: 'reacted to your post',
-    timeAgo: '12m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHl3jp1gX_Y_k79ShEt6Rxet3AGCC0j2G-VgLVF6UUbde6rb1mYYJD_KQ&s=10'
-  },
-  {
-    type: 'comment',
-    username: 'Ly Heng',
-    message: 'commented on your article',
-    timeAgo: '13m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPdf6ZUWk9JoqCHl3LWZp1tKUb74YX9Ku_vrChs0uvU_zberBOwG6rUSA&s=10'
-  },
-  {
-    type: 'share',
-    username: 'Ly Heng Zin',
-    message: 'shared your course',
-    timeAgo: '14m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuUFwfa3MQ_svuorOuJ-aURHw-al2WayoSPUZ3shSBTUceLS1dGMfqP4c&s=10'
-  },
-  {
-    type: 'enroll',
-    username: 'Mean',
-    message: 'enrolled in your course',
-    timeAgo: '15m',
-    profileImage: 'https://media.licdn.com/dms/image/v2/D5603AQEXEdGLPUTabw/profile-displayphoto-scale_400_400/B56Z1reuHPGoAk-/0/1775624709989?e=2147483647&v=beta&t=tp9dlXocXlkxK-hVej_uxrwittuA3yiRX-lA1akTdlk'
-  },
-  {
-    type: 'react',
-    username: 'Mai Malai',
-    message: 'reacted to your post',
-    timeAgo: '20m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHl3jp1gX_Y_k79ShEt6Rxet3AGCC0j2G-VgLVF6UUbde6rb1mYYJD_KQ&s=10'
-  },
-  {
-    type: 'comment',
-    username: 'Va Vondy',
-    message: 'commented on your article',
-    timeAgo: '32m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPdf6ZUWk9JoqCHl3LWZp1tKUb74YX9Ku_vrChs0uvU_zberBOwG6rUSA&s=10'
-  },
-  {
-    type: 'share',
-    username: 'AhZa AhXa',
-    message: 'shared your course',
-    timeAgo: '1h',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuUFwfa3MQ_svuorOuJ-aURHw-al2WayoSPUZ3shSBTUceLS1dGMfqP4c&s=10'
-  },
-  {
-    type: 'enroll',
-    username: 'Udom PangThea',
-    message: 'enrolled in your course',
-    timeAgo: '2h',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_ZWDQFG1-zwSrlKgaBB__Znl1Qd_yvKKzlg-VeaaOEA&s=10'
+const props = defineProps({
+  notifications: {
+    type: Array,
+    default: () => []
   }
-])
+})
 
-const followerNotifications = ref([
-  {
-    username: 'Nary Sovan',
-    message: 'started following you',
-    timeAgo: '12h',
-    profileImage: ''
-  },
-  {
-    username: 'Roth Roth',
-    message: 'started following you',
-    timeAgo: '12h',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBMlSC1pqRvEynrEUiSQGNI-Eqw9ftuCBOWah2qSykSg&s=10'
-  },
-  {
-    username: 'Yuri Babo',
-    message: 'started following you',
-    timeAgo: '12h',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_ZWDQFG1-zwSrlKgaBB__Znl1Qd_yvKKzlg-VeaaOEA&s=10'
-  },
-  {
-    username: 'Vong VuthThea',
-    message: 'started following you',
-    timeAgo: '1d',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfZvMX8nfvk9XPYxiuPRqmmU8OYpYOdF8QNrPHktGDpA&s=10'
-  },
-  {
-    username: 'Nar Nar',
-    message: 'started following you',
-    timeAgo: '1d',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQplUwsYBXGSupgB-bKH7O1Bf97O5EgSFkBnZB7cxgCKw&s=10'
-  },
-  {
-    username: 'Bros Har',
-    message: 'started following you',
-    timeAgo: '2d',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1c66WJConDWtSjTt6i22PDCGzfT4v79jjKPyjIGCY5O52-hLxAS9H7wc&s=10'
-  }
-])
+const emit = defineEmits(['seeAllNew', 'seeAllFollower', 'followBack', 'delete', 'itemClick'])
 
-const deleteFollower = (index) => {
-  followerNotifications.value.splice(index, 1)
+// បំបែក props.notifications ជា New / Follower ដោយផ្អែកលើ type
+const newNotifications = computed(() =>
+  props.notifications.filter((n) => n.type !== 'follow')
+)
+
+const followerNotifications = computed(() =>
+  props.notifications.filter((n) => n.type === 'follow')
+)
+
+const deleteFollower = (item) => {
+  emit('delete', item)
 }
 </script>
 

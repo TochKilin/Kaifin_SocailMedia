@@ -28,43 +28,6 @@ func NewProfileHandlerImpl(
 	}
 }
 
-// func (h *ProfileHandlerImpl) Profile(c fiber.Ctx) error {
-// 	userCtx, ok := c.Locals(
-// 		"UserContext",
-// 	).(share.UserContext)
-// 	if !ok {
-// 		return c.Status(401).JSON(
-// 			response.NewResponseError(
-// 				"invalid user context",
-// 				constants.Login_failed,
-// 				fmt.Errorf("user context missing"),
-// 			),
-// 		)
-// 	}
-
-// 	profile, errRes := h.se.GetProfile(
-// 		userCtx.UserID,
-// 	)
-
-// 	if errRes != nil {
-// 		return c.Status(400).JSON(
-// 			response.NewResponseError(
-// 				errRes.MessageID,
-// 				constants.Login_failed,
-// 				errRes,
-// 			),
-// 		)
-// 	}
-
-// 	return c.Status(200).JSON(
-// 		response.NewResponse(
-// 			"profile fetched successfully",
-// 			constants.Login_success,
-// 			profile,
-// 		),
-// 	)
-// }
-
 func (h *ProfileHandlerImpl) Profile(c fiber.Ctx) error {
 	userCtx, ok := c.Locals("UserContext").(share.UserContext)
 	if !ok {
@@ -80,7 +43,6 @@ func (h *ProfileHandlerImpl) Profile(c fiber.Ctx) error {
 	idParam := c.Query("id")
 	fmt.Println("🔍 [BACKEND] c.Query(\"id\"):", idParam, "| userCtx.UserID:", userCtx.UserID)
 
-	// ✅ អាន id ពី query string; បើគ្មាន ប្រើ user ដែល login ជា default
 	targetUserID := userCtx.UserID
 	if idParam := c.Query("id"); idParam != "" {
 		if parsedID, err := strconv.ParseInt(idParam, 10, 64); err == nil {
@@ -89,7 +51,7 @@ func (h *ProfileHandlerImpl) Profile(c fiber.Ctx) error {
 	}
 
 	profile, errRes := h.se.GetProfile(
-		targetUserID, // ✅ ប្រើ target ជំនួស userCtx.UserID ជានិច្ច
+		targetUserID,
 	)
 
 	if errRes != nil {
@@ -183,7 +145,6 @@ var allowedCoverExtensions = map[string]bool{
 	".jpg":  true,
 	".jpeg": true,
 	".gif":  true,
-	// .svg មិនអនុញ្ញាត ដោយសារ XSS risk (SVG អាចផ្ទុក script tag)
 }
 
 const maxCoverFileSize = 5 * 1024 * 1024 // 5MB

@@ -128,3 +128,29 @@ reaction_added: "Reaction added successfully"
 reaction_removed: "Reaction removed successfully"
 reaction_types_retrieved: "Reaction types retrieved successfully"
 view_tracked: "View tracked successfully"
+
+course_created: "Course created successfully"
+courses_retrieved: "Courses retrieved successfully"
+course_updated: "Course updated successfully"
+course_deleted: "Course deleted successfully"
+
+# en.yaml
+invalid_request: "Invalid request"
+community_created: "Community created successfully"
+communities_retrieved: "Communities retrieved successfully"
+community_retrieved: "Community retrieved successfully"
+join_toggled: "Join status updated successfully"
+members_retrieved: "Members retrieved successfully"
+
+levels_retrieved: "Levels retrieved successfully"
+status_retrieved: "Status retrieved successfully"
+checkin_success: "Checked in successfully"
+leaderboard_retrieved: "Leaderboard retrieved successfully"
+
+conversations_retrieved: "Conversations retrieved successfully"
+messages_retrieved: "Messages retrieved successfully"
+message_sent: "Message sent successfully"
+reaction_toggled: "Reaction toggled successfully"
+marked_as_read: "Marked as read successfully"
+
+forbidden: "You do not have permission to perform this action"

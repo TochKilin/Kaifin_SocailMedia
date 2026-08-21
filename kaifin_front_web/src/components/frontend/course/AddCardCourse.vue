@@ -1,11 +1,10 @@
 <template>
   <div class="course-detail-page">
     <NavBar />
-    
     <div class="page-wrapper">
+          <div v-if="isLoading" class="state-msg">loading...</div>
+      <div v-else-if="error" class="state-msg error">{{ error }}</div>
       <div class="course-card">
-        
-        <!-- Header Section: Thumbnail ឆ្វេង & ព័ត៌មានស្តាំ -->
         <div class="course-header-row">
           <div class="course-thumbnail-container">
             <img 
@@ -13,12 +12,10 @@
               alt="Course Thumbnail" 
               class="course-thumb-img" 
             />
-            <!-- 🌟 បន្ថែម margin-top និងកែតម្រូវទីតាំងកុំឱ្យវាឡើងទៅប៉ះ Navbar ផ្នែកខាងលើ -->
             <div class="thumbnail-new-badge">
               <span>New product</span>
             </div>
           </div>
-          
           <div class="course-header-info">
             <div class="title-with-badge">
               <h2 class="course-title">{{ course?.name || 'Advanced ASP.NET Core & Vue.js Architecture' }}</h2>
@@ -32,7 +29,6 @@
               <span class="level-badge">LV.5</span>
             </div>
 
-            <!-- Meta Info (Last update & Hours) -->
             <div class="meta-info-row">
               <div class="meta-badge">
                 <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -52,14 +48,12 @@
               </div>
             </div>
 
-            <!-- តម្លៃពណ៌ខៀវ -->
             <div class="price-display">
               <span class="currency-symbol">$</span><span class="price-number">49.99</span>
             </div>
           </div>
         </div>
 
-        <!-- Container សម្រាប់ការពិពណ៌នា និងអត្ថប្រយោជន៍ -->
         <div class="content-top-group">
           <div class="description-box">
             <p class="description-text">
@@ -68,24 +62,31 @@
           </div>
 
           <div class="benefits-list">
-            <div class="benefit-item" v-for="(benefit, index) in (course?.benefits || defaultBenefits)" :key="index">
-              <div class="benefit-icon-box">
-                <svg class="sticker-face-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="3" y="3" width="18" height="18" rx="5" fill="#1B75D2" stroke="#60a5fa" stroke-width="1.5"/>
-                  <circle cx="8.5" cy="9" r="2" fill="#ffffff"/>
-                  <circle cx="15.5" cy="9" r="2" fill="#ffffff"/>
-                  <rect x="9.5" y="14" width="5" height="4" rx="1" fill="#ffffff"/>
-                </svg>
-              </div>
-              <span class="benefit-text">{{ benefit }}</span>
+          <div class="benefit-item" v-for="(inc, index) in (course?.includesRaw?.length ? course.includesRaw : defaultBenefits.map(t => ({ text: t, icon: '' })))" :key="index">
+            <div class="benefit-icon-box">
+              <!-- Video icon -->
+              <svg v-if="inc.icon === 'video'" class="sticker-face-icon" viewBox="0 0 24 24" fill="none" stroke="#1B75D2" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              <!-- Download icon -->
+              <svg v-else-if="inc.icon === 'download'" class="sticker-face-icon" viewBox="0 0 24 24" fill="none" stroke="#1B75D2" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <!-- Certificate icon -->
+              <svg v-else-if="inc.icon === 'certificate'" class="sticker-face-icon" viewBox="0 0 24 24" fill="none" stroke="#1B75D2" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5L17 22l-5-3-5 3 1.5-8.5"/></svg>
+              <!-- Default smiley fallback -->
+              <svg v-else class="sticker-face-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="18" height="18" rx="5" fill="#1B75D2" stroke="#60a5fa" stroke-width="1.5"/>
+                <circle cx="8.5" cy="9" r="2" fill="#ffffff"/>
+                <circle cx="15.5" cy="9" r="2" fill="#ffffff"/>
+                <rect x="9.5" y="14" width="5" height="4" rx="1" fill="#ffffff"/>
+              </svg>
             </div>
+            <span class="benefit-text">{{ inc.text }}</span>
           </div>
         </div>
+        </div>
 
-        <!-- Footer Action (Add Cart & Save) -->
+        <!-- Footer A-->
         <div class="action-footer">
-          <button class="add-cart-btn" @click="addToCart">
-            <span>Add Cart</span>
+          <button class="add-cart-btn" @click="addToCart" :disabled="isAddingToCart">
+            <span>{{ isAddingToCart ? 'កំពុងបន្ថែម...' : 'Add Cart' }}</span>
             <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="9" cy="21" r="1"></circle>
               <circle cx="20" cy="21" r="1"></circle>
@@ -98,7 +99,7 @@
             </svg>
           </button>
         </div>
-
+        <p v-if="addToCartError" class="state-msg error" style="margin-top: 8px;">{{ addToCartError }}</p>
       </div>
     </div>
   </div>
@@ -109,6 +110,22 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NavBar from '../navbar/NavBar.vue'
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+
+function getAuthToken() {
+  return localStorage.getItem('token') || ''
+}
+function authHeaders() {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+function resolveImageUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image/')) return url
+  const path = url.startsWith('/') ? url : `/uploads/${url}`
+  return `${BASE_URL}${path}`
+}
+
 const props = defineProps({
   courseData: {
     type: Object,
@@ -118,49 +135,107 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
-
 const defaultCourseImage = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
-
-const mockCourseDatabase = {
-  1: {
-    name: 'Advanced ASP.NET Core & Vue.js Architecture',
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80',
-    lastUpdate: '2026',
-    hours: '80 Hours',
-    price: '$49.99',
-    description: 'Comprehensive guide to building scalable retail management backend APIs and high-performance Vue component systems.',
-    benefits: [
-      'Master database integration with MySQL & phpMyAdmin schemas',
-      'Build robust RESTful controllers using C# ASP.NET Core',
-      'Develop reactive frontend components using Vue.js'
-    ]
-  }
-}
-
-const course = ref(props.courseData)
-
 const defaultBenefits = [
   'Master database integration with MySQL & phpMyAdmin schemas',
   'Build robust RESTful controllers using C# ASP.NET Core',
   'Develop reactive frontend components using Vue.js'
 ]
 
+const course = ref(null)
+const isLoading = ref(false)
+const error = ref(null)
+const isAddingToCart = ref(false)
+const addToCartError = ref(null)
+
+function mapCourseDetail(c) {
+  const includes = Array.isArray(c.includes) ? c.includes : []
+  return {
+    id: c.id,
+    name: c.title,
+    image: resolveImageUrl(c.thumbnail) || defaultCourseImage,
+    lastUpdate: c.updated_at ? new Date(c.updated_at).getFullYear() : new Date().getFullYear(),
+    hours: c.total_length || '—',
+    price: c.current_price,
+    originalPrice: c.original_price,
+    description: c.description || c.subtitle || '',
+    benefits: includes.length > 0
+      ? includes.map(inc => inc.text)
+      : defaultBenefits,
+    includesRaw: includes,
+  }
+}
+
+async function fetchCourseById(id) {
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/courses/show/${id}`, {
+      headers: { ...authHeaders() },
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`API ${res.status} ${res.statusText}: ${text}`)
+    }
+    const json = await res.json()
+    const data = json?.data ?? json
+    course.value = mapCourseDetail(data)
+  } catch (e) {
+    console.error('Failed to fetch course detail', e)
+    error.value = 'can not fetch'
+  } finally {
+    isLoading.value = false
+  }
+}
+
 onMounted(() => {
-  if (!course.value && history.state && history.state.courseData) {
+  const courseId = route.params.id
+  if (courseId) {
+    fetchCourseById(courseId)
+    return
+  }
+
+  if (props.courseData) {
+    course.value = props.courseData
+    return
+  }
+  if (history.state && history.state.courseData) {
     course.value = history.state.courseData
-  } else if (!course.value) {
-    const courseId = route.params.id || 1
-    course.value = mockCourseDatabase[courseId] || mockCourseDatabase[1]
   }
 })
 
-const addToCart = () => {
-  router.push({
-    name: 'ShoppingCartCourse',
-    state: {
-      cartItem: course.value
+const addToCart = async () => {
+  if (!course.value?.id) return
+  isAddingToCart.value = true
+  addToCartError.value = null
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/cart/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+      },
+      body: JSON.stringify({ course_id: course.value.id }),
+    })
+
+    const raw = await res.text()
+    let data = null
+    if (raw) {
+      try { data = JSON.parse(raw) } catch {
+        throw new Error(`Server returned non-JSON response (status ${res.status})`)
+      }
     }
-  })
+    if (!res.ok) {
+      throw new Error(data?.message || `Request failed with status ${res.status}`)
+    }
+
+    router.push({ name: 'ShoppingCartCourse' })
+  } catch (e) {
+    console.error('Failed to add to cart', e)
+    addToCartError.value = e.message || 'មិនអាចបន្ថែមទៅ Cart បានទេ'
+  } finally {
+    isAddingToCart.value = false
+  }
 }
 </script>
 
@@ -198,7 +273,6 @@ const addToCart = () => {
   border-left: 1px solid #e2e8f0;
   border-right: 1px solid #e2e8f0;
   border-radius: 0;
-  /* 🌟 បន្ថែម padding-top ធំល្មម ដើម្បីបង្កើតគម្លាតសុវត្ថិភាពពី Navbar កុំឱ្យ Badge ឡើងទៅប៉ះ */
   padding: 35px 28px 20px 28px;
   box-sizing: border-box;
   display: flex;
@@ -233,7 +307,6 @@ const addToCart = () => {
   border-radius: 12px;
 }
 
-/* 🌟 រក្សាតម្លៃ top ឱ្យនៅខាងក្នុង Thumbnail មិនឱ្យរត់ហៀរឡើងលើទៅប៉ះ Navbar ទេ។ */
 .thumbnail-new-badge {
   position: absolute;
   top: -10px;

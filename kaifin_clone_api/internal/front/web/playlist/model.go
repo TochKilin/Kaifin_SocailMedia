@@ -8,7 +8,6 @@ import (
 	"kaifin_clone_api/pkg/utls"
 )
 
-// Playlist maps to the `playlists` table.
 type Playlist struct {
 	ID         int64     `json:"id" db:"id"`
 	UserID     int64     `json:"user_id" db:"user_id"`
@@ -37,17 +36,11 @@ type PlaylistListResponse struct {
 	Limit     int                `json:"limit"`
 }
 
-// ---------- Create ----------
-// NOTE: cover_url is a real file upload (multipart file part), not a
-// text URL — same pattern as songs.file_url/cover_url. It's populated
-// by the handler after saving the uploaded file, not bound from the
-// form directly.
-
 type CreatePlaylistRequest struct {
 	Name     string  `json:"name" form:"name" validate:"required"`
-	CoverURL string  `json:"cover_url"` // set by the handler, not bound from form
+	CoverURL string  `json:"cover_url"`
 	IsPublic *bool   `json:"is_public" form:"is_public"`
-	SongIDs  []int64 `json:"song_ids"` // optional — songs to add right away
+	SongIDs  []int64 `json:"song_ids"`
 }
 
 func (r *CreatePlaylistRequest) bind(c fiber.Ctx, v *utls.Validator) error {
@@ -64,9 +57,9 @@ func (r *CreatePlaylistRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 
 type UpdatePlaylistRequest struct {
 	Name     *string  `json:"name" form:"name"`
-	CoverURL *string  `json:"cover_url"` // set by the handler only if a new file was uploaded
+	CoverURL *string  `json:"cover_url"`
 	IsPublic *bool    `json:"is_public" form:"is_public"`
-	SongIDs  *[]int64 `json:"song_ids"` // nil = leave songs untouched, [] = clear, [...] = replace
+	SongIDs  *[]int64 `json:"song_ids"`
 }
 
 func (r *UpdatePlaylistRequest) bind(c fiber.Ctx, v *utls.Validator) error {
@@ -78,8 +71,6 @@ func (r *UpdatePlaylistRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	}
 	return nil
 }
-
-// ---------- Show / List ----------
 
 type ShowPlaylistRequest struct {
 	Search string `query:"search"`
@@ -106,9 +97,6 @@ func (r *ShowPlaylistRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	return nil
 }
 
-// ---------- Top ----------
-// Ranking agreed on: is_featured DESC, then songs_count DESC.
-
 type TopPlaylistRequest struct {
 	Limit int `query:"limit"`
 }
@@ -125,15 +113,6 @@ func (r *TopPlaylistRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	}
 	return nil
 }
-
-// ---------- Delete ----------
-// Delete only needs the :id path param plus the authenticated user —
-// both are resolved in the handler, so there's no request body to bind.
-
-// ---------- Add / Remove a single song ----------
-// Lighter-weight alternative to Update's full song_ids replace — lets
-// the frontend's "Add to playlist" button add one song without
-// re-sending the whole list.
 
 type AddPlaylistSongRequest struct {
 	SongID int64 `json:"song_id" form:"song_id" validate:"required"`

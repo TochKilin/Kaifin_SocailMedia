@@ -77,7 +77,6 @@ func (r *MysetStickerRepoImpl) Show(userID int64) (*MyStickerSetsResponse, *erro
 	return &MyStickerSetsResponse{Sets: result}, nil
 }
 
-// Delete = ដក pack ចេញពី collection របស់ user (មិនលុប pack/stickers ដើម)
 func (r *MysetStickerRepoImpl) Delete(packID int64, userID int64) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 
@@ -95,7 +94,6 @@ func (r *MysetStickerRepoImpl) Delete(packID int64, userID int64) *error_respons
 	return nil
 }
 
-// Add pack ចូល collection (ប្រើពេលចុច "ADD" លើ pack-card)
 func (r *MysetStickerRepoImpl) Create(packID int64, userID int64) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 
@@ -110,7 +108,6 @@ func (r *MysetStickerRepoImpl) Create(packID int64, userID int64) *error_respons
 	return nil
 }
 
-// Serve raw image bytes ពី bytea
 func (r *MysetStickerRepoImpl) GetStickerImage(id int64) ([]byte, string, error) {
 	var fileData []byte
 	var fileType string

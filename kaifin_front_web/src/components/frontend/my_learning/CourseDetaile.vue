@@ -1,6 +1,5 @@
-<!-- File: CourseWatchPage.vue -->
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import AIAssistant from './AIAssistant.vue'
 import LessonSection from './LessonSection.vue'
 import Overview from './Overview.vue'
@@ -8,16 +7,17 @@ import QnAManagement from './QnAManagement.vue'
 import Note from './Note.vue'
 import Annount from './Annount.vue'
 import Review from './Review.vue'
-import LearningTool from './LearningTool.vue' // 1. នាំចូល LearningTool Component
+import LearningTool from './LearningTool.vue'
 
-defineProps({
+const props = defineProps({
   course: {
     type: Object,
     required: true,
     default: () => ({
       title: 'AI & Machine Learning Mastery',
       description: 'Learn cutting-edge AI techniques from industry experts with hands-on projects.',
-      mediaUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop'
+      mediaUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop',
+      videoUrl: ''
     })
   }
 })
@@ -26,6 +26,101 @@ defineEmits(['back'])
 
 const activeSidebarTab = ref('Lesson')
 const activeContentTab = ref('Content Course')
+
+const videoRef = ref(null)
+const isPlaying = ref(false)
+const isMuted = ref(false)
+const currentTime = ref(0)
+const duration = ref(0)
+const currentVideoUrl = ref(props.course.videoUrl || '')
+
+watch(
+  () => props.course.videoUrl,
+  (newUrl) => {
+    if (newUrl) {
+      currentVideoUrl.value = newUrl
+    }
+  },
+  { immediate: true }
+)
+
+const progressPercent = computed(() => {
+  if (!duration.value) return 0
+  return (currentTime.value / duration.value) * 100
+})
+
+function formatTime(sec) {
+  if (!sec || isNaN(sec)) return '00:00'
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+const timeLabel = computed(() => `${formatTime(currentTime.value)} / ${formatTime(duration.value)}`)
+
+function togglePlay() {
+  const el = videoRef.value
+  if (!el) return
+  if (el.paused) el.play()
+  else el.pause()
+}
+
+
+
+function toggleMute() {
+  const el = videoRef.value
+  if (!el) return
+  el.muted = !el.muted
+  isMuted.value = el.muted
+}
+
+function onTimeUpdate() {
+  const el = videoRef.value
+  if (!el) return
+  currentTime.value = el.currentTime
+}
+
+function onLoadedMetadata() {
+  duration.value = videoRef.value?.duration || 0
+}
+
+function onPlay() { isPlaying.value = true }
+function onPause() { isPlaying.value = false }
+function onEnded() { isPlaying.value = false }
+
+function seekTo(event) {
+  const el = videoRef.value
+  const bar = event.currentTarget
+  if (!el || !duration.value) return
+  const rect = bar.getBoundingClientRect()
+  const ratio = (event.clientX - rect.left) / rect.width
+  el.currentTime = Math.max(0, Math.min(1, ratio)) * duration.value
+}
+
+function toggleFullscreen() {
+  const container = videoRef.value?.closest('.video-screen')
+  if (!container) return
+  if (!document.fullscreenElement) {
+    container.requestFullscreen?.()
+  } else {
+    document.exitFullscreen?.()
+  }
+}
+
+function playLesson(lesson) {
+  if (!lesson.videoUrl) return
+  currentVideoUrl.value = lesson.videoUrl
+  currentTime.value = 0
+  duration.value = 0
+  isPlaying.value = false
+  requestAnimationFrame(() => {
+    videoRef.value?.play()
+  })
+}
+
+onBeforeUnmount(() => {
+  videoRef.value?.pause()
+})
 
 const handleSwitcherClick = (tabName) => {
   activeContentTab.value = tabName
@@ -48,8 +143,8 @@ const sidebarTabs = [
 ]
 
 const lessonsList = ref([
-  { id: '01', title: 'Advanced Machine Learning Architecture & Pipelines', duration: '15:30 mins', isHot: true },
-  { id: '02', title: 'The booklets main theme remains the same...', duration: '15:30 mins', isHot: false }
+  { id: '01', title: 'Advanced Machine Learning Architecture & Pipelines', duration: '15:30 mins', isHot: true, videoUrl: '' },
+  { id: '02', title: 'The booklets main theme remains the same...', duration: '15:30 mins', isHot: false, videoUrl: '' }
 ])
 
 const instructorProfile = {
@@ -72,7 +167,7 @@ const sendAiMessage = () => {
   aiMessages.value.push({ sender: 'user', text: aiQuery.value })
   const question = aiQuery.value
   aiQuery.value = ''
-  
+
   setTimeout(() => {
     aiMessages.value.push({ sender: 'ai', text: `Regarding your question "${question}", it relates to the system architecture...` })
   }, 1000)
@@ -82,15 +177,59 @@ const sendAiMessage = () => {
 <template>
   <div class="watch-page">
     <div class="watch-layout">
-      
-      <!-- ផ្នែកខាងឆ្វេង៖ វីដេអូ និងមាតិកា -->
-      <div class="main-content-col">
 
-        <!-- Video Player Box -->
+      <div class="main-content-col">
         <div class="video-container">
-          <div class="video-screen" :style="{ backgroundImage: `url(${course.mediaUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }">
-            <div class="play-btn">
-              <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <div class="video-screen">
+            <video
+              ref="videoRef"
+              class="video-el"
+              :src="currentVideoUrl"
+              :poster="course.mediaUrl"
+              @click="togglePlay"
+              @play="onPlay"
+              @pause="onPause"
+              @ended="onEnded"
+              @timeupdate="onTimeUpdate"
+              @loadedmetadata="onLoadedMetadata"
+               @error="onVideoError"
+            ></video>
+
+            <div v-if="!isPlaying" class="play-btn" @click="togglePlay">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+
+          <div class="video-controls">
+            <div class="ctrl-group">
+              <button class="icon-btn" @click="togglePlay">
+                <svg v-if="!isPlaying" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+              </button>
+
+              <button class="icon-btn" @click="toggleMute">
+                <svg v-if="!isMuted" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+              </button>
+
+              <div class="progress-bar-wrapper" @click="seekTo">
+                <div class="progress-line">
+                  <div class="progress-filled" :style="{ width: progressPercent + '%' }"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ctrl-group right-group">
+              <div class="time-badge-with-clock">
+                <svg class="badge-clock-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 3"></path>
+                </svg>
+                <span class="time-badge">{{ timeLabel }}</span>
+              </div>
+              <button class="icon-btn" @click="toggleFullscreen">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+              </button>
             </div>
           </div>
         </div>
@@ -101,7 +240,6 @@ const sendAiMessage = () => {
           <p class="course-main-desc">{{ course.description }}</p>
         </div>
 
-        <!-- Instructor Profile Section -->
         <div class="instructor-profile-box">
           <div class="prof-header">
             <img :src="instructorProfile.avatar" :alt="instructorProfile.name" class="prof-avatar">
@@ -112,24 +250,23 @@ const sendAiMessage = () => {
           </div>
         </div>
 
-        <!-- Switcher Tabs -->
         <div class="switcher-tabs">
-          <button 
-            class="switch-btn" 
+          <button
+            class="switch-btn"
             :class="{ active: activeContentTab === 'Content Course' }"
             @click="handleSwitcherClick('Content Course')"
           >
             Content Course
           </button>
-          <button 
-            class="switch-btn" 
+          <button
+            class="switch-btn"
             :class="{ active: activeContentTab === 'Reviews' }"
             @click="handleSwitcherClick('Reviews')"
           >
             Reviews
           </button>
-          <button 
-            class="switch-btn" 
+          <button
+            class="switch-btn"
             :class="{ active: activeContentTab === 'AI Assistance' }"
             @click="handleSwitcherClick('AI Assistance')"
           >
@@ -137,17 +274,17 @@ const sendAiMessage = () => {
           </button>
         </div>
 
-        <!-- Dynamic Conditional Rendering for Sidebar Tabs -->
         <div class="sections-list" v-if="activeSidebarTab === 'Lesson'">
-          <LessonSection 
-            v-for="lesson in lessonsList" 
-            :key="lesson.id" 
-            :lesson="lesson" 
-            :mediaUrl="course.mediaUrl" 
+          <LessonSection
+            v-for="lesson in lessonsList"
+            :key="lesson.id"
+            :lesson="lesson"
+            :mediaUrl="course.mediaUrl"
+            @click="playLesson(lesson)"
           />
         </div>
 
-        <AIAssistant 
+        <AIAssistant
           v-else-if="activeSidebarTab === 'AI Assistant'"
           v-model:aiQuery="aiQuery"
           :aiMessages="aiMessages"
@@ -155,30 +292,20 @@ const sendAiMessage = () => {
         />
 
         <Overview v-else-if="activeSidebarTab === 'Overview'" />
-
         <QnAManagement v-else-if="activeSidebarTab === 'Q&A'" />
-
         <Note v-else-if="activeSidebarTab === 'Notes'" />
-
         <Annount v-else-if="activeSidebarTab === 'Announcement'" />
-
         <Review v-else-if="activeSidebarTab === 'Reviews'" @back="activeSidebarTab = 'Lesson'" />
-
-        <!-- 2. បន្ថែម LearningTool Component នៅទីនេះ -->
         <LearningTool v-else-if="activeSidebarTab === 'Learning tools'" @back="activeSidebarTab = 'Lesson'" />
 
-        <!-- Other Tab Content -->
         <div class="other-tab-content" v-else>
           <p>Content for Tab: <strong>{{ activeSidebarTab }}</strong></p>
         </div>
-
       </div>
-
-      <!-- Right: Sidebar Menu -->
       <div class="sidebar-menu-col">
         <div class="sidebar-menu-container">
-          <button 
-            v-for="tab in sidebarTabs" 
+          <button
+            v-for="tab in sidebarTabs"
             :key="tab.name"
             class="menu-item"
             :class="{ active: activeSidebarTab === tab.name }"
@@ -191,7 +318,6 @@ const sendAiMessage = () => {
           </button>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -238,6 +364,7 @@ const sendAiMessage = () => {
   align-items: center;
   justify-content: center;
   position: relative;
+    aspect-ratio: 16 / 9;
 }
 
 .video-screen::before {
@@ -558,5 +685,19 @@ const sendAiMessage = () => {
 .menu-item:hover .menu-icon,
 .menu-item.active .menu-icon {
   color: #1976D2;
+}
+
+.video-el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+  z-index: 0;
+}
+
+.progress-bar-wrapper {
+  cursor: pointer;
 }
 </style>

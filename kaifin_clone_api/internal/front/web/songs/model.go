@@ -8,7 +8,6 @@ import (
 	"kaifin_clone_api/pkg/utls"
 )
 
-// Song maps to the `songs` table.
 type Song struct {
 	ID        int64     `json:"id" db:"id"`
 	Title     string    `json:"title" db:"title"`
@@ -36,17 +35,11 @@ type SongListResponse struct {
 	Limit int            `json:"limit"`
 }
 
-// ---------- Create ----------
-// NOTE: file_url / cover_url are real file uploads (multipart file
-// parts), not text URLs. I'm assuming local-disk storage since I don't
-// know your setup — swap saveUploadedFile() in handler.go for an S3 (or
-// other) upload if that's what you actually use.
-
 type CreateSongRequest struct {
 	Title    string `json:"title" form:"title" validate:"required"`
 	Duration int    `json:"duration" form:"duration"`
-	FileURL  string `json:"file_url"`  // set by the handler after saving the uploaded audio file — not bound from the form directly
-	CoverURL string `json:"cover_url"` // same, optional
+	FileURL  string `json:"file_url"`
+	CoverURL string `json:"cover_url"`
 }
 
 func (r *CreateSongRequest) bind(c fiber.Ctx, v *utls.Validator) error {
@@ -59,13 +52,11 @@ func (r *CreateSongRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	return nil
 }
 
-// ---------- Update ----------
-
 type UpdateSongRequest struct {
 	Title    *string `json:"title" form:"title"`
 	Duration *int    `json:"duration" form:"duration"`
-	FileURL  *string `json:"file_url"`  // set by the handler only if a new file was uploaded
-	CoverURL *string `json:"cover_url"` // same
+	FileURL  *string `json:"file_url"`
+	CoverURL *string `json:"cover_url"`
 }
 
 func (r *UpdateSongRequest) bind(c fiber.Ctx, v *utls.Validator) error {
@@ -77,8 +68,6 @@ func (r *UpdateSongRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	}
 	return nil
 }
-
-// ---------- Show / List ----------
 
 type ShowSongRequest struct {
 	Search string `query:"search"`
@@ -104,10 +93,6 @@ func (r *ShowSongRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	}
 	return nil
 }
-
-// ---------- Delete ----------
-// Delete only needs the :id path param plus the authenticated user —
-// both are resolved in the handler, so there's no request body to bind.
 
 func toSongResponse(s Song) SongResponse {
 	return SongResponse{

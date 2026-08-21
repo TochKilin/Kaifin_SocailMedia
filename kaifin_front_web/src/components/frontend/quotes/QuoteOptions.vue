@@ -38,7 +38,7 @@ defineEmits(['action', 'close'])
 
 .options-popup {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #e2e8f0;
   border-radius: 16px;
   padding: 8px;
   display: flex;
@@ -91,11 +91,11 @@ defineEmits(['action', 'close'])
 }
 
 .blocked-icon {
-  color: #000; /* ពណ៌ក្រហមសម្រាប់ Blocked */
+  color: #000;
 }
 
 .report-icon {
-  color: #000; /* ពណ៌លឿងទុំសម្រាប់ Report */
+  color: #000; 
 }
 
 .option-text {

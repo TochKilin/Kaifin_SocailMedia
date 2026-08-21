@@ -1,4 +1,4 @@
-<!-- File: MoreNotification.vue -->
+
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
@@ -13,14 +13,13 @@ const emit = defineEmits([
   'fullScreen'
 ])
 
-// State សម្រាប់គ្រប់គ្រងការបង្ហាញ Menu
+
 const showDropdown = ref(false)
 
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
 }
 
-// បិទ Menu វិញពេលចុចក្រៅ
 const closeDropdown = (e) => {
   if (!e.target.closest('.header-dots-wrapper')) {
     showDropdown.value = false
@@ -91,7 +90,7 @@ const deleteFollow = (index) => {
 
 <template>
   <div class="article-notification-container">
-    <!-- Main Header with Title & More Dropdown -->
+    <!-- Main Header with title -->
     <div class="main-header">
       <div class="header-title-wrapper">
         <!-- SVG Bell Icon -->
@@ -194,7 +193,7 @@ const deleteFollow = (index) => {
       </div>
     </div>
 
-    <!-- Section: Follow -->
+    <!-- Section Follow -->
     <div class="section-header follower-header">
       <h2 class="section-title">Follow</h2>
       <button class="see-all-btn" @click="$emit('seeAllFollow')">see all</button>
@@ -261,7 +260,7 @@ const deleteFollow = (index) => {
       </div>
     </div>
 
-    <!-- Section: A Week -->
+    <!-- Section A Week -->
     <div class="section-header follower-header">
       <h2 class="section-title">A Week</h2>
       <button class="see-all-btn" @click="$emit('seeAllWeek')">see all</button>
@@ -366,7 +365,6 @@ const deleteFollow = (index) => {
   color: #0f172a;
 }
 
-/* More Dots & Dropdown */
 .header-dots-wrapper {
   position: relative;
   cursor: pointer;

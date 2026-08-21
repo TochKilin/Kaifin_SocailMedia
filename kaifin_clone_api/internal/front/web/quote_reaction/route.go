@@ -20,8 +20,8 @@ func NewQuoteReactionRoute(app *fiber.App, dbpool *sqlx.DB, rdb *redis.Client, w
 	v1.Get("/reaction-types", h.ListTypes)
 
 	reactions := v1.Group("/quote-reactions")
-	reactions.Post("/create", h.React)        // body: {quote_id, reaction_type_id}
-	reactions.Delete("/:quote_id", h.Unreact) // unlike
+	reactions.Post("/create", h.React)
+	reactions.Delete("/:quote_id", h.Unreact)
 
 	reactions.Get("/:quote_id", h.Show)
 

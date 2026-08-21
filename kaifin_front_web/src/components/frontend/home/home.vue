@@ -1,241 +1,247 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import axios from "axios";
 import NavBar from "../navbar/NavBar.vue";
 
 const router = useRouter();
 const searchQuery = ref("");
 const isLoading = ref(true);
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:7070";
 
-// 1. Top Course Data
-const topCourses = ref([
-  {
-    id: 1,
-    title: "Vue 3 Mastery",
-    description: "Learn composition API with real-world projects",
-    students: "400K students",
-    lessons: "50 lessons",
-    rating: "4.5",
-    price: "$49.99",
-    isPopular: false,
-    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60",
-    studentAvatars: [
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSW3VxjZL3_kSA2MNOF0OjZfplGwqBAhQXy7J8yrSSkMw&s=10",
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTh_k5cXIkYZ3hzJmx5T1bZ3I75UjesvsJGIrSQdhxG2g&s=10",
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRP0S6ttGS95Hyz_PrZcUpCicTSMEDWc0ygqMF342zmfw&s=10"
-    ]
-  },
-  {
-    id: 2,
-    title: "UI/UX Basics",
-    description: "Design clean layouts using Figma & Adobe XD",
-    students: "40K students",
-    lessons: "20 lessons",
-    rating: "4.0",
-    price: "$39.99",
-    isPopular: false,
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&auto=format&fit=crop&q=60",
-    studentAvatars: [
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQby2dEgu1YToVDheFGglIRDCSrbbkjePalS6qJwUDEJg&s=10",
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkYF18KgSgnBrGXMIp_-3Fh7VfKI8__LiD12p9d9FfJg&s=10",
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWOW7kqG8TaXpCftb0Vht_sYIVGcJ9MbPqZ7Zn4gk7-g&s=10"
-    ]
-  },
-  {
-    id: 3,
-    title: "Node.js API",
-    description: "Build fast backends with Express & MongoDB",
-    students: "30K students",
-    lessons: "10 lessons",
-    rating: "4.2",
-    price: "$44.99",
-    isPopular: false,
-    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500&auto=format&fit=crop&q=60",
-    studentAvatars: [
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=node1",
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=node2",
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=node3"
-    ]
-  },
-  {
-    id: 4,
-    title: "JavaScript Pro",
-    description: "Advanced concepts: closures, promises, and OOP",
-    students: "50K students",
-    lessons: "30 lessons",
-    rating: "4.8",
-    price: "$59.99",
-    isPopular: true,
-    image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=500&auto=format&fit=crop&q=60",
-    studentAvatars: [
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4eqpFfPcr8emX3vrlrGgOUVgZcsL6P17FZv6IGiNa_Q&s=10",
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8sFS-cWes5GACsxIoT-pO1m9arlRRkIf5XIQUAPo9Zw&s",
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4SPmztW6CFsWOKzJTWRS3ClZT7RWmu0JD-JSAUTYDGg&s=10"
-    ]
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function resolveAvatarUrl(raw) {
+  if (!raw) return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  return `${BASE_URL}/uploads/${raw}`;
+}
+
+const topCourses = ref([]);
+const coursesError = ref("");
+const fetchTopCourses = async () => {
+  isLoading.value = true;
+  coursesError.value = "";
+  try {
+    const res = await axios.get(`${BASE_URL}/api/v1/front/courses/show`, {
+      params: { page: 1, limit: 6 },
+      headers: authHeaders(),
+    });
+    const data = res.data?.data ?? res.data;
+    const list = data?.courses ?? [];
+    topCourses.value = list.map((c) => ({
+      id: c.id,
+      title: c.title,
+      description: c.description || c.subtitle || "",
+      students: `${c.students_count ?? 0} students`,
+      lessons: `${c.lectures_count ?? 0} lessons`,
+      rating: (c.rating ?? 0).toFixed(1),
+      price: c.is_free ? "Free" : `$${(c.current_price ?? 0).toFixed(2)}`,
+      isPopular: (c.ratings_count ?? 0) >= 50,
+      image: c.thumbnail || "https://via.placeholder.com/500x300?text=No+Image",
+      studentAvatars: [],
+    }));
+  } catch (err) {
+    console.error("Failed to fetch top courses:", err);
+    coursesError.value = err.message || "Failed to load courses";
+  } finally {
+    isLoading.value = false;
   }
-]);
+};
 
-// 2. Top Instructor Data
-const topInstructors = ref([
-  { 
-    id: 1, 
-    username: "Alice", 
-    level: "Lvl 1", 
-    students: "10k students", 
-    rating: "4.8", 
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice" 
-  },
-  { 
-    id: 2, 
-    username: "Bob", 
-    level: "Lvl 2", 
-    students: "12k students", 
-    rating: "4.5", 
-    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkITF8ud3rnoF1JleTe8zBZh1Fz2T3_3l0RQyAWrWDqg&s=10" 
-  },
-  { 
-    id: 3, 
-    username: "Charlie", 
-    level: "Lvl 1", 
-    students: "9k students", 
-    rating: "4.2", 
-    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9eBo6yUWTzp_8hRfVqs2oQNEBzHnQqkcsTTVAsZnhyA&s=10" 
-  },
-  { 
-    id: 4, 
-    username: "Diana", 
-    level: "Lvl 3", 
-    students: "6k students", 
-    rating: "4.9", 
-    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIRO0LuYaRlwSJHSJQjVSSAL_EZQO9hju9mUm3wtLSFA&s=10" 
+const topInstructors = ref([]);
+const instructorsError = ref("");
+const isLoadingInstructors = ref(true);
+const TOP_INSTRUCTOR_LIMIT = 6;
+
+async function fetchInstructorProfile(instructorId) {
+  try {
+    const res = await axios.get(`${BASE_URL}/api/v1/front/profile/show`, {
+      params: { id: instructorId },
+      headers: authHeaders(),
+    });
+    const data = res.data?.data ?? res.data;
+    return {
+      username: [data.first_name, data.last_name].filter(Boolean).join(" ") || data.user_name || `Instructor #${instructorId}`,
+      avatar: resolveAvatarUrl(data.profile_images) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${instructorId}`,
+    };
+  } catch (err) {
+    console.error(`Failed to load profile for instructor ${instructorId}:`, err);
+    return {
+      username: `Instructor #${instructorId}`,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${instructorId}`,
+    };
   }
-]);
+}
 
-// 3. Top User Data
-const topUsers = ref([
-  { 
-    id: 1, 
-    username: "Evan", 
-    level: "Lvl 5", 
-    follower: "10M", 
-    streak: "1000",
-    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwRtaBBsSGeXoNNSvKOpMjJi9_In7yFCL-3q6zyagZoA&s"
-  },
-  { 
-    id: 2, 
-    username: "Fiona", 
-    level: "Lvl 4", 
-    follower: "16M", 
-    streak: "9000",
-    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg8KFf5dQ_nkTgIxZCRyeR4vBiBgci7X33PGzadC6uWQ&s=10"
-  },
-  { 
-    id: 3, 
-    username: "George", 
-    level: "Lvl 6", 
-    follower: "12M", 
-    streak: "2000",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=George"
-  },
-  { 
-    id: 4, 
-    username: "Hannah", 
-    level: "Lvl 3", 
-    follower: "14M", 
-    streak: "3000",
-    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQh0q4tGldXhZ8v1R189WgOC9sZWYQw-XUqY1h6vhg8bw&s=10"
+const fetchTopInstructors = async () => {
+  isLoadingInstructors.value = true;
+  instructorsError.value = "";
+  try {
+    const res = await axios.get(`${BASE_URL}/api/v1/front/courses/show`, {
+      params: { page: 1, limit: 200 },
+      headers: authHeaders(),
+    });
+    const data = res.data?.data ?? res.data;
+    const courses = data?.courses ?? [];
+    const grouped = {};
+    courses.forEach((c) => {
+      const key = c.instructor_id;
+      if (!key) return;
+      if (!grouped[key]) {
+        grouped[key] = {
+          instructorId: key,
+          totalStudents: 0,
+          ratingSum: 0,
+          ratedCourseCount: 0,
+          courseCount: 0,
+        };
+      }
+      grouped[key].totalStudents += c.students_count ?? 0;
+      if (c.rating) {
+        grouped[key].ratingSum += c.rating;
+        grouped[key].ratedCourseCount += 1;
+      }
+      grouped[key].courseCount += 1;
+    });
+    const ranked = Object.values(grouped)
+      .map((g) => {
+        const avgRating = g.ratedCourseCount ? g.ratingSum / g.ratedCourseCount : 0;
+        const score =
+          g.totalStudents * 0.4 +
+          avgRating * 20 * 0.3 +
+          g.courseCount * 5 * 0.1;
+        return { ...g, avgRating, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, TOP_INSTRUCTOR_LIMIT);
+
+    if (!ranked.length) {
+      topInstructors.value = [];
+      return;
+    }
+    const [profiles, followInfos] = await Promise.all([
+      Promise.all(ranked.map((r) => fetchInstructorProfile(r.instructorId))),
+      Promise.all(ranked.map((r) => fetchFollowInfo(r.instructorId))),
+    ]);
+
+    topInstructors.value = ranked.map((r, idx) => ({
+      id: r.instructorId,
+      username: profiles[idx].username,
+      avatar: profiles[idx].avatar,
+      level: "",
+      students: `${r.totalStudents} students`,
+      rating: r.avgRating.toFixed(1),
+      follower: formatFollowerCount(followInfos[idx].followerCount),
+      isFollowing: followInfos[idx].isFollowing,
+      isFollowingLoading: false,
+    }));
+  } catch (err) {
+    console.error("Failed to compute top instructors:", err);
+    instructorsError.value = err.message || "Failed to load instructors";
+  } finally {
+    isLoadingInstructors.value = false;
   }
-]);
+};
 
-// 4. Sponsors Data
-const sponsors = ref([
-  {
-    id: 1,
-    title: "Wink Bank",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXlI1mNSiydNCeS3zyw488KVjy-v_ZVsyytF6iX71E-Q&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXlI1mNSiydNCeS3zyw488KVjy-v_ZVsyytF6iX71E-Q&s=10"
-  },
-  {
-    id: 2,
-    title: "Rupp",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyvLU7mMbM-LsYiA1C_dIvUyQb8zyr0Y7nNwiw5EO-fQ&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyvLU7mMbM-LsYiA1C_dIvUyQb8zyr0Y7nNwiw5EO-fQ&s=10"
-  },
-  {
-    id: 3,
-    title: "ACE",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVbFiigLim2Y8L3wYAXr5ZZio59rii96XEFYmEQjoBiA&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVbFiigLim2Y8L3wYAXr5ZZio59rii96XEFYmEQjoBiA&s=10"
-  },
-  {
-    id: 4,
-    title: "Chip Mong Market",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSn9NOWTme2d5Br0DDizgQAyzkfF-UfjkV72q6JxeeEsw&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSn9NOWTme2d5Br0DDizgQAyzkfF-UfjkV72q6JxeeEsw&s=10"
-  },
-  {
-    id: 4,
-    title: "Chip Mong Retail",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKNcoZhYPHPy9T3SQGK7GDGZisXdqvy_s9A_Ie45Gfww&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKNcoZhYPHPy9T3SQGK7GDGZisXdqvy_s9A_Ie45Gfww&s=10"
-  },
-  {
-    id: 4,
-    title: "Sastra Film",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRL2yg_MZaVkXuCIwzw9KoCMCpARkp_bXEoO0t_eFYFvg&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRL2yg_MZaVkXuCIwzw9KoCMCpARkp_bXEoO0t_eFYFvg&s=10"
-  },
-  {
-    id: 4,
-    title: "DoDo Film",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCdILnVKJmoojtTsVPlu3k0T03vbsuszny1drVo9G1PQ&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCdILnVKJmoojtTsVPlu3k0T03vbsuszny1drVo9G1PQ&s=10"
-  },
-  {
-    id: 4,
-    title: "Khmer Saa Film",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg7ChEMgD-lxit-NG08tHu0z1CKjSBsPgJKUKeiSMxVw&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg7ChEMgD-lxit-NG08tHu0z1CKjSBsPgJKUKeiSMxVw&s=10"
-  },
-  {
-    id: 4,
-    title: "Khmer Saa Film",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPT3xHGAGHs333J04kWZJr0qXghvd_aI56CyY3atO3xg&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPT3xHGAGHs333J04kWZJr0qXghvd_aI56CyY3atO3xg&s=10"
-  },
-  {
-    id: 4,
-    title: "Hong Meas KH",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMPs9iCyijzUm-GssePt-_OqP7-BAOEvId9oIEy7CgOQ&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMPs9iCyijzUm-GssePt-_OqP7-BAOEvId9oIEy7CgOQ&s=10"
-  },
-  {
-    id: 4,
-    title: "BTV KH",
-    image: "https://images.seeklogo.com/logo-png/65/1/bayon-news-television-logo-png_seeklogo-654190.png",
-    logo: "https://images.seeklogo.com/logo-png/65/1/bayon-news-television-logo-png_seeklogo-654190.png"
-  },
-  {
-    id: 4,
-    title: "Bayon TV",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaLepv74woJ7dyjAQUTzwk3JpwD_hJdTnFxSIg757X2g&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaLepv74woJ7dyjAQUTzwk3JpwD_hJdTnFxSIg757X2g&s=10"
-  },
-  {
-    id: 4,
-    title: "Chip Mong Industry",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDG7BIKfixMXs5KfyFxOhPhUpqNjcBME1pYH1hgsSD1w&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDG7BIKfixMXs5KfyFxOhPhUpqNjcBME1pYH1hgsSD1w&s=10"
-  },
-  {
-    id: 4,
-    title: "Khmer Saa Film",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg7ChEMgD-lxit-NG08tHu0z1CKjSBsPgJKUKeiSMxVw&s=10",
-    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg7ChEMgD-lxit-NG08tHu0z1CKjSBsPgJKUKeiSMxVw&s=10"
+const topUsers = ref([]);
+const isLoadingUsers = ref(true);
+const usersError = ref("");
+
+async function fetchFollowInfo(userId) {
+  try {
+    const res = await axios.get(`${BASE_URL}/api/v1/front/followers/show`, {
+      params: { user_id: userId },
+      headers: authHeaders(),
+    });
+    const data = res.data?.data ?? res.data;
+    return {
+      followerCount: data?.follower_count ?? 0,
+      isFollowing: data?.is_following ?? false,
+    };
+  } catch (err) {
+    console.error(`Failed to load follow info for user ${userId}:`, err);
+    return { followerCount: 0, isFollowing: false };
   }
-]);
+}
 
-// ============= FUNCTIONS =============
+function formatFollowerCount(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
+const fetchTopUsers = async () => {
+  isLoadingUsers.value = true;
+  usersError.value = "";
+  try {
+    const res = await axios.get(`${BASE_URL}/api/v1/front/levels/leaderboard`, {
+      params: { limit: 6 },
+      headers: authHeaders(),
+    });
+    const list = res.data?.data ?? [];
+    const followInfos = await Promise.all(
+      list.map((u) => fetchFollowInfo(u.user_id))
+    );
+
+    topUsers.value = list.map((u, idx) => ({
+      id: u.user_id,
+      username: u.user_name || `User #${u.user_id}`,
+      level: `Lvl ${Math.max(1, Math.floor(u.longest_streak / 3) + 1)}`,
+      streak: String(u.current_streak),
+      avatar: resolveAvatarUrl(u.profile_images) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_id}`,
+      follower: formatFollowerCount(followInfos[idx].followerCount),
+      isFollowing: followInfos[idx].isFollowing,  
+    }));
+  } catch (err) {
+    console.error("Failed to fetch top users:", err);
+    usersError.value = err.message || "Failed to load users";
+  } finally {
+    isLoadingUsers.value = false;
+  }
+};
+
+
+const sponsors = ref([]);
+const sponsorsError = ref("");
+const isLoadingSponsors = ref(true);
+
+function resolveSponsorLogoUrl(raw) {
+  if (!raw) return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  return `${BASE_URL}/uploads/${raw}`;
+}
+
+const fetchSponsors = async () => {
+  isLoadingSponsors.value = true;
+  sponsorsError.value = "";
+  try {
+    const res = await axios.get(`${BASE_URL}/api/v1/front/sponsors/show`, {
+      params: { page: 1, per_page: 20 },
+      headers: authHeaders(),
+    });
+    const data = res.data?.data ?? res.data;
+    const list = data?.sponsors ?? data?.Sponsors ?? [];
+
+    sponsors.value = list.map((s) => ({
+      id: s.id,
+      title: s.name,
+      image: resolveSponsorLogoUrl(s.logo_image),
+      logo: resolveSponsorLogoUrl(s.logo_image),
+      websiteUrl: s.website_url || "",
+      isVerified: s.is_verified ?? false,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch sponsors:", err);
+    sponsorsError.value = err.message || "Failed to load sponsors";
+  } finally {
+    isLoadingSponsors.value = false;
+  }
+};
+
 function handleSearch() {
   if (searchQuery.value.trim()) {
     alert(`🔍 Searching for: "${searchQuery.value}"`);
@@ -248,24 +254,50 @@ function handleBuy(course) {
   alert(`🛒 Added "${course.title}" to cart!\n💰 Price: ${course.price}`);
 }
 
-function handleFollow(user, type) {
-  alert(`✅ You are now following ${type}: ${user.username}`);
+async function handleFollow(item, type) {
+  if (type !== 'User' && type !== 'Instructor') {
+    alert(`You are now following ${type}: ${item.username}`);
+    return;
+  }
+
+  if (item.isFollowingLoading) return;
+  item.isFollowingLoading = true;
+  try {
+    const res = await axios.post(
+      `${BASE_URL}/api/v1/front/followers/create`,
+      { user_id: item.id },
+      { headers: authHeaders() }
+    );
+    const data = res.data?.data ?? res.data;
+
+    const list = type === 'User' ? topUsers.value : topInstructors.value;
+    const target = list.find((u) => u.id === item.id);
+    if (target) {
+      target.isFollowing = data?.is_following ?? false;
+      target.follower = formatFollowerCount(data?.follower_count ?? 0);
+    }
+  } catch (err) {
+    console.error('Follow toggle failed', err);
+    alert('Failed to update follow status');
+  } finally {
+    item.isFollowingLoading = false;
+  }
 }
 
 function handleSponsorReadMore(sponsor) {
-  alert(`📖 Reading more about sponsor: ${sponsor.title}`);
+  alert(`Reading more about sponsor: ${sponsor.title}`);
 }
 
 function viewMore(section) {
-  alert(`📚 Viewing all ${section}...`);
+  alert(`Viewing all ${section}...`);
 }
 
 function openChat() {
-  alert("💬 Opening Chat Room...");
+  alert("Opening Chat Room...");
 }
 
 function openMoreOptions() {
-  alert("⚙️ Opening More Options...");
+  alert("Opening More Options...");
 }
 
 function goToProfile(item, type) {
@@ -283,32 +315,28 @@ function showTooltip(event, name) {
   tooltip.style.left = event.pageX + 'px';
   tooltip.style.top = (event.pageY - 30) + 'px';
   document.body.appendChild(tooltip);
-  
+
   setTimeout(() => {
     tooltip.remove();
   }, 1500);
 }
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+  fetchTopCourses();
+  fetchTopInstructors();
+  fetchTopUsers(); 
+   fetchSponsors();  
 });
 </script>
 
 <template>
   <div class="page-container">
     <NavBar />
-    
     <div class="content-wrap">
-      
-      <!-- MAIN LAYOUT GRID -->
+      <!-- Main layout-->
       <div class="main-layout-grid">
-        
-        <!-- 1. MAIN CONTENT LEFT -->
+        <!-- Main content -->
         <div class="sections-container" :class="{ 'fade-in': !isLoading }">
-          
-          <!-- SECTION 1: TOP COURSE -->
           <div class="row-section-box" :class="{ 'slide-up': !isLoading }">
             <div class="section-header">
               <h2>
@@ -333,23 +361,23 @@ onMounted(() => {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   Best Seller
                 </div>
-                
+
                 <div class="img-box">
                   <img :src="course.image" :alt="course.title" loading="lazy" />
                 </div>
-                
+
                 <div class="card-content-area">
                   <div class="card-info">
                     <h3>{{ course.title }}</h3>
                     <p>{{ course.description }}</p>
-                    
+
                     <div class="students-info-row">
-                      <div class="stacked-avatars">
-                        <img 
-                          v-for="(avatar, index) in course.studentAvatars" 
-                          :key="index" 
-                          :src="avatar" 
-                          alt="student" 
+                      <div class="stacked-avatars" v-if="course.studentAvatars.length">
+                        <img
+                          v-for="(avatar, index) in course.studentAvatars"
+                          :key="index"
+                          :src="avatar"
+                          alt="student"
                           class="stack-avatar"
                           @mouseenter="showTooltip($event, 'Student ' + (index + 1))"
                         />
@@ -359,6 +387,14 @@ onMounted(() => {
                         <svg class="inline-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                         {{ course.students }}
                       </span>
+                    </div>
+
+                    <div v-if="!isLoading && coursesError" class="state-box error" style="text-align:center; padding: 20px; color: #dc3545;">
+                      <p>Can't load courses — {{ coursesError }}</p>
+                      <button class="all-btn" @click="fetchTopCourses">Try again</button>
+                    </div>
+                    <div v-else-if="!isLoading && topCourses.length === 0" class="state-box" style="text-align:center; padding: 20px; color: #6b7280;">
+                      <p>No courses yet</p>
                     </div>
 
                     <div class="tags-row">
@@ -376,7 +412,7 @@ onMounted(() => {
                       </span>
                     </div>
                   </div>
-                  
+
                   <button class="action-btn buying-effect" @click="handleBuy(course)">
                     <svg class="btn-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     Add to Cart
@@ -386,7 +422,6 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- SECTION 2: TOP INSTRUCTOR -->
           <div class="row-section-box" :class="{ 'slide-up': !isLoading }">
             <div class="section-header">
               <h2>
@@ -395,7 +430,7 @@ onMounted(() => {
               <button class="all-btn" @click="viewMore('Top Instructor')">View All &rarr;</button>
             </div>
 
-            <div v-if="isLoading" class="skeleton-wrapper">
+            <div v-if="isLoadingInstructors" class="skeleton-wrapper">
               <div v-for="n in 3" :key="'skeleton-instr-' + n" class="skeleton-card">
                 <div class="skeleton-image"></div>
                 <div class="skeleton-content">
@@ -404,10 +439,19 @@ onMounted(() => {
               </div>
             </div>
 
+            <div v-else-if="instructorsError" class="state-box error" style="text-align:center; padding: 20px; color: #dc3545;">
+              <p>Can't load instructors — {{ instructorsError }}</p>
+              <button class="all-btn" @click="fetchTopInstructors">Try again</button>
+            </div>
+
+            <div v-else-if="topInstructors.length === 0" class="state-box" style="text-align:center; padding: 20px; color: #6b7280;">
+              <p>No instructors with courses yet</p>
+            </div>
+
             <div v-else class="horizontal-cards-scroll">
-              <div 
-                v-for="instructor in topInstructors" 
-                :key="instructor.id" 
+              <div
+                v-for="instructor in topInstructors"
+                :key="instructor.id"
                 class="item-card instructor-vertical-card clickable-card"
                 @click="goToProfile(instructor, 'Instructor')"
               >
@@ -417,33 +461,41 @@ onMounted(() => {
                     <div class="online-status"></div>
                   </div>
                 </div>
-                
+
                 <div class="card-content-area">
                   <div class="card-info instructor-text-center">
                     <h3>{{ instructor.username }}</h3>
-                    <p>{{ instructor.students }} • {{ instructor.level }}</p>
+                    <p>{{ instructor.students }} • ⭐ {{ instructor.rating }}</p>
                   </div>
-                  
-                  <button class="action-btn follow-effect-blue" @click.stop="handleFollow(instructor, 'Instructor')">
-                    Add to Follow
+
+                  <button
+                    class="action-btn follow-effect-blue"
+                    :class="{ 'is-following': instructor.isFollowing }"
+                    :disabled="instructor.isFollowingLoading"
+                    @click.stop="handleFollow(instructor, 'Instructor')"
+                  >
+                    <svg
+                      v-if="instructor.isFollowing"
+                      width="12" height="12" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    {{ instructor.isFollowing ? 'Following' : 'Follow' }}
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          
         </div>
 
-        <!-- 2. SIDEBAR RIGHT PANEL -->
         <div class="sidebar-right-container" :class="{ 'fade-in': !isLoading }">
-          
-          <!-- SEARCH BOX CARD IN SIDEBAR -->
           <div class="sidebar-search-card">
             <div class="search-input-wrap">
-              <input 
-                type="text" 
-                v-model="searchQuery" 
-                placeholder="Search..." 
+              <input
+                type="text"
+                v-model="searchQuery"
+                placeholder="Search..."
                 @keyup.enter="handleSearch"
                 aria-label="Search"
               />
@@ -456,7 +508,6 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- DISCOVER FEATURES CARD IN SIDEBAR -->
           <div class="sidebar-discover-card">
             <div class="hero-text">
               <h1 class="page-title">
@@ -467,7 +518,6 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- TOP USERS CARD IN SIDEBAR -->
           <div class="sidebar-right-panel">
             <div class="sidebar-section-header">
               <h2 class="sidebar-title">
@@ -477,116 +527,137 @@ onMounted(() => {
             </div>
 
             <div class="top-users-sidebar-list">
-              <div 
-                v-for="user in topUsers" 
-                :key="user.id" 
+              <div
+                v-for="user in topUsers"
+                :key="user.id"
                 class="sidebar-user-card clickable-card"
                 @click="goToProfile(user, 'User')"
               >
-                <div class="sidebar-user-avatar">
+                <div
+                  class="sidebar-user-avatar"
+                  :class="{ 'is-following': user.isFollowing }"
+                >
                   <img :src="user.avatar" :alt="user.username" loading="lazy" />
                   <div class="online-status"></div>
+                  <div v-if="user.isFollowing" class="follow-check-badge">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
                 </div>
-                
+
                 <div class="sidebar-user-info">
                   <h4 class="sidebar-user-name">{{ user.username }}   <div class="streak-badge-sm">
                     <span>🔥</span> {{ user.streak }}
                   </div></h4>
                   <p class="sidebar-user-sub">
-  <span class="user-meta-item">
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M12 2l1.9 5.8h6.1l-4.9 3.6 1.9 5.8-5-3.6-5 3.6 1.9-5.8-4.9-3.6h6.1L12 2z"/>
-    </svg>
-    Lvl: {{ user.level }}
-  </span>
-
-  <span class="meta-separator">•</span>
-
-  <span class="user-meta-item">
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-      <circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-    {{ user.follower }}
-  </span>
-</p>
-                
+                  <span class="user-meta-item">
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 2l1.9 5.8h6.1l-4.9 3.6 1.9 5.8-5-3.6-5 3.6 1.9-5.8-4.9-3.6h6.1L12 2z"/>
+                    </svg>
+                    Lvl: {{ user.level }}
+                  </span>
+                    <span class="meta-separator">•</span>
+                    <span class="user-meta-item">
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                      {{ user.follower }}
+                    </span>
+                  </p>
                 </div>
 
-                <button class="user-add-btn" @click.stop="handleFollow(user, 'User')" aria-label="Follow user">
-                  Follow
+                <button
+                  class="user-add-btn"
+                  :class="{ 'is-following': user.isFollowing }"
+                  :disabled="user.isFollowingLoading"
+                  @click.stop="handleFollow(user, 'User')"
+                  aria-label="Follow user"
+                >
+                  <svg
+                    v-if="user.isFollowing"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  {{ user.isFollowing ? 'Following' : 'Follow' }}
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- SPONSORS PROFILE CARD -->
-<div class="sidebar-right-panel sponsors-sidebar-card">
-  <div class="sidebar-section-header">
-    <h2 class="sidebar-title">
-      Sponsors
-    </h2>
+          <div class="sidebar-right-panel sponsors-sidebar-card">
+            <div class="sidebar-section-header">
+              <h2 class="sidebar-title">Sponsors</h2>
+              <button class="all-btn" @click="viewMore('Sponsors')">See All</button>
+            </div>
 
-    <button class="all-btn" @click="viewMore('Sponsors')">
-      See All
-    </button>
-  </div>
+            <div v-if="isLoadingSponsors" class="state-box" style="text-align:center; padding: 16px; color: #6b7280; font-size: 12px;">
+              Loading...
+            </div>
+            <div v-else-if="sponsorsError" class="state-box error" style="text-align:center; padding: 16px; color: #dc3545; font-size: 12px;">
+              Can't load sponsors
+              <button class="all-btn" @click="fetchSponsors">Try again</button>
+            </div>
+            <div v-else-if="sponsors.length === 0" class="state-box" style="text-align:center; padding: 16px; color: #6b7280; font-size: 12px;">
+              No sponsors yet
+            </div>
 
-  <div class="sponsor-profile-grid">
-    <div
-      v-for="sponsor in sponsors"
-      :key="sponsor.id"
-      class="sponsor-profile-item"
-      @click="handleSponsorReadMore(sponsor)"
-    >
-      <!-- Avatar -->
-      <div class="sponsor-avatar-wrap">
-        <img
-          :src="sponsor.logo || sponsor.image"
-          :alt="sponsor.title"
-          class="sponsor-avatar"
-          loading="lazy"
-        />
+            <div v-else class="sponsor-profile-grid">
+              <div
+                v-for="sponsor in sponsors"
+                :key="sponsor.id"
+                class="sponsor-profile-item"
+                @click="handleSponsorReadMore(sponsor)"
+              >
+                <div class="sponsor-avatar-wrap">
+                  <img
+                    :src="sponsor.logo || sponsor.image"
+                    :alt="sponsor.title"
+                    class="sponsor-avatar"
+                    loading="lazy"
+                  />
+                  <span v-if="sponsor.isVerified" class="sponsor-active-dot"></span>
+                </div>
 
-        <!-- Online / Active dot -->
-        <span class="sponsor-active-dot"></span>
-      </div>
-
-      <!-- Name -->
-      <span class="sponsor-profile-name">
-        {{ sponsor.title }}
-      </span>
-    </div>
-  </div>
-</div>
-
+                <span class="sponsor-profile-name">
+                  {{ sponsor.title }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-
       </div>
-
     </div>
 
-    <!-- FLOATING ACTIONS -->
     <div class="floating-sidebar-right">
       <div class="sidebar-card chat-card" @click="openChat">
         <span class="chat-badge">3</span>
@@ -607,7 +678,6 @@ onMounted(() => {
         <span class="sidebar-label">More</span>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -624,8 +694,6 @@ onMounted(() => {
 .content-wrap {
   max-width: 1251px;
   margin: 0 auto;
-  /* padding: 32px 12px; */
-  /* background-color: red; */
 }
 
 @keyframes fadeIn {
@@ -663,7 +731,6 @@ onMounted(() => {
   justify-content: center;
 }
 
-/* Sidebar Discover Features Card Style */
 .sidebar-discover-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -714,7 +781,6 @@ onMounted(() => {
   line-height: 1.4;
 }
 
-/* Sidebar Right Container */
 .sidebar-right-container {
   display: flex;
   flex-direction: column;
@@ -739,12 +805,10 @@ onMounted(() => {
   background: transparent;
   border: 1px solid #e2e8f0;
   border-radius: 32px;
-  /* transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); */
 }
 
 .search-input-wrap:focus-within {
   border-color: #1B75D2;
-
 }
 
 .search-input-wrap input {
@@ -779,7 +843,6 @@ onMounted(() => {
   transform: scale(1.1);
 }
 
-/* Sidebar Right Panel for Top Users & Sponsors */
 .sidebar-right-panel {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -819,8 +882,6 @@ onMounted(() => {
   padding: 4px;
   border-radius: 12px;
   transition: all 0.2s ease;
-  /* background: #f8fafc; */
-  /* border: 1px solid #f1f5f9; */
 }
 
 .sidebar-user-card:hover {
@@ -837,12 +898,50 @@ onMounted(() => {
   position: relative;
   flex-shrink: 0;
   background: #e2e8f0;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
 }
 
 .sidebar-user-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.sidebar-user-avatar.is-following {
+  border-color: #1B75D2;
+}
+
+.follow-check-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1B75D2;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  z-index: 2;
+}
+
+.user-add-btn.is-following {
+  background: transparent;
+  color: #1B75D2;
+  border: 1.5px solid #1B75D2;
+  padding: 3px 10px;     
+}
+
+
+.user-add-btn.is-following:hover {
+  background: transparent;
+}
+
+.user-add-btn.is-following:hover {
+  opacity: 0.8;
 }
 
 .sidebar-user-info {
@@ -905,8 +1004,6 @@ onMounted(() => {
   background: #1B75D2;
   color: #ffffff;
   border: none;
-  /* width: 32px;
-  height: 32px; */
   border-radius: 32px;
   padding: 4px 8px;
   font-size: 12px;
@@ -915,16 +1012,16 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;              /* <-- បន្ថែម gap រវាង icon និង text */
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .user-add-btn:hover {
-  transform: scale(1.1);
+
   background: #155bb5;
 }
 
-/* Sponsors Sidebar Card Specific Styles */
 .sponsors-sidebar-list {
   display: flex;
   flex-direction: column;
@@ -1017,7 +1114,6 @@ onMounted(() => {
   object-fit: cover;
 }
 
-/* Common Layout Components */
 .sections-container {
   width: 100%;
   display: flex;
@@ -1050,11 +1146,11 @@ onMounted(() => {
 }
 
 .more-card {
-  background-color: #1B75D2;
+  background-color: #ffffff;
 }
 
 .chat-card {
-  background-color: #EE8207;
+  background-color: #ffffff;
   position: relative;
   border: 2.1px solid #1B75D2;
   transform: rotate(-5deg);
@@ -1071,7 +1167,7 @@ onMounted(() => {
   min-width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #EE8207;
+  background: #1B75D2;
   color: white;
   display: flex;
   align-items: center;
@@ -1129,7 +1225,7 @@ onMounted(() => {
 }
 
 .sidebar-label {
-  color: #ffffff;
+  color: #000;
   font-size: 11px;
   font-weight: 700;
   text-align: center;
@@ -1139,8 +1235,6 @@ onMounted(() => {
   background: #ffffff;
   border-left: 1px solid #e2e8f0;
   border-right: 1px solid #e2e8f0;
-  /* border: 1px solid #e2e8f0; */
-  /* border-radius: 12px; */
   padding: 16px 20px;
   transition: all 0.3s ease;
 }
@@ -1197,7 +1291,6 @@ onMounted(() => {
   transform: translateX(-4px);
 }
 
-/* Updated to Grid to remove Scroll X */
 .horizontal-cards-scroll {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -1211,17 +1304,12 @@ onMounted(() => {
   flex: unset;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-}
-
-.item-card:hover {
-  border-color: #1B75D2;
-  transform: translateY(-6px);
 }
 
 .popular-badge {
@@ -1433,7 +1521,6 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-/* Updated Skeleton Wrapper to Grid */
 .skeleton-wrapper {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -1499,11 +1586,6 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
-
-/* =========================================
-   SPONSOR PROFILE GRID
-========================================= */
-
 .sponsors-sidebar-card {
   width: 100%;
   background: #fff;
@@ -1513,7 +1595,6 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-/* Header */
 .sponsors-sidebar-card .sidebar-section-header {
   display: flex;
   align-items: center;
@@ -1532,24 +1613,12 @@ onMounted(() => {
   color: #172033;
 }
 
-/* =========================================
-   GRID
-========================================= */
-
 .sponsor-profile-grid {
   display: grid;
-
-  /* 4 profiles per row in sidebar */
   grid-template-columns: repeat(7, 1fr);
-
   gap: 16px 10px;
-
   width: 100%;
 }
-
-/* =========================================
-   PROFILE ITEM
-========================================= */
 
 .sponsor-profile-item {
   display: flex;
@@ -1565,10 +1634,6 @@ onMounted(() => {
     opacity 0.2s ease;
 }
 
-/* =========================================
-   AVATAR
-========================================= */
-
 .sponsor-avatar-wrap {
   position: relative;
 
@@ -1578,25 +1643,17 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* Circle image */
 .sponsor-avatar {
   width: 32px;
   height: 32px;
-
   display: block;
-
   object-fit: cover;
-
   border-radius: 8px;
-
   border: 2px solid #fff;
-
   box-shadow:
     0 0 0 1px #dfe5ec,
     0 3px 8px rgba(0, 0, 0, 0.08);
-
   background: #f1f4f8;
-
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -1610,53 +1667,50 @@ onMounted(() => {
     0 4px 12px rgba(27, 117, 210, 0.18);
 }
 
-/* =========================================
-   ACTIVE DOT
-========================================= */
-
 .sponsor-active-dot {
   position: absolute;
-
   right: 1px;
   bottom: 1px;
-
   width: 10px;
   height: 10px;
-
   border-radius: 50%;
-
   background: #22c55e;
-
   border: 2px solid #fff;
-
   box-sizing: border-box;
 }
 
-/* =========================================
-   NAME
-========================================= */
-
 .sponsor-profile-name {
   width: 100%;
-
   margin-top: 7px;
-
   font-size: 10.5px;
   font-weight: 600;
-
   color: #596579;
-
   text-align: center;
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
   line-height: 1.3;
 }
 
-/* Hover name */
 .sponsor-profile-item:hover .sponsor-profile-name {
   color: #1b75d2;
+}
+
+.user-add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.follow-effect-blue.is-following {
+  background: transparent;
+  color: #1B75D2;
+  border: 1.5px solid #1B75D2;
+}
+
+.follow-effect-blue:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 </style>

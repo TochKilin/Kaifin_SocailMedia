@@ -8,7 +8,6 @@ const sortBy = ref('Sort by recent')
 
 const isModalOpen = ref(false)
 const modalContent = ref('')
-
 const notesList = ref([
   {
     id: 1,
@@ -217,8 +216,7 @@ const closeModal = () => {
 }
 
 .create-note-input:focus {
-  /* border-color: #3b82f6; */
-  /* background-color: #ffffff; */
+
     box-shadow: 0 0 0 3px #1B75D2;
 }
 
@@ -334,7 +332,6 @@ const closeModal = () => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  /* backdrop-filter: blur(2px); */
 }
 
 .modal-card {

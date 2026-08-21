@@ -12,10 +12,9 @@ type NotificationsServiceImpl struct {
 	UserCtx *share.UserContext
 	dbpool  *sqlx.DB
 	Repo    *NotificationsRepoImpl
-	Ws      *websocket.WebSocketManager // បន្ថែម ws ទីនេះ
+	Ws      *websocket.WebSocketManager
 }
 
-// កែប្រែ Constructor ឱ្យទទួលយក ws
 func NewNotificationsServiceImpl(dbpool *sqlx.DB, ws *websocket.WebSocketManager) *NotificationsServiceImpl {
 	return &NotificationsServiceImpl{
 		dbpool: dbpool,

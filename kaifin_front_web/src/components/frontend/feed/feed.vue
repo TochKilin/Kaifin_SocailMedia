@@ -7,19 +7,26 @@ import Posts from '../posts/Posts.vue';
 import PostsCard from '../postcards/PostsCard.vue';
 import Navbar from '../navbar/NavBar.vue';
 import GroupFeed from '../../../components/frontend/sidebar_left_feed/GoupeFeed.vue';
+import FeedFollowing from '../sidebar_left_feed/FeedFollowing.vue';
 
-// State សម្រាប់គ្រប់គ្រងការបង្ហាញ View ('feed' សម្រាប់ទំព័រដើម, 'group-join' សម្រាប់ទំព័រក្រុម)
 const currentView = ref('feed');
-
-// មុខងារពេលចុចលើប៊ូតុង Group Join ពី Sidebar
 const handleOpenGroupJoin = () => {
   currentView.value = 'group-join';
 };
 
-// មុខងារពេលចុចលើ New Feeds ដើម្បីត្រឡប់មក Feed ដើមវិញ
 const handleBackToFeed = () => {
   currentView.value = 'feed';
 };
+
+const handleOpenFollowing = () => {
+  currentView.value = 'following';
+};
+
+const handleOpenPopulars = () => {
+  currentView.value = 'populars';
+}
+
+
 </script>
 
 <template>
@@ -27,34 +34,40 @@ const handleBackToFeed = () => {
        <Navbar/>
     <div class="container">
     <div class="row">
-      <!-- ភ្ជាប់ Event ទាំងពីរនៅទីនេះ -->
       <aside class="col-12 col-md-3 col-lg-2.5 mb-3">
         <SidebarLeftFeed 
+         :active-view="currentView"
           @open-group-join="handleOpenGroupJoin" 
+          @open-following="handleOpenFollowing"
           @open-news-feed="handleBackToFeed" 
+          @open-populars="handleOpenPopulars"
         />
       </aside>
-
       <main class="col-12 col-md-6 col-lg-6.5 mb-3 bd-main">
-        <!-- ប្តូរមាតិកាកណ្តាលឱ្យដាច់ពីគ្នាផ្អែកលើ currentView -->
         <template v-if="currentView === 'group-join'">
             <GroupFeed />
         </template>
+        <template v-else-if="currentView === 'following'">
+            <FeedFollowing />
+        </template>
+        <template v-else-if="currentView === 'populars'">
+            <PostsCard mode="popular" />
+        </template>
+
         <template v-else>
             <SidebarContainerFeed />
             <!-- <Posts /> -->
             <PostsCard />
         </template>
       </main>
-
       <aside class="col-12 col-md-3 col-lg-3 mb-3">
         <SidebarRightFeed />
       </aside>
-    </div>
-    <div class="row">
-        <aside class="col-12 col-md-3 col-lg-2.5 mb-3">
-        </aside>
-    </div>
+      </div>
+      <div class="row">
+          <aside class="col-12 col-md-3 col-lg-2.5 mb-3">
+          </aside>
+      </div>
   </div>
   <div>
   </div>
@@ -63,21 +76,16 @@ const handleBackToFeed = () => {
 
 <style scoped>
 body{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .container{
-    width: 85%;
-    margin: auto;
-}
+  width: 85%;
+  margin: auto;
 
-.bd-main{
-  /* border: 0.5px solid #EFE2D3; */
-  /* background-color: #FDFDFD; */
-  /* padding: 0; */
 }
 
 .row > aside {
@@ -85,7 +93,6 @@ body{
   top: 60px;
   align-self: flex-start;
   max-height: calc(100vh - 100px);
-  
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;

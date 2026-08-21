@@ -1,20 +1,15 @@
 <template>
-  <!-- ផ្ទាំង Forward inline -->
   <div class="forward-panel">
-    <!-- Header ជាមួយ Back button -->
     <div class="forward-panel-header">
       <button class="back-btn" title="Back" @click="$emit('close')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>
       <h3>Forward</h3>
     </div>
-
-    <!-- Search target chat -->
     <div class="forward-search-box">
       <span class="for-label">For:</span>
       <input type="text" v-model="searchQuery" placeholder="Search for friends" />
       
-      <!-- ផ្នែកបង្ហាញ Avatar ដែលមាន background រួមគ្នាតែមួយ -->
       <div class="selected-avatars-row" v-if="selectedTargets.length > 0">
         <div class="selected-avatar-item" v-for="target in selectedTargets" :key="target.id">
           <img :src="target.avatar" :alt="target.name" />
@@ -22,7 +17,6 @@
       </div>
     </div>
 
-    <!-- List of chats to choose from -->
     <div class="forward-chat-list">
       <div
         v-for="chat in filteredChats"
@@ -33,14 +27,12 @@
         <img :src="chat.avatar" :alt="chat.name" class="forward-avatar" />
         <span class="forward-name">{{ chat.name }}</span>
 
-        <!-- Checkbox circle -->
         <div class="wa-checkbox" :class="{ checked: isSelected(chat) }">
           <svg v-if="isSelected(chat)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
       </div>
     </div>
 
-    <!-- Comment input box រួមជាមួយប៊ូតុង Forward -->
     <div class="forward-comment-box">
       <input type="text" v-model="commentText" placeholder="Write a comment" />
       <button class="action-btn forward-btn" @click="confirmForward" :disabled="selectedTargets.length === 0">Forward</button>
@@ -169,16 +161,15 @@ function confirmForward() {
   padding: 4px 0;
 }
 
-/* ធ្វើឱ្យ row ទាំងមូលមាន background តែមួយ និងរាងមូលស្អាត */
 .selected-avatars-row {
   display: flex;
   align-items: center;
   gap: 4px;
   overflow-x: auto;
   max-width: 50%;
-  background-color: #f0f2f5; /* ពណ៌ background រួម */
+  background-color: #f0f2f5; 
   padding: 3px 6px;
-  border-radius: 20px; /* រាងមូលអមសងខាង */
+  border-radius: 20px; 
 }
 
 .selected-avatar-item img {
@@ -186,7 +177,7 @@ function confirmForward() {
   height: 28px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #ffffff; /* បន្ថែម border ស ដើម្បីឱ្យដាច់ភាគនីមួយៗស្អាត */
+  border: 2px solid #ffffff; 
   flex-shrink: 0;
   display: block;
 }

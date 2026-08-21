@@ -19,13 +19,6 @@ import (
 	"kaifin_clone_api/pkg/utls"
 )
 
-// uploadsRoot / baseURL: adjust these to match your actual storage setup.
-// This implementation saves to local disk under ./public/uploads and
-// assumes that folder is served statically by your app (e.g.
-// app.Static("/uploads", "./public/uploads") registered somewhere in
-// your server setup). If you use S3 or another provider instead, this
-// is the one place that needs to change — everything else (repo/service)
-// only ever deals with the final URL string.
 const uploadsRoot = "./uploads"
 
 func baseURL() string {
@@ -35,10 +28,6 @@ func baseURL() string {
 	return "http://localhost:7070"
 }
 
-// saveUploadedFile reads the multipart file under fieldName, writes it
-// to disk under uploadsRoot/subDir, and returns the public URL to store
-// in the DB. Returns an error if no file was sent under that field —
-// callers decide whether that's fatal (required) or fine (optional).
 func saveUploadedFile(c fiber.Ctx, fieldName string, subDir string) (string, error) {
 	fileHeader, err := c.FormFile(fieldName)
 	if err != nil {
@@ -71,8 +60,6 @@ func NewSongHandlerImpl(dbpool *sqlx.DB, rdb *redis.Client) *SongHandlerImpl {
 	}
 }
 
-// currentUser mirrors the post module's helper — pulls the authenticated
-// user from c.Locals("UserContext"), set by pkg/middleware/jwt.go.
 func currentUser(c fiber.Ctx) *share.UserContext {
 	raw := c.Locals("UserContext")
 	if raw == nil {
@@ -121,8 +108,6 @@ func respondError(c fiber.Ctx, e *error_responses.ErrorResponse) error {
 	)
 }
 
-// ---------- Create ----------
-
 func (h *SongHandlerImpl) Create(c fiber.Ctx) error {
 	userCtx := currentUser(c)
 	if userCtx == nil {
@@ -141,7 +126,6 @@ func (h *SongHandlerImpl) Create(c fiber.Ctx) error {
 	}
 	req.FileURL = fileURL
 
-	// cover_url is optional — only set it if a cover file was actually sent
 	if coverURL, err := saveUploadedFile(c, "cover_url", "covers"); err == nil {
 		req.CoverURL = coverURL
 	}
@@ -162,8 +146,6 @@ func (h *SongHandlerImpl) Create(c fiber.Ctx) error {
 		response.NewResponse(msg, constants.Generic_success, newSong),
 	)
 }
-
-// ---------- Show / List ----------
 
 func (h *SongHandlerImpl) Show(c fiber.Ctx) error {
 	var req ShowSongRequest
@@ -188,8 +170,6 @@ func (h *SongHandlerImpl) Show(c fiber.Ctx) error {
 	)
 }
 
-// ---------- Update ----------
-
 func (h *SongHandlerImpl) Update(c fiber.Ctx) error {
 	userCtx := currentUser(c)
 	if userCtx == nil {
@@ -207,9 +187,6 @@ func (h *SongHandlerImpl) Update(c fiber.Ctx) error {
 		return badRequest(c, err)
 	}
 
-	// Only overwrite file_url / cover_url if a new file was actually
-	// uploaded with this request — leaving the pointer nil means
-	// repo.Update()'s COALESCE keeps whatever is already in the DB.
 	if fileURL, err := saveUploadedFile(c, "file_url", "songs"); err == nil {
 		req.FileURL = &fileURL
 	}
@@ -233,8 +210,6 @@ func (h *SongHandlerImpl) Update(c fiber.Ctx) error {
 		response.NewResponse(msg, constants.Generic_success, updated),
 	)
 }
-
-// ---------- Delete ----------
 
 func (h *SongHandlerImpl) Delete(c fiber.Ctx) error {
 	userCtx := currentUser(c)

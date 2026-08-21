@@ -111,7 +111,7 @@ func saveCommentImage(c fiber.Ctx, fh *multipart.FileHeader) (string, error) {
 func randomHex(n int) string {
 	b := make([]byte, n)
 	if _, err := rand.Read(b); err != nil {
-		// fallback ដែលមិនប្រើ crypto/rand ក្នុងករណីកម្រកើតមាន error
+
 		return strconv.FormatInt(time.Now().UnixNano(), 36)
 	}
 	return hex.EncodeToString(b)

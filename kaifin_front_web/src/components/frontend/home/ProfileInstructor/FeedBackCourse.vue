@@ -70,10 +70,8 @@ const toggleShowMore = () => {
 
 <template>
   <div class="feedback-container">
-    <!-- Header Stats Table Style (with Attractive Rating Badge & User Avatars) -->
     <div class="feedback-header-stats-table">
       <div class="stat-cell">
-        <!-- Hot Rating Badge -->
         <div class="rating-badge-hot">
           <span class="star-icon">⭐</span>
           <span class="rating-text">4.7 course rating</span>
@@ -82,7 +80,6 @@ const toggleShowMore = () => {
       <div class="stat-divider"></div>
       <div class="stat-cell ratings-cell-right">
         <span>469K ratings</span>
-        <!-- User Profile Avatars Stack with Plus Badge -->
         <div class="header-user-avatars">
           <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="User 1" class="header-avatar" />
           <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="User 2" class="header-avatar" />
@@ -92,11 +89,9 @@ const toggleShowMore = () => {
       </div>
     </div>
 
-    <!-- Feedback Cards Grid -->
     <div class="feedback-grid">
       <div v-for="(item, index) in displayedFeedbacks" :key="index" class="feedback-card">
         <div class="feedback-card-top">
-          <!-- Course Thumbnail Image -->
           <div class="course-thumbnail-wrapper">
             <img :src="item.thumbnail" :alt="item.courseName" class="course-thumbnail-img" />
           </div>
@@ -115,14 +110,12 @@ const toggleShowMore = () => {
             </div>
           </div>
         </div>
-        
         <div class="feedback-text-box">
           <p>{{ item.comment }}</p>
         </div>
       </div>
     </div>
 
-    <!-- See More Button -->
     <div class="see-more-wrapper">
       <button @click="toggleShowMore" class="see-more-feedback-btn">
         <span>{{ showAll ? 'Show less' : 'See more' }}</span>
@@ -147,7 +140,6 @@ const toggleShowMore = () => {
   border-radius: 24px;
 }
 
-/* Header Stats Table Style (Border and Shadow Intact) */
 .feedback-header-stats-table {
   display: flex;
   align-items: center;
@@ -170,18 +162,17 @@ const toggleShowMore = () => {
   justify-content: center;
 }
 
-/* Hot Rating Badge Style */
 .rating-badge-hot {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: #fff1f2c3; /* Soft light red/orange background */
+  background-color: #fff1f2c3; 
   padding: 6px 14px;
   border-radius: 32px;
 }
 
 .rating-text {
-  color: #e11d48; /* Vibrant red text */
+  color: #e11d48; 
   font-weight: 700;
   font-size: 14px;
 }
@@ -217,7 +208,6 @@ const toggleShowMore = () => {
   margin-left: 0;
 }
 
-/* Plus Badge Style */
 .avatar-plus-badge {
   width: 26px;
   height: 26px;
@@ -274,7 +264,6 @@ const toggleShowMore = () => {
   gap: 12px;
 }
 
-/* Course Thumbnail Styles */
 .course-thumbnail-wrapper {
   width: 52px;
   height: 52px;

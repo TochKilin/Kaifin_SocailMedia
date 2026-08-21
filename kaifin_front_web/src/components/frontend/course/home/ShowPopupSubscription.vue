@@ -2,7 +2,7 @@
   <div class="popup-overlay" @click.self="$emit('close')">
     <div class="popup-card">
       
-      <!-- Header Bar: Text Label នៅខាងឆ្វេង និង Close Button នៅខាងស្ដាំ -->
+      <!-- Heade-->
       <div class="popup-header-bar">
         <span class="header-label">Subscription</span>
         <button class="close-btn" @click="$emit('close')">
@@ -13,7 +13,7 @@
         </button>
       </div>
 
-      <!-- Top Video / Thumbnail Section -->
+      <!-- Top -->
       <div class="popup-video-box">
         <img :src="thumbnail" alt="Course Preview" class="popup-thumb-img" />
         <div class="play-overlay">
@@ -67,11 +67,10 @@
         <span class="benefit-text highlight-blue">More course</span>
       </div>
 
-      <!-- Action Button: ពេលចុចឱ្យរត់ទៅកាន់ PaymentMethod -->
+      <!-- Action Button -->
       <button class="subscription-submit-btn" @click="goToPayment">
         Subscription Now
       </button>
-
     </div>
   </div>
 </template>
@@ -90,13 +89,10 @@ defineProps({
 })
 
 defineEmits(['close'])
-
-// មុខងារពេលចុចលើ More course
 const goToMoreCourse = () => {
   router.push({ name: 'MoreCourseInstructor' })
 }
 
-// មុខងារពេលចុចលើប៊ូតុង Subscription Now ដើម្បីទៅកាន់ PaymentMethod
 const goToPayment = () => {
   router.push({ name: 'PaymentMethod' })
 }
@@ -117,15 +113,11 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: calc(100vh - 65px);
-
   background: rgba(13, 13, 14, 0.253);
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   z-index: 100;
-
   padding: 20px 16px;
   box-sizing: border-box;
 }
@@ -133,21 +125,15 @@ onUnmounted(() => {
 .popup-card {
   width: 100%;
   max-width: 740px;
-
-  /* ឱ្យវាវែង */
   height: calc(100vh - 90px);
-
   background: #ffffff;
   border-radius: 12px;
   padding: 20px;
-
   display: flex;
   flex-direction: column;
   gap: 16px;
-
   position: relative;
   animation: popupFadeIn 0.25s ease-out;
-
   overflow-y: auto;
   box-sizing: border-box;
 }

@@ -8,6 +8,7 @@ import (
 
 	wsManager "kaifin_clone_api/internal/admin/websocket"
 	"kaifin_clone_api/internal/front/web/notification"
+
 	// notification "kaifin_clone_api/internal/front/notification" //
 	constants "kaifin_clone_api/pkg/constants"
 	response "kaifin_clone_api/pkg/http"
@@ -86,8 +87,6 @@ func (h *FollowersHandlerImpl) Toggle(c fiber.Ctx) error {
 		)
 	}
 
-	// 🔔 ជូនដំណឹងទៅ user គោលដៅ តែពេលដែលទើប follow ថ្មី (មិនមែន unfollow)
-	// ⚠️ កែ "result.IsFollowing" ឲ្យត្រូវនឹងឈ្មោះ field ពិតក្នុង FollowStatusResponse struct
 	if result.IsFollowing {
 		go h.NotificationsRepo.CreateNotification(req.UserID, uCtx.UserID, "follow", nil)
 	}

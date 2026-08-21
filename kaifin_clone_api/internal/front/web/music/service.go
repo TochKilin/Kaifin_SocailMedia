@@ -38,8 +38,7 @@ func (s *PostMusicServiceImpl) Create(req CreatePostRequest) (*PostResponse, *er
 }
 
 func (s *PostMusicServiceImpl) Show(req ShowPostRequest) (*PostListResponse, *error_responses.ErrorResponse) {
-	// Show is allowed without a logged-in user (public feed), so guard
-	// against a nil UserCtx instead of assuming it's always set.
+
 	var requesterID int64
 	if s.UserCtx != nil {
 		requesterID = s.UserCtx.UserID

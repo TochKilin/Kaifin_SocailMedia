@@ -1,7 +1,6 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue';
-
-// ============= PROPS =============
+// prop
 const props = defineProps({
   isOpen: {
     type: Boolean,
@@ -31,17 +30,12 @@ const props = defineProps({
   }
 });
 
-// ============= EMITS =============
 const emit = defineEmits(['close', 'enroll']);
-
-// ============= STATE =============
 const isVisible = ref(false);
 const isLoading = ref(true);
 const isEnrolling = ref(false);
 const isFavorite = ref(false);
 const modalRef = ref(null);
-
-// ============= WATCHERS =============
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     isVisible.value = true;
@@ -58,7 +52,6 @@ watch(() => props.isOpen, (newVal) => {
   }
 });
 
-// ============= FUNCTIONS =============
 function closeModal() {
   isVisible.value = false;
   document.body.style.overflow = '';
@@ -69,8 +62,6 @@ function closeModal() {
 
 function handleEnroll() {
   isEnrolling.value = true;
-  
-  // Simulate enrollment process
   setTimeout(() => {
     isEnrolling.value = false;
     emit('enroll', props.course);
@@ -95,10 +86,7 @@ function handleOutsideClick(event) {
   }
 }
 
-// ============= COMPUTED =============
 const discountPercentage = ref(0);
-
-// Calculate discount if originalPrice exists
 if (props.course.originalPrice) {
   const original = parseFloat(props.course.originalPrice.replace('$', ''));
   const current = parseFloat(props.course.price.replace('$', ''));
@@ -124,8 +112,6 @@ if (props.course.originalPrice) {
       >
         <Transition name="modal-slide">
           <div class="modal-card-container" v-if="isVisible">
-            
-            <!-- ========== CLOSE BUTTON ========== -->
             <button 
               class="close-btn" 
               @click="closeModal" 
@@ -137,8 +123,6 @@ if (props.course.originalPrice) {
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
-
-            <!-- ========== FAVORITE BUTTON ========== -->
             <button 
               class="favorite-btn" 
               @click="toggleFavorite"
@@ -149,8 +133,6 @@ if (props.course.originalPrice) {
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
             </button>
-
-            <!-- ========== LOADING SKELETON ========== -->
             <div v-if="isLoading" class="loading-state">
               <div class="skeleton-image"></div>
               <div class="skeleton-content">
@@ -159,8 +141,6 @@ if (props.course.originalPrice) {
                 <div class="skeleton-line w-40"></div>
               </div>
             </div>
-
-            <!-- ========== COURSE CONTENT ========== -->
             <template v-else>
               <!-- Course Image -->
               <div class="modal-img-box">
@@ -174,7 +154,6 @@ if (props.course.originalPrice) {
                   </span>
                 </div>
 
-                <!-- Instructor Info Overlay -->
                 <div class="instructor-overlay" v-if="course.instructor">
                   <div class="instructor-avatar">
                     <img 
@@ -189,7 +168,6 @@ if (props.course.originalPrice) {
                 </div>
               </div>
 
-              <!-- Course Body -->
               <div class="modal-body-content">
                 <h2 class="course-title">{{ course.title }}</h2>
                 
@@ -205,7 +183,6 @@ if (props.course.originalPrice) {
 
                 <p class="course-desc">{{ course.description }}</p>
 
-                <!-- Course Tags -->
                 <div class="course-tags">
                   <span class="tag" v-if="course.level">📊 {{ course.level }}</span>
                   <span class="tag" v-if="course.language">🌐 {{ course.language }}</span>
@@ -217,7 +194,6 @@ if (props.course.originalPrice) {
 
                 <hr class="divider" />
 
-                <!-- Course Meta Details -->
                 <div class="course-meta-section">
                   <h3 class="section-heading">📋 Course Information</h3>
                   
@@ -251,7 +227,6 @@ if (props.course.originalPrice) {
                     </div>
                   </div>
 
-                  <!-- ========== PRICE & CTA BOX ========== -->
                   <div class="promo-footer-box">
                     <div class="price-info">
                       <span class="price-label">Total Price:</span>
@@ -289,7 +264,6 @@ if (props.course.originalPrice) {
                     </ul>
                   </div>
                 </div>
-
               </div>
             </template>
           </div>
@@ -300,9 +274,6 @@ if (props.course.originalPrice) {
 </template>
 
 <style scoped>
-/* ======================== */
-/* BACKDROP */
-/* ======================== */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -316,9 +287,7 @@ if (props.course.originalPrice) {
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* ======================== */
-/* MODAL CARD */
-/* ======================== */
+
 .modal-card-container {
   background: #ffffff;
   width: 100%;
@@ -350,9 +319,6 @@ if (props.course.originalPrice) {
   background: #94a3b8;
 }
 
-/* ======================== */
-/* BUTTONS */
-/* ======================== */
 .close-btn {
   position: absolute;
   top: 16px;
@@ -410,9 +376,6 @@ if (props.course.originalPrice) {
   fill: white;
 }
 
-/* ======================== */
-/* IMAGE SECTION */
-/* ======================== */
 .modal-img-box {
   width: 100%;
   height: 280px;
@@ -468,9 +431,6 @@ if (props.course.originalPrice) {
   color: white;
 }
 
-/* ======================== */
-/* INSTRUCTOR OVERLAY */
-/* ======================== */
 .instructor-overlay {
   position: absolute;
   bottom: 16px;
@@ -517,9 +477,6 @@ if (props.course.originalPrice) {
   letter-spacing: 0.3px;
 }
 
-/* ======================== */
-/* BODY CONTENT */
-/* ======================== */
 .modal-body-content {
   padding: 24px 28px;
 }
@@ -574,9 +531,7 @@ if (props.course.originalPrice) {
   margin: 0 0 16px 0;
 }
 
-/* ======================== */
-/* COURSE TAGS */
-/* ======================== */
+
 .course-tags {
   display: flex;
   flex-wrap: wrap;
@@ -616,9 +571,6 @@ if (props.course.originalPrice) {
   margin: 20px 0;
 }
 
-/* ======================== */
-/* META GRID */
-/* ======================== */
 .section-heading {
   font-size: 15px;
   font-weight: 700;
@@ -657,9 +609,6 @@ if (props.course.originalPrice) {
   flex-shrink: 0;
 }
 
-/* ======================== */
-/* PROMO FOOTER */
-/* ======================== */
 .promo-footer-box {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border: 1px solid #e2e8f0;
@@ -744,9 +693,6 @@ if (props.course.originalPrice) {
   cursor: not-allowed;
 }
 
-/* ======================== */
-/* LOADING SPINNER */
-/* ======================== */
 .loading-spinner {
   display: flex;
   align-items: center;
@@ -767,9 +713,6 @@ if (props.course.originalPrice) {
   to { transform: rotate(360deg); }
 }
 
-/* ======================== */
-/* LEARN SECTION */
-/* ======================== */
 .learn-section {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -807,9 +750,6 @@ if (props.course.originalPrice) {
   font-weight: 800;
 }
 
-/* ======================== */
-/* SKELETON LOADING */
-/* ======================== */
 .loading-state {
   width: 100%;
 }
@@ -848,9 +788,6 @@ if (props.course.originalPrice) {
   100% { background-position: -200% 0; }
 }
 
-/* ======================== */
-/* TRANSITIONS */
-/* ======================== */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.3s ease;

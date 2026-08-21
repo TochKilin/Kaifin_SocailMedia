@@ -69,7 +69,6 @@ func (r *CommentsRepoImpl) Create(comment *ArticleComment) *error_responses.Erro
 	}
 	defer tx.Rollback()
 
-	// 1. Insert ចូល tbl_article_comments
 	err = tx.QueryRow(`
         INSERT INTO tbl_article_comments (article_id, user_id, parent_comment_id, text, created_at)
         VALUES ($1, $2, $3, $4, NOW())
@@ -91,7 +90,6 @@ func (r *CommentsRepoImpl) Create(comment *ArticleComment) *error_responses.Erro
 		}
 	}
 
-	// 3. Insert ចូល tbl_article_comment_stickers សម្រាប់ StickerIDs ទាំងអស់
 	for _, stickerID := range comment.StickerIDs {
 		_, err = tx.Exec(`
             INSERT INTO tbl_article_comment_stickers (comment_id, sticker_id)
@@ -102,15 +100,10 @@ func (r *CommentsRepoImpl) Create(comment *ArticleComment) *error_responses.Erro
 		}
 	}
 
-	// 4. Load display info (username, avatar) for the response — the same
-	// source Show() joins in — inside the same transaction, so the Create
-	// response looks exactly like a row from the list endpoint. This is
-	// what makes the username/avatar show up immediately, no page refresh
-	// needed. Do NOT overwrite these from uCtx/JWT claims in the handler.
 	if err := tx.QueryRow(`
         SELECT user_name, profile_images FROM tbl_users WHERE id = $1
     `, comment.UserID).Scan(&comment.UserName, &comment.ProfileImage); err != nil {
-		// Not fatal — the comment itself was created successfully.
+
 		log.Printf("Create comment: failed to load user info for user %d: %v", comment.UserID, err)
 	}
 
@@ -118,14 +111,10 @@ func (r *CommentsRepoImpl) Create(comment *ArticleComment) *error_responses.Erro
 		return msg.NewErrorResponse("database_error", err)
 	}
 
-	// Also fill ImageURLs on the response so it matches what Show() would
-	// return for this comment (Show gets it via string_agg + splitImageURLs).
 	comment.ImageURLs = append([]string{}, comment.SavedImageURLs...)
 
 	return nil
 }
-
-// ---------------- Update ----------------
 
 func (r *CommentsRepoImpl) Update(id int64, userID int64, text string) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
@@ -144,8 +133,6 @@ func (r *CommentsRepoImpl) Update(id int64, userID int64, text string) *error_re
 	return nil
 }
 
-// ---------------- Delete ----------------
-
 func (r *CommentsRepoImpl) Delete(id int64, userID int64) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 	result, err := r.dbpool.Exec(`
@@ -160,8 +147,6 @@ func (r *CommentsRepoImpl) Delete(id int64, userID int64) *error_responses.Error
 	}
 	return nil
 }
-
-// ---------------- Show ----------------
 
 var commentSortColumns = map[string]string{
 	"created_at": "c.created_at",

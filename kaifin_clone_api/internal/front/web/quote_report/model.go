@@ -2,7 +2,6 @@ package quotereport
 
 import "time"
 
-// mirror to db table column (quote_reports)
 type QuoteReport struct {
 	ID         int64     `json:"id" db:"id"`
 	QuoteID    int64     `json:"quote_id" db:"quote_id"`

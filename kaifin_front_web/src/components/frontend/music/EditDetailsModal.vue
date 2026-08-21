@@ -14,7 +14,6 @@
 
       <!-- Body Form -->
       <div class="modal-body">
-        <!-- Left: Photo Upload Box -->
         <div class="modal-photo-box" @click="triggerFileInput">
           <input 
             type="file" 

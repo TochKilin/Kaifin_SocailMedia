@@ -1,30 +1,21 @@
 <template>
-  <div
-    class="account-menu-wrap"
-    @mouseenter="openMenu"
-    @mouseleave="scheduleCloseMenu"
-  >
-<button class="account-trigger">
-  <div class="trigger-avatar">
-    <img v-if="user.avatarUrl" :src="user.avatarUrl" alt="" />
-    <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-  </div>
-  <!-- <span class="trigger-name">{{ user.username }}</span> -->
-  <svg class="trigger-chevron" :class="{ 'is-open': isOpen }" viewBox="0 0 24 24">
-    <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-</button>
-
-    <div
-      class="account-menu"
-      v-if="isOpen"
-      @mouseenter="keepMenuOpen"
-      @mouseleave="scheduleCloseMenu"
-    >
+  <div class="account-menu-wrap" @mouseenter="openMenu" @mouseleave="scheduleCloseMenu">
+    <!-- Profile user  -->
+    <button class="account-trigger">
+      <div class="trigger-avatar">
+        <img v-if="user.avatarUrl" :src="user.avatarUrl" alt="img" />
+        <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <svg class="trigger-chevron" :class="{ 'is-open': isOpen }" viewBox="0 0 24 24">
+        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <!-- Dropdown user -->
+    <div class="account-menu" v-if="isOpen"  @mouseenter="keepMenuOpen" @mouseleave="scheduleCloseMenu">
       <div class="account-menu-inner">
         <div class="account-head">
           <div class="head-avatar">
-            <img v-if="user.avatarUrl" :src="user.avatarUrl" alt="" />
+            <img v-if="user.avatarUrl" :src="user.avatarUrl" alt="img" />
             <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </div>
           <span class="head-name">{{ user.username }}</span>
@@ -33,42 +24,35 @@
             Log out
           </button>
         </div>
-
+        <!-- Setting menu  -->
         <div class="menu-list">
           <button class="menu-row" @click="onAction('settings')">
             <svg class="row-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1h-.2a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.6v-.2a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.6 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
             <span>Settings</span>
           </button>
-
+           <!-- Dark mode menu -->
           <button class="menu-row" @click="toggleTheme">
             <svg class="row-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
             <span>Theme: {{ theme === 'light' ? 'Light' : 'Dark' }}</span>
           </button>
 
+          <!-- Languege change  -->
           <button class="menu-row" @click="isLangOpen = !isLangOpen">
             <svg class="row-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.7 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.7-3.6-9s1.2-6.4 3.6-9Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
             <span>{{ language }}</span>
           </button>
           <div class="lang-options" v-if="isLangOpen">
-            <button
-              v-for="lang in ['English', 'ខ្មែរ']"
-              :key="lang"
-              class="lang-option"
-              :class="{ active: language === lang }"
-              @click="selectLanguage(lang)"
-            >
+            <button v-for="lang in ['English', 'ខ្មែរ']" :key="lang" class="lang-option" :class="{ active: language === lang }" @click="selectLanguage(lang)" >
               {{ lang }}
             </button>
           </div>
-
+          <!-- Help menu categories  -->
           <button class="menu-row" @click="onAction('help')">
             <svg class="row-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.3 9.4c.3-1.6 1.6-2.5 3-2.5 1.7 0 3 1.1 3 2.7 0 1.3-.8 1.9-1.8 2.6-.8.6-1.2 1.1-1.2 2.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.05" fill="currentColor"/></svg>
             <span>Help</span>
           </button>
         </div>
-
         <hr class="menu-divider" />
-
         <button class="switch-profile-btn" @click="onAction('switch-profile')">
           Log in to another profile
         </button>
@@ -80,6 +64,7 @@
 <script setup>
 import { ref } from 'vue'
 
+// Prop username call 
 const props = defineProps({
   user: {
     type: Object,
@@ -87,19 +72,21 @@ const props = defineProps({
   },
 })
 
+// Array item dropdown
 const emit = defineEmits(['logout', 'settings', 'help', 'switch-profile', 'theme-change', 'language-change'])
-
 const isOpen = ref(false)
 const isLangOpen = ref(false)
 const theme = ref('light')
 const language = ref('English')
 let menuCloseTimer = null
 
+// Openu menu
 function openMenu() {
   clearTimeout(menuCloseTimer)
   isOpen.value = true
 }
 
+// Close menu
 function scheduleCloseMenu() {
   clearTimeout(menuCloseTimer)
   menuCloseTimer = setTimeout(() => {
@@ -108,30 +95,36 @@ function scheduleCloseMenu() {
   }, 300)
 }
 
+// open menu keep 
 function keepMenuOpen() {
   clearTimeout(menuCloseTimer)
 }
 
+// Close menu 
 function closeMenu() {
   isOpen.value = false
   isLangOpen.value = false
 }
 
+// Logout menu
 function onLogout() {
   closeMenu()
   emit('logout')
 }
 
+// Action close prop
 function onAction(action) {
   closeMenu()
   emit(action)
 }
 
+// Toggle arrow down
 function toggleTheme() {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
   emit('theme-change', theme.value)
 }
 
+// Choose languge
 function selectLanguage(lang) {
   language.value = lang
   isLangOpen.value = false
@@ -143,7 +136,7 @@ function selectLanguage(lang) {
 * {
   box-sizing: border-box;
 }
-
+/* Wrap container  */
 .account-menu-wrap {
   position: relative;
   display: inline-flex;
@@ -177,11 +170,6 @@ function selectLanguage(lang) {
   justify-content: center;
   flex-shrink: 0;
   color: #6b7280;
-}
-
-.head-avatar {
-  /* width: 20x;
-  height: 20px; */
 }
 
 .trigger-avatar img,
@@ -225,6 +213,7 @@ function selectLanguage(lang) {
   
 }
 
+/* Manu animation hover  */
 @keyframes menuPopIn {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -346,10 +335,6 @@ function selectLanguage(lang) {
   padding: 4px;
   border-radius: 32px;
   cursor: pointer;
-}
-
-.switch-profile-btn:hover {
-  /* background: #e5e5e6; */
 }
 
 .trigger-chevron {

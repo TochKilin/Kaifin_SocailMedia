@@ -1,7 +1,8 @@
 <template>
   <div class="feed">
     <Posts v-if="!props.userId" @post="onNewPost" />
-    <!-- Loading first  -->
+
+    <!-- Loading -->
     <p v-if="isLoading" class="state-msg">Loading...</p>
     <p v-else-if="error" class="state-msg error">{{ error }}</p>
     <p v-else-if="!posts.length" class="state-msg">No post yet</p>
@@ -17,131 +18,81 @@
       </div>
     </div>
 
-      <!-- Header post  -->
-      <div class="post-top">
-        <!-- <div class="avatar" @click="goToProfile(post.userId)"  style="cursor: pointer;">
-          <img v-if="post.avatarUrl" :src="post.avatarUrl" alt="" />
-          <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
-        </div> -->
-     <div
-  class="avatar-wrap"
-  style="position: relative;"
-  @mouseenter="openHoverCard(post.userId, post._key)"
-  
-  @mouseleave="scheduleCloseHoverCard"
->
+    <div class="post-top">
+     <div class="avatar-wrap" style="position: relative;" @mouseenter="openHoverCard(post.userId, post._key)" @mouseleave="scheduleCloseHoverCard">
+    <div class="avatar" style="cursor: pointer;" @click="goToProfile(post.userId)">
+      <img v-if="post.avatarUrl" :src="post.avatarUrl" alt="hashtag" />
+      <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
+    </div>
 
-  <div class="avatar" style="cursor: pointer;" @click="goToProfile(post.userId)">
-    <img v-if="post.avatarUrl" :src="post.avatarUrl" alt="hashtag" />
-    <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
-  </div>
+    <!-- Progile Hover -->
+    <div v-if="hoverCardPostId === post._key" class="hover-card-anchor" @mouseenter="keepHoverCardOpen" @mouseleave="scheduleCloseHoverCard">
+      <ProfileHoverCard :profile="hoverCardProfile" :is-loading="hoverCardLoading" :is-following="post.isFollowing" :is-own-profile="String(post.userId) === String(currentUserId)" @toggle-follow="toggleFollow(post)"
+        @view-profile="goToProfile(post.userId)"/>
+    </div>
+    </div>
 
-<div v-if="hoverCardPostId === post._key" class="hover-card-anchor" @mouseenter="keepHoverCardOpen" @mouseleave="scheduleCloseHoverCard">
-  <ProfileHoverCard
-    :profile="hoverCardProfile"
-    :is-loading="hoverCardLoading"
-    :is-following="post.isFollowing"
-    :is-own-profile="String(post.userId) === String(currentUserId)"
-    @toggle-follow="toggleFollow(post)"
-    @view-profile="goToProfile(post.userId)"
-  />
-</div>
+    <!-- Post body  -->
+    <div class="post-body">
+      <div class="post-head">
+        <div class="user-block">
+        <!-- <span class="username">{{ post.username }}</span> -->
+        <span class="username" style="cursor: pointer; position: relative;" @click="goToProfile(post.userId)" @mouseenter="openHoverCard(post.userId, post._key)" @mouseleave="scheduleCloseHoverCard" >
+            {{ post.fullName }}
+        </span>
 
-</div>
-
-
-
-        <!-- Post body  -->
-        <div class="post-body">
-          <div class="post-head">
-            <div class="user-block">
-              <!-- <span class="username">{{ post.username }}</span> -->
-<span
-  class="username"
-  style="cursor: pointer; position: relative;"
-  @click="goToProfile(post.userId)"
-
-  @mouseenter="openHoverCard(post.userId, post._key)"
-  @mouseleave="scheduleCloseHoverCard"
->
-  {{ post.username }}
-</span>
-              <!-- data time  -->
-              <span class="datetime">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>
-                {{ post.datetime }}
-              </span>
-            </div>
-            <button v-if="String(post.userId) !== String(currentUserId)" class="follow-btn" :class="{ following: post.isFollowing }" @click="toggleFollow(post)">
-              {{ post.isFollowing ? 'Following' : 'Follow' }}
-            </button>
+        <!-- data time  -->
+        <span class="datetime">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>
+          {{ post.datetime }}
+        </span>
+        </div>
+        <button v-if="String(post.userId) !== String(currentUserId)" class="follow-btn" :class="{ following: post.isFollowing }" @click="toggleFollow(post)">
+          {{ post.isFollowing ? 'Following' : 'Follow' }}
+        </button>
           </div>
         </div>
        </div>
 
+       <!-- Quote share card on feed  -->
+       <div v-if="post.isQuoteShare" class="quote-repost-card">
+        <svg class="quote-mark" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.998v10h-9.998z"/>
+        </svg>
+        <h4 class="quote-repost-title">{{ post.description }}</h4>
+        <p class="quote-repost-text" v-html="post.quoteContent"></p>
+      </div>
 
-       <!-- ============ -->
-        <div v-if="post.isQuoteShare" class="quote-repost-card">
-  <svg class="quote-mark" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.998v10h-9.998z"/>
-  </svg>
-  <h4 class="quote-repost-title">{{ post.description }}</h4>
-  <p class="quote-repost-text" v-html="post.quoteContent"></p>
-</div>
-       <!-- Post description  -->
-       <!-- <p class="description">
-        {{ post.showTranslated ? post.translatedText : post.description }}
-      </p> -->
-      <!-- <p class="description">
-  {{ getDisplayText(post) }}
-  <span 
-    v-if="isTextTruncatable(post)" 
-    class="see-more-btn" 
-    @click.stop="post.showFullText = !post.showFullText"
-  >
-    {{ post.showFullText ? ' See less' : ' See more' }}
-  </span>
-</p> -->
-<pre v-if="post.postType === 'code'" class="code-block">
-  <!-- <code>{{ getDisplayText(post) }}</code> -->
-   <code class="language-javascript">{{ getDisplayText(post) }}</code>
-  <span 
-    v-if="isTextTruncatable(post)" 
-    class="see-more-btn code-see-more" 
-    @click.stop="post.showFullText = !post.showFullText"
-  >{{ post.showFullText ? ' See less' : ' See more' }}</span></pre>
-      
-  
-  <!-- <p v-else class="description">
-  {{ getDisplayText(post) }}
-  <span 
-    v-if="isTextTruncatable(post)" 
-    class="see-more-btn" 
-    @click.stop="post.showFullText = !post.showFullText"
-  >
-    {{ post.showFullText ? ' See less' : ' See more' }}
-  </span>
-</p> -->
-<p v-else-if="!post.isQuoteShare" class="description">
-  {{ getDisplayText(post) }}
-  <span v-if="isTextTruncatable(post)" class="see-more-btn" @click.stop="post.showFullText = !post.showFullText">
-    {{ post.showFullText ? ' See less' : ' See more' }}
-  </span>
-</p>
+      <!-- Codeing show on post  -->
+      <pre v-if="post.postType === 'code'" class="code-block">
+        <code class="language-javascript">{{ getDisplayText(post) }}</code>
+        <span 
+          v-if="isTextTruncatable(post)" 
+          class="see-more-btn code-see-more" 
+          @click.stop="post.showFullText = !post.showFullText"
+        >{{ post.showFullText ? ' See less' : ' See more' }}</span>
+      </pre>
 
+      <!-- Quote share des  -->
+      <p v-else-if="!post.isQuoteShare" class="description">
+        {{ getDisplayText(post) }}
+        <span v-if="isTextTruncatable(post)" class="see-more-btn" @click.stop="post.showFullText = !post.showFullText">
+          {{ post.showFullText ? ' See less' : ' See more' }}
+        </span>
+      </p>
 
-
-
-<span class="tag-chip" v-for="(tag, i) in post.tags" :key="i" @click="onTagClick(tag)">
-  <img v-if="splitTagIcon(tag).stickerUrl" :src="splitTagIcon(tag).stickerUrl" class="tag-icon-badge" alt="" />
-  <span v-else-if="splitTagIcon(tag).icon" class="tag-icon-badge">{{ splitTagIcon(tag).icon }}</span>
-  #{{ splitTagIcon(tag).text || tag }}
-</span>
+      <!-- Tags chip show  -->
+      <span class="tag-chip" v-for="(tag, i) in post.tags" :key="i" @click="onTagClick(tag)">
+        <img v-if="splitTagIcon(tag).stickerUrl" :src="splitTagIcon(tag).stickerUrl" class="tag-icon-badge" alt="" />
+        <span v-else-if="splitTagIcon(tag).icon" class="tag-icon-badge">{{ splitTagIcon(tag).icon }}</span>
+        #{{ splitTagIcon(tag).text || tag }}
+      </span>
         <div
-        class="photo-grid"
+        class="photo-grid media-wrap"
         v-if="post.photos.length"
         :class="post.photosExpanded ? 'expanded' : 'count-' + Math.min(post.photos.length, 4)"
       >
+      
         <div
           class="photo"
           v-for="(photo, i) in (post.photosExpanded ? post.photos : post.photos.slice(0, 4))"
@@ -186,7 +137,7 @@
           <!-- Duration -->
           <div class="video-duration">{{ formatDuration(post.videoDuration) }}</div>
 
-          <!--Progress Bar (TikTok style) -->
+          <!--Progress Bar-->
         <div class="progress-track" @click.stop="seekVideo(post, $event)" @mousedown.stop="startSeekDrag(post, $event)">
           <div class="progress-fill" :style="{ width: post.videoProgress + '%' }"></div>
           </div>
@@ -201,11 +152,21 @@
           <button class="translate-btn" v-if="post.translatedText" @click="post.showTranslated = !post.showTranslated">
             {{ post.showTranslated ? 'Theme' : 'Translate' }}
           </button>
-          <label class="group-toggle">
-            <input type="checkbox" v-model="post.postToGroup" />
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            Group
-          </label>
+          <!-- <button
+            v-if="post.communityId"
+            type="button"
+            class="community-badge"
+            @click.stop="goToCommunity(post.communityId)"
+          >
+            <span class="community-badge-icon">
+              <img v-if="post.communityAvatar" :src="post.communityAvatar" alt="" />
+              <svg v-else viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-1.76-4.24L14 10h6V4l-2.2 2.2A8 8 0 0 0 12 4Z"/>
+              </svg>
+            </span>
+            <span class="community-badge-name">{{ post.communityName }}</span>
+            <svg class="community-badge-chevron" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button> -->
         <!-- Likes Avatar  -->
         <div class="liked-by" v-if="post.likedByAvatars.length" @mouseenter="post.showLikers = true" :ref="(el) => setLikedByRef(el, post.id)">
          <div class="stack">
@@ -243,63 +204,28 @@
         </div>
         <!-- Reaction button  -->
         <div class="like-wrap" @mouseenter="openReactionPicker(post)" @mouseleave="scheduleCloseReactionPicker(post)" >
-          <!-- <button class="stat-btn like-btn" :class="{ liked: post.isLiked, [`reaction-${post.reaction}`]: post.reaction }"  @click="toggleLike(post)">
-            <span v-if="post.reaction" class="reaction-svg reaction-emoji" v-html="REACTIONS.find(r => r.key === post.reaction)?.icon"></span>
-            <svg v-else viewBox="0 0 24 24"><path d="M7 11v9H4v-9h3Zm3 9h8a2 2 0 0 0 2-2l1.5-5a2 2 0 0 0-2-2.6H15l.7-4A2 2 0 0 0 13.8 4L10 10v10Z"/></svg>
-            {{ formatCount(post.likeCount) }}
-          </button> -->
-          <!-- <button
-  class="stat-btn like-btn"
-  :class="{ liked: post.isLiked, [`reaction-${post.reaction}`]: post.reaction }"
-  @click="toggleLike(post)"
->
-    <span class="icon-circle">
-        <span
-            v-if="post.reaction"
-            class="reaction-svg reaction-emoji"
-            v-html="REACTIONS.find(r => r.key === post.reaction)?.icon">
-        </span>
+         
+        <button
+          class="stat-btn like-btn"
+          :class="{ liked: post.isLiked, [`reaction-${post.isQuoteShare ? post.quoteReactionTypeId : post.reaction}`]: post.isQuoteShare ? post.quoteReactionTypeId : post.reaction }"
+          @click="toggleLike(post)"
+        >
+          <span class="icon-circle">
+              <span
+                  v-if="post.isQuoteShare ? post.quoteReactionTypeId != null : post.reaction"
+                  class="reaction-svg reaction-emoji"
+                  v-html="post.isQuoteShare ? getQuoteReactionIcon(post) : REACTIONS.find(r => r.key === post.reaction)?.icon">
+              </span>
 
-        <svg v-else viewBox="0 0 24 24">
-            <path d="M7 11v9H4v-9h3Zm3 9h8a2 2 0 0 0 2-2l1.5-5a2 2 0 0 0-2-2.6H15l.7-4A2 2 0 0 0 13.8 4L10 10v10Z"/>
-        </svg>
-    </span>
+              <svg v-else viewBox="0 0 24 24">
+                  <path d="M7 11v9H4v-9h3Zm3 9h8a2 2 0 0 0 2-2l1.5-5a2 2 0 0 0-2-2.6H15l.7-4A2 2 0 0 0 13.8 4L10 10v10Z"/>
+              </svg>
+          </span>
+              <span class="count">
+                  {{ formatCount(post.likeCount) }}
+              </span>
+          </button>
 
-    <span class="count">
-        {{ formatCount(post.likeCount) }}
-    </span>
-</button> -->
-<button
-  class="stat-btn like-btn"
-  :class="{ liked: post.isLiked, [`reaction-${post.isQuoteShare ? post.quoteReactionTypeId : post.reaction}`]: post.isQuoteShare ? post.quoteReactionTypeId : post.reaction }"
-  @click="toggleLike(post)"
->
-    <span class="icon-circle">
-        <span
-            v-if="post.isQuoteShare ? post.quoteReactionTypeId != null : post.reaction"
-            class="reaction-svg reaction-emoji"
-            v-html="post.isQuoteShare ? getQuoteReactionIcon(post) : REACTIONS.find(r => r.key === post.reaction)?.icon">
-        </span>
-
-        <svg v-else viewBox="0 0 24 24">
-            <path d="M7 11v9H4v-9h3Zm3 9h8a2 2 0 0 0 2-2l1.5-5a2 2 0 0 0-2-2.6H15l.7-4A2 2 0 0 0 13.8 4L10 10v10Z"/>
-        </svg>
-    </span>
-
-    <span class="count">
-        {{ formatCount(post.likeCount) }}
-    </span>
-</button>
-          <!-- Hover reactionpicker  -->
-          <!-- <div class="reaction-picker" v-if="post.showReactions" @mouseenter="keepReactionPickerOpen" @mouseleave="scheduleCloseReactionPicker(post)"
-          >
-            <button v-for="r in REACTIONS" :key="r.key" class="reaction-option" :class="{ locked: r.private, active: post.reaction === r.key }" @click="pickReaction(post, r, $event)">
-              <span class="reaction-svg" v-html="r.icon"></span>
-              <span v-if="r.private" class="lock-badge">🔒</span>
-              <span class="reaction-tooltip">{{ r.label }}</span>
-            </button>
-          </div>
-        </div> -->
         <div class="reaction-picker" v-if="post.showReactions" @mouseenter="keepReactionPickerOpen" @mouseleave="scheduleCloseReactionPicker(post)"
           >
             <button v-for="r in reactionsForPost(post)" :key="r.key" class="reaction-option" :class="{ locked: r.private, active: (post.isQuoteShare ? post.quoteReactionTypeId : post.reaction) === r.key }" @click="pickReaction(post, r, $event)">
@@ -341,9 +267,8 @@
     <div ref="sentinel" class="sentinel"></div>
     <p v-if="isLoadingMore" class="state-msg">Wiat for fetch</p>
     <p v-if="!hasMore && posts.length" class="state-msg">No post for fetch</p>
-  <!-- <PostsCard ref="postsCardRef" /> -->
+    <!-- <PostsCard ref="postsCardRef" /> -->
 
-  <!-- ===================== IMAGE PREVIEW LIGHTBOX ===================== -->
   <Teleport to="body">
     <div v-if="lightbox.open" class="lightbox-overlay" @click.self="closeLightbox">
       <div class="lightbox-toolbar">
@@ -386,22 +311,21 @@
         >
           <svg viewBox="0 0 24 24"><path d="m8.6 16.6 1.4 1.4 6-6-6-6-1.4 1.4 4.6 4.6z"/></svg>
         </button>
-      </div>
-
+          </div>
       <div class="lightbox-thumbs" v-if="lightbox.images.length > 1">
-        <div
+      <div
           v-for="(img, idx) in lightbox.images"
           :key="idx"
           class="lightbox-thumb"
           :class="{ active: idx === lightbox.activeIndex }"
           @click.stop="selectLightboxImage(idx)"
         >
-          <img :src="img" alt="" />
-        </div>
+        <img :src="img" alt="" />
+        <span v-if="lightbox.reactions[idx]" class="lightbox-thumb-reaction" v-html="getLightboxReactionIcon(idx)"></span>
+      </div>
       </div>
     </div>
   </Teleport>
-  
   </div>
 </template>
 
@@ -413,8 +337,6 @@ import { useRouter } from 'vue-router'
 import Posts from '../posts/Posts.vue'
 import ProfileHoverCard from '../profile_hover_card/ProfileHoverCard.vue'
 import gsap from 'gsap'
-// import 'highlight.js/styles/one-dark.css'
-// import 'highlight.js/styles/atom-one-dark.css'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.css'
 
@@ -430,6 +352,7 @@ const sentinel = ref(null)
 let observer = null
 const currentUserId = ref(null)
 const currentUserProfile = ref(null)
+
 
 
 async function loadCurrentUserProfile() {
@@ -558,6 +481,66 @@ const REACTIONS = [
   },
 ]
 
+
+const groups = ref([])
+const groupsLoading = ref(false)
+let groupsFetched = false
+
+async function fetchGroups() {
+  if (groupsFetched || groupsLoading.value) return
+  groupsLoading.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/communities/show?perpage=50`, {
+      headers: { ...authHeaders() },
+    })
+    if (!res.ok) return
+    const json = await res.json()
+    const data = json?.data ?? json
+    groups.value = (data.communities ?? []).map((g) => ({
+      id: g.id,
+      name: g.name,
+      avatarUrl: resolveAvatarUrl(g.avatar_url),
+      memberCount: g.member_count ?? 0,
+      hotScore: g.hot_score ?? 0,
+    }))
+    groupsFetched = true
+  } catch (e) {
+    console.error('Failed to load groups', e)
+  } finally {
+    groupsLoading.value = false
+  }
+}
+
+let groupPickerCloseTimer = null
+function openGroupPicker(post) {
+  clearTimeout(groupPickerCloseTimer)
+  posts.value.forEach((p) => { if (p !== post) p.showGroupPicker = false })
+  post.showGroupPicker = true
+  fetchGroups()
+}
+
+function scheduleCloseGroupPicker(post) {
+  clearTimeout(groupPickerCloseTimer)
+  groupPickerCloseTimer = setTimeout(() => {
+    post.showGroupPicker = false
+  }, 250)
+}
+
+function keepGroupPickerOpen() {
+  clearTimeout(groupPickerCloseTimer)
+}
+
+function selectGroup(post, group) {
+  post.selectedGroupId = group ? group.id : null
+  post.selectedGroupName = group ? group.name : null
+  post.selectedGroupAvatar = group ? group.avatarUrl : null
+  post.showGroupPicker = false
+}
+
+function formatHotScore(n) {
+  return formatCount(Math.round(n))
+}
+
 let reactionCloseTimer = null
 function getAuthToken() {
   return localStorage.getItem('token') || ''
@@ -657,7 +640,8 @@ async function syncStickers(post) {
 }
 
 const props = defineProps({
-  userId: { type: [String, Number], default: null }
+  userId: { type: [String, Number], default: null },
+   mode: { type: String, default: 'feed' }
 })
 
 watch(
@@ -674,10 +658,8 @@ watch(
 
 
 let currentRequestId = 0
-
 async function loadPosts(page) {
-  const requestId = ++currentRequestId  
-  console.log('🔍 loadPosts called with props.userId:', props.userId) 
+  const requestId = ++currentRequestId
   const isFirstPage = page === 1
   if (isFirstPage) {
     isLoading.value = true
@@ -687,14 +669,13 @@ async function loadPosts(page) {
   }
 
   try {
-    let url = `${BASE_URL}/api/v1/front/posts/show?page=${page}&perpage=${PER_PAGE}`
+    let url = `${BASE_URL}/api/v1/front/posts/show?page=${page}&perpage=${PER_PAGE}&feed_only=true`
     if (props.userId) {
       url += `&user_id=${props.userId}`
     }
 
-    const res = await fetch(url, { headers: { ...authHeaders() },cache: 'no-store', })
+    const res = await fetch(url, { headers: { ...authHeaders() }, cache: 'no-store' })
 
-    // ✅ បើមាន request ថ្មីជាងបានចាប់ផ្តើមរួច កុំយក response ចាស់នេះមកប្រើ
     if (requestId !== currentRequestId) return
 
     if (res.status === 401) {
@@ -709,7 +690,16 @@ async function loadPosts(page) {
     const payload = json?.data ?? json
     const rawList = payload?.posts ?? payload?.Posts ?? []
     const total = payload?.total ?? payload?.Total ?? 0
-    const mapped = rawList.map(mapPost)
+    let mapped = rawList.map(mapPost)
+
+    if (props.mode === 'popular') {
+      mapped = mapped.sort((a, b) => {
+        const scoreA = (a.views || 0) + (a.commentCount || 0) * 3
+        const scoreB = (b.views || 0) + (b.commentCount || 0) * 3
+        return scoreB - scoreA
+      })
+    }
+
     const insertedCount = mapped.length
     posts.value = isFirstPage ? mapped : [...posts.value, ...mapped]
     currentPage.value = page
@@ -720,11 +710,10 @@ async function loadPosts(page) {
       syncBookmark(posts.value[i])
       syncFollow(posts.value[i])
       syncStickers(posts.value[i])
-      syncTagStickers(posts.value[i]) 
+      syncTagStickers(posts.value[i])
       syncShares(posts.value[i])
-      syncQuoteReaction(posts.value[i]) 
+      syncQuoteReaction(posts.value[i])
     }
-
   } catch (e) {
     if (requestId === currentRequestId) {
       error.value = e.message || 'Failed to load posts'
@@ -740,12 +729,14 @@ async function loadPosts(page) {
 
 let feedKeySeq = 0
 function mapPost(p) {
+     console.log('post raw data:', p.first_name, p.last_name, p.user_name)
   return {
     _key: `post-${feedKeySeq++}`,
     id: p.id,
     userId: p.user_id,
     avatarUrl: resolveAvatarUrl(p.profile_images), 
     username: p.user_name || `User #${p.user_id}`,
+    fullName: [p.first_name, p.last_name].filter(Boolean).join(' ') || p.user_name || `User #${p.user_id}`,
     datetime: formatDatetime(p.created_at),
     description: buildDescription(p),
     translatedText: '',
@@ -774,7 +765,12 @@ function mapPost(p) {
     bookmarkCount: 0,  
     isFollowing: false,
     postType: p.post_type || 'text',
-    postToGroup: true,
+    // postToGroup: true,
+    selectedGroupId: null,
+    selectedGroupName: null,
+    selectedGroupAvatar: null,
+
+    showGroupPicker: false,
     showTranslated: false,
     showMore: false,
     likedByAvatars: [],
@@ -787,21 +783,20 @@ function mapPost(p) {
       : [],
     stickers: [],
     showSharePicker: false,
-    // ============ Repost fields (ok.ru style) ============
     isRepost: !!p.repost_id,
     repostedByUserId: p.reposted_by_user_id ?? null,
     repostedByUsername: p.reposted_by_username ?? null,
     repostedAt: p.reposted_at ? formatDatetime(p.reposted_at) : '',
     repostedByAvatar: resolveAvatarUrl(p.reposted_by_profile_images),
-    // quoteContent: p.post_type === 'quote' ? (p.code_content ?? '') : null,
-
-
-      // quoteContent: p.post_type === 'quote_share' ? (p.code_content ?? '') : null,   // ➕ ប្តូរ 'quote' → 'quote_share'
-      quoteContent: p.post_type === 'quote_share' ? (p.code_content ?? '') : null,
+    quoteContent: p.post_type === 'quote_share' ? (p.code_content ?? '') : null,
     isQuoteShare: p.post_type === 'quote_share', 
     quoteId: p.post_type === 'quote_share' ? p.community_id : null,
-quoteReactionLoading: false,
-quoteReactionTypeId: null, 
+    quoteReactionLoading: false,
+    quoteReactionTypeId: null, 
+
+    communityId: p.community_id ?? p.group_id ?? null,
+    communityName: p.community_name ?? p.group_name ?? null,
+    communityAvatar: resolveAvatarUrl(p.community_avatar ?? p.community_avatar_url ?? p.group_avatar ?? ''),
   }
 }
 
@@ -821,8 +816,6 @@ function addNewPost(response) {
     syncQuoteReaction(newPost)
 }
 
-// defineExpose({ addNewPost })
-
 function addOptimisticPost(post) {
   posts.value.unshift(post)
 }
@@ -830,7 +823,6 @@ function addOptimisticPost(post) {
 function onNewPost(post) {
   addOptimisticPost(post)
 }
-
 
 defineExpose({ addOptimisticPost })
 
@@ -844,7 +836,7 @@ function buildDescription(p) {
       return p.code_content ?? ''
     case 'link':
       return p.link_url ?? ''
-       case 'quote':                    // ➕ ថ្មី — title
+       case 'quote':                
       return p.caption ?? ''
     default: 
       return p.caption ?? ''
@@ -860,13 +852,6 @@ function buildPhotos(p) {
     .map(resolveImageUrl)
 }
 
-// function buildTags(p) {
-//   if (!p.tag_name) return []
-//   return p.tag_name
-//     .split(',')
-//     .map((t) => t.trim())
-//     .filter(Boolean)
-// }
 function buildTags(p) {
   if (!p.tag_data) return []
   return p.tag_data
@@ -914,13 +899,8 @@ function resolveAvatarUrl(raw) {
   return `${BASE_URL}/uploads/${raw}`
 }
 
-// function resolveImageUrl(url) {
-//   if (/^https?:\/\//i.test(url)) return url
-//   return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
-// }
 function resolveImageUrl(url) {
   if (!url) return ''
-  // បើជា URL ពេញ ឬជា Base64 ស្រាប់ មិនបាច់ថែម BASE_URL ទេ
   if (/^https?:\/\//i.test(url) || url.startsWith('data:image/')) {
     return url
   }
@@ -1104,12 +1084,6 @@ function keepReactionPickerOpen() {
   clearTimeout(reactionCloseTimer)
 }
 
-// function toggleLike(post) {
-//   const target = post.reaction
-//     ? REACTIONS.find((r) => r.key === post.reaction)
-//     : REACTIONS.find((r) => r.key === 'like')
-//   pickReaction(post, target, event)
-// }
 function toggleLike(post) {
   if (post.isQuoteShare) {
     toggleQuoteReaction(post)
@@ -1150,13 +1124,13 @@ async function toggleQuoteReaction(post) {
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ quote_id: post.quoteId, reaction_type_id: defaultQuoteReactionId.value }),
       })
-      post.quoteReactionTypeId = defaultQuoteReactionId.value // ✅
+      post.quoteReactionTypeId = defaultQuoteReactionId.value 
     } else {
       await fetch(`${BASE_URL}/api/v1/front/quote-reactions/${post.quoteId}`, {
         method: 'DELETE',
         headers: { ...authHeaders() },
       })
-      post.quoteReactionTypeId = null // ✅
+      post.quoteReactionTypeId = null 
     }
   } catch (e) {
     console.error('Failed to toggle quote reaction', e)
@@ -1166,57 +1140,7 @@ async function toggleQuoteReaction(post) {
     post.quoteReactionLoading = false
   }
 }
-// =============================================
-// async function pickReaction(post, reaction) {
-//   clearTimeout(reactionCloseTimer)
-//   post.showReactions = false
 
-//   if (post.reaction !== reaction.key && event) {
-//     triggerFloatingReaction(event, reaction.icon)
-//   }
-
-//   const previous = {
-//     reaction: post.reaction,
-//     isLiked: post.isLiked,
-//     likeCount: post.likeCount,
-//   }
-//   const wasSame = post.reaction === reaction.key
-//   post.reaction = wasSame ? null : reaction.key
-//   post.isLiked = !wasSame
-//   post.likeCount += wasSame ? -1 : previous.reaction ? 0 : 1
-
-//   try {
-//     const res = await fetch(`${BASE_URL}/api/v1/front/likes/create`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         ...authHeaders(),
-//       },
-//       body: JSON.stringify({
-//         post_id: post.id,
-//         reaction_type: reaction.key,
-//       }),
-//     })
-//     if (!res.ok) {
-//       const text = await res.text().catch(() => '')
-//       throw new Error(`API ${res.status} ${res.statusText}: ${text}`)
-//     }
-//     const json = await res.json()
-//     const liked = (json?.data ?? json)?.liked
-//     if (typeof liked === 'boolean') {
-//       post.isLiked = liked
-//       post.reaction = liked ? reaction.key : null
-//     }
-//     await syncLikes(post)
-//   } catch (e) {
-//     console.error('Failed to update like', e)
-//     post.reaction = previous.reaction
-//     post.isLiked = previous.isLiked
-//     post.likeCount = previous.likeCount
-//   }
-// }
-
-// ===========================================================
 async function pickReaction(post, reaction) {
   if (post.isQuoteShare) {
     await selectQuoteReaction(post, reaction)
@@ -1265,13 +1189,83 @@ async function pickReaction(post, reaction) {
   }
 }
 
+
+
+let lightboxReactionCloseTimer = null
+
+const lightboxCurrentReaction = computed(() => {
+  const key = lightbox.value.reactions[lightbox.value.activeIndex]
+  return key ? REACTIONS.find(r => r.key === key) : null
+})
+
+function openLightboxReactionPicker() {
+  clearTimeout(lightboxReactionCloseTimer)
+  lightbox.value.showReactions = true
+}
+
+function scheduleCloseLightboxReactionPicker() {
+  clearTimeout(lightboxReactionCloseTimer)
+  lightboxReactionCloseTimer = setTimeout(() => {
+    lightbox.value.showReactions = false
+  }, 300)
+}
+
+function keepLightboxReactionPickerOpen() {
+  clearTimeout(lightboxReactionCloseTimer)
+}
+
+function toggleLightboxReaction() {
+  const existing = lightbox.value.reactions[lightbox.value.activeIndex]
+  if (existing) {
+    pickLightboxReaction({ key: existing }) // ចុចម្ដងទៀត = toggle off
+  } else {
+    openLightboxReactionPicker()
+  }
+}
+
+async function pickLightboxReaction(reaction, event) {
+  const idx = lightbox.value.activeIndex
+  const previous = lightbox.value.reactions[idx]
+  const wasSame = previous === reaction.key
+  lightbox.value.showReactions = false
+
+  if (!wasSame && event) {
+    const icon = REACTIONS.find(r => r.key === reaction.key)?.icon
+    if (icon) triggerFloatingReaction(event, icon)
+  }
+
+  if (wasSame) {
+    delete lightbox.value.reactions[idx]
+  } else {
+    lightbox.value.reactions[idx] = reaction.key
+  }
+  lightbox.value.reactions = { ...lightbox.value.reactions } 
+  try {
+    await fetch(`${BASE_URL}/api/v1/front/photo-reactions/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({
+        post_id: lightbox.value.postId,
+        photo_index: idx,
+        reaction_type: wasSame ? null : reaction.key,
+      }),
+    })
+  } catch (e) {
+    console.error('Failed to save photo reaction', e)
+  }
+}
+
+function getLightboxReactionIcon(idx) {
+  const key = lightbox.value.reactions[idx]
+  if (!key) return ''
+  return REACTIONS.find(r => r.key === key)?.icon || ''
+}
+
 function getQuoteReactionIcon(post) {
   if (!post.isQuoteShare || post.quoteReactionTypeId == null) return null
   const match = quoteReactionTypesMapped.value.find(r => r.key === post.quoteReactionTypeId)
   return match ? match.icon : null
 }
-
-
 
 const quoteReactionTypesMapped = computed(() =>
   quoteReactionTypes.value.map(rt => ({
@@ -1280,8 +1274,6 @@ const quoteReactionTypesMapped = computed(() =>
     icon: rt.icon_value,
   }))
 )
-
-
 
 function reactionsForPost(post) {
   return post.isQuoteShare ? quoteReactionTypesMapped.value : REACTIONS
@@ -1304,7 +1296,6 @@ async function selectQuoteReaction(post, reaction) {
   post.isLiked = true
   post.quoteReactionTypeId = reaction.key
   if (!hadReactionBefore) post.likeCount += 1
-  // បើប្តូរ reaction ពីមួយទៅមួយទៀត (upsert) count មិនប្តូរទេ
 
   try {
     const res = await fetch(`${BASE_URL}/api/v1/front/quote-reactions/create`, {
@@ -1322,8 +1313,6 @@ async function selectQuoteReaction(post, reaction) {
     post.quoteReactionLoading = false
   }
 }
-
-// ===========================================================
 
 async function syncLikes(post) {
   try {
@@ -1465,9 +1454,7 @@ function keepSharePickerOpen() {
 
 async function quickShare(post, key) {
   post.showSharePicker = false
-
   if (key === 'internal') {
-    // ok.ru style — repost ទៅ profile ខ្លួនឯង + instant show
     try {
       const res = await fetch(`${BASE_URL}/api/v1/front/posts/shares/create`, {
         method: 'POST',
@@ -1481,9 +1468,7 @@ async function quickShare(post, key) {
         const text = await res.text().catch(() => '')
         throw new Error(`API ${res.status} ${res.statusText}: ${text}`)
       }
-
       post.shareCount = (post.shareCount || 0) + 1
-
       const currentUserIdVal = getCurrentUserId()
       const repostedPost = {
         ...post,
@@ -1590,9 +1575,13 @@ function togglePlay(post) {
   const el = videoRefs[post.id]
   if (!el) return
   if (el.paused) {
-    pauseAllVideosExcept(post.id)   
+    pauseAllVideosExcept(post.id)
     el.play()
-    post.isPlaying = true
+      .then(() => { post.isPlaying = true })
+      .catch((e) => {
+        console.error('Failed to play video', e)
+        post.isPlaying = false
+      })
   } else {
     el.pause()
     post.isPlaying = false
@@ -1633,6 +1622,7 @@ function initVideoObserver(){
         if(!video || !post) return
         if(entry.isIntersecting){
           pauseAllVideosExcept(postId)
+          //  video.muted = true  
           video.play().catch(() => {})
           post.isPlaying = true
         } else {
@@ -1708,7 +1698,6 @@ function seekVideo(post, event) {
   post.videoProgress = ratio * 100
 }
 
-// drag process bar
 function startSeekDrag(post, event) {
   post.isSeeking = true
   const track = event.currentTarget
@@ -1735,31 +1724,26 @@ function startSeekDrag(post, event) {
   document.addEventListener('mouseup', onMouseUp)
 }
 
-// ============= GO TO PROFILE FUNCTIONS =============
-
-/**
- * ចុចទៅកាន់ Profile របស់អ្នកប្រើតាម userId
- */
 const router = useRouter()
 function goToProfile(userId) {
-  console.log('🔍 goToProfile called with userId:', userId)
   if (!userId) {
     console.warn('No userId provided')
     return
   }
-  router.push(`/profile/${userId}`) // ← ប្តូរមកប្រើនេះ, លុប window.location.href ចោល
+  router.push(`/profile/${userId}`) 
 }
 
-/**
- * ចុចទៅកាន់ Profile របស់អ្នកប្រើតាម Username (សម្រាប់ liker)
- */
+function goToCommunity(communityId) {
+  if (!communityId) return
+  router.push({ name: 'GroupDetail', params: { id: communityId } })
+}
+
 function goToProfileByUsername(username) {
   if (!username) {
     console.warn('No username provided');
     return;
   }
-  
-  // ស្វែងរក user តាម username
+
   const post = posts.value.find(p => 
     p.likedByAvatars.some(u => u.username === username)
   );
@@ -1769,7 +1753,6 @@ function goToProfileByUsername(username) {
     if (user && user.userId) {
       goToProfile(user.userId);
     } else {
-      // បើគ្មាន userId ប្រើ username ជំនួស
       window.location.href = `/profile?username=${encodeURIComponent(username)}`;
     }
   } else {
@@ -1785,23 +1768,17 @@ async function syncShares(post) {
     if (!res.ok) return
     const json = await res.json()
     const data = json?.data ?? json
-    
-    // 🔴 កែត្រង់នេះឱ្យត្រូវជាមួយ fiber.Map ដែលផ្ញើមកពី Handler ("share_count")
     post.shareCount = data.share_count ?? data.shareCount ?? 0
   } catch (e) {
     console.error(`syncShares HTTP error for post ${post.id}:`, e)
   }
 }
 
-/**
- * បន្ថែម handle click លើ avatar និង username ក្នុង Comments ផងដែរ
- * បើមាន Comments component
- */
 function handleCommentUserClick(userId) {
   goToProfile(userId);
 }
 
-const TEXT_LIMIT = 100 // ចំនួន character មុនកាត់ខ្លី — អាចលៃតម្រូវបាន
+const TEXT_LIMIT = 100 
 
 function isTextTruncatable(post) {
   const text = post.showTranslated ? post.translatedText : post.description
@@ -1817,7 +1794,7 @@ function getDisplayText(post) {
   return text.slice(0, TEXT_LIMIT) + '...'
 }
 
-const hoverCardPostId = ref(null)   // ប្តូរពី hoverCardUserId
+const hoverCardPostId = ref(null) 
 const hoverCardProfile = ref(null)
 const hoverCardLoading = ref(false)
 const profileCache = new Map()
@@ -1848,6 +1825,7 @@ async function fetchHoverProfile(userId, postId) {
     const json = await res.json()
     const data = json?.data ?? json
     const mapped = {
+      id: data.id ?? userId, 
       name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.user_name,
       handle: '@' + data.user_name,
       avatarUrl: resolveAvatarUrl(data.profile_images),
@@ -1881,19 +1859,20 @@ function keepHoverCardOpen() {
   clearTimeout(hoverCloseTimer)
 }
 
-// ============= IMAGE PREVIEW LIGHTBOX =============
-// Standalone preview feature: does not touch the existing photo-grid UI/CSS,
-// it just opens on top when a photo is clicked.
 const lightbox = ref({
   open: false,
   images: [],
+    postId: null,   
   activeIndex: 0,
   rotation: 0,
+    showReactions: false,
+    reactions: {},
 })
 
 function openLightbox(post, index) {
   if (!post.photos || !post.photos.length) return
   lightbox.value.images = post.photos
+  lightbox.value.postId = post.id
   lightbox.value.activeIndex = index
   lightbox.value.rotation = 0
   lightbox.value.open = true
@@ -1939,26 +1918,21 @@ function handleLightboxKeydown(e) {
 }
 
 function triggerFloatingReaction(event, emojiIcon) {
-  // ១. បង្កើត HTML Element បណ្តោះអាសន្នសម្រាប់ Emoji
   const floatingEl = document.createElement('div')
   floatingEl.className = 'floating-reaction-emoji'
   floatingEl.innerHTML = emojiIcon
-
-  // ២. កំណត់ទីតាំង Emoji ឲ្យចំកន្លែងដែល Mouse/Touch បាន Click
   const x = event.clientX
   const y = event.clientY
 
   floatingEl.style.position = 'fixed'
   floatingEl.style.left = `${x - 15}px`
   floatingEl.style.top = `${y - 15}px`
-  floatingEl.style.pointerEvents = 'none' // ដើម្បីកុំឲ្យបាំង Element ផ្សេង
+  floatingEl.style.pointerEvents = 'none' 
   floatingEl.style.zIndex = '9999'
   floatingEl.style.width = '32px'
   floatingEl.style.height = '32px'
 
   document.body.appendChild(floatingEl)
-
-  // ៣. ប្រើ GSAP ធ្វើ Animation (ហោះឡើង, រីក/ពង្រីក, បាត់/Fade out, និងរំញើរបន្តិច)
   gsap.fromTo(
     floatingEl,
     {
@@ -1969,28 +1943,21 @@ function triggerFloatingReaction(event, emojiIcon) {
       rotation: 0
     },
     {
-      scale: 1.8,                  // រីកធំ
-      y: -120,                     // ហោះឡើងលើ 120px
-      x: (Math.random() - 0.5) * 40, // រំញើរឆ្វេង/ស្តាំ បន្តិច (Random)
-      rotation: (Math.random() - 0.5) * 30, // ផ្អៀងឆ្វេង/ស្តាំ បន្តិច
-      opacity: 0,                  // ស្រអាប់រហូតដល់បាត់
-      duration: 1.2,               // រយៈពេល ១.២ វិនាទី
+      scale: 1.8,                
+      y: -120,                   
+      x: (Math.random() - 0.5) * 40, 
+      rotation: (Math.random() - 0.5) * 30,
+      opacity: 0,            
+      duration: 1.2,               
       ease: 'power2.out',
       onComplete: () => {
-        floatingEl.remove()        // លុប Element ចោលវិញពេល Animation ចប់
+        floatingEl.remove()       
       }
     }
   )
 }
 
-
-// function splitTagIcon(tag) {
-//   const m = tag.match(/^(\p{Extended_Pictographic}\uFE0F?)/u)
-//   if (m) return { icon: m[1], text: tag.slice(m[1].length) }
-//   return { icon: '', text: tag }
-// }
 function splitTagIcon(tag) {
-  // ✅ tag ជា object (ពី optimistic post ដែលមកពី composer)
   if (tag && typeof tag === 'object') {
     return {
       icon: tag.icon || '',
@@ -1999,7 +1966,6 @@ function splitTagIcon(tag) {
     }
   }
 
-  // ✅ tag ជា string (ពី backend, split ពី tag_name)
   if (typeof tag !== 'string') {
     return { icon: '', text: String(tag ?? ''), stickerUrl: '' }
   }
@@ -2009,9 +1975,6 @@ function splitTagIcon(tag) {
   return { icon: '', text: tag, stickerUrl: '' }
 }
 
-
-
-// ថ្មី
 async function syncQuoteReaction(post) {
   if (!post.isQuoteShare || !post.quoteId) return
   try {
@@ -2029,7 +1992,6 @@ async function syncQuoteReaction(post) {
       post.isLiked = false
       post.quoteReactionTypeId = null
     }
-    // 🆕 count ត្រូវទាញពី server ជានិច្ច មិនមែនគាំង 0 ទៀតទេ
     if (typeof data?.total === 'number') {
       post.likeCount = data.total
     }
@@ -2066,8 +2028,6 @@ async function syncQuoteReaction(post) {
   align-items: center;
   gap: 2px;
  background: #3867f3;
-  /* border: 1px solid #e2e8f0; */
-  /* border: 1px solid #CFE6F5; */
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
@@ -2090,7 +2050,6 @@ async function syncQuoteReaction(post) {
   margin-right: 5px;
   font-size: 22px;
   line-height: 1;
-  /* border: 1.5px solid #cccccc75; */
   border-radius: 2px;
   background-color: #ffff;
 
@@ -2104,11 +2063,9 @@ async function syncQuoteReaction(post) {
   font-family: 'Inter', sans-serif;
   max-width: 720px;
   margin-top: 22px;
-  /* border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0; */
+  border: 1.5px solid #E5E7EB;
   border: 1px solid #E5E7EB;
-   /* box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); */
-   box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.04);
 }
 
 .post-top {
@@ -2340,14 +2297,14 @@ async function syncQuoteReaction(post) {
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 2px solid #1976D2;
-  background: #1976D2;
+  border: 2px solid #eae7e1;
+  background: #eae7e1;
   font-size: 12.5px;
   font-weight: 700;
   padding: 7px 12px;
   border-radius: 32px;
   cursor: pointer;
-  color: #ffff;
+  color: #3f3a34;
   font-family: 'Nunito', sans-serif;
 }
 
@@ -2358,12 +2315,12 @@ async function syncQuoteReaction(post) {
   width: 23px;
   height: 23px;
   background-color: rgba(255, 255, 255, 0.112); 
-  border-radius: 50%; /* រាងមូល */
+  border-radius: 50%; 
   backdrop-filter: blur(4px); 
 }
 
 .icon-circle svg {
-  color: #ffffff;
+  color: #3f3a34;
 }
 
 .stat-btn svg {
@@ -2396,14 +2353,14 @@ async function syncQuoteReaction(post) {
 }
 
 .bookmark-btn.saved {
-  background: #ffff;
-  color: #D9601C;
-  border-color: #F2C48B;
+  background: #1976d218;
+  color: #1976D2;
+  border-color: #1976d218;
 }
 
 .bookmark-btn.saved svg {
-  fill: #D9601C;
-  stroke: #D9601C;
+  fill: #1976D2;
+  stroke: #1976D2;
 }
 
 .more-wrap {
@@ -2411,8 +2368,8 @@ async function syncQuoteReaction(post) {
 }
 
 .more-btn {
-  background: #1976D2;
-  color: #fff;
+  /* background: #F4F1EC; */
+  color: #3f3a34;
   padding: 7px 10px;
 }
 
@@ -2482,7 +2439,7 @@ async function syncQuoteReaction(post) {
   margin-left: -8px;
   overflow: hidden;
   display: block;
-  border: 2px solid #8A8A8E;
+  border: 2px solid #EAE7E1;
 }
 
 .stack span:first-child {
@@ -2499,44 +2456,30 @@ async function syncQuoteReaction(post) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   transition: all 0.3s ease;
-  max-width: 420px; /* ទំហំ Default ពេលបើកមកដំបូង គឺតូចល្មមស្អាត */
+  max-width: 320px; 
   gap: 8px;
   margin-bottom: 10px;
 }
 
-/* ករណីមានរូប ១ សន្លឹក Default (បង្ហាញមកតូចល្មមស្អាត) */
 .photo-grid.count-1 {
   grid-template-columns: 1fr !important;
-  max-width: 300px !important; 
+  max-width: 320px !important; 
 }
 
-/* ករណីមានរូប ៤ សន្លឹក Default */
 .photo-grid.count-4 {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  max-width: 420px !important;
+  max-width: 320px !important;
 }
 
-/* ================= ពេលចុចពង្រីកធំ (Expanded / Preview) ================= */
-/* .photo-grid.expanded {
-  display: block;
-  
-  gap: 8px;
-  max-width: 100% !important; 
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-} */
 
 .photo-grid.expanded {
   display: grid !important;
-  grid-template-columns: 1fr !important; /* ឱ្យធ្លាក់ចុះមកក្រោម១ជួរម្នាក់ឯង */
-  row-gap: 12px !important; /* គម្លាតចន្លោះពីលើចុះក្រោមរវាងរូបភាពនីមួយៗ */
+  grid-template-columns: 1fr !important;
+  row-gap: 12px !important; 
   max-width: 100% !important;
 }
 
-/* .photo-grid.count-1.expanded {
-  gap: 8px;
-  max-width: 500px !important; 
-  grid-template-columns: 1fr !important;
-} */
+
  .photo-grid.count-1.expanded {
   row-gap: 12px !important;
   max-width: 500px !important;
@@ -2555,13 +2498,11 @@ async function syncQuoteReaction(post) {
   
 }
 
-/* ================= ការកំណត់ទំហំប្រអប់រូបភាព (Photo Item) ================= */
 .photo {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 11; /* សមាមាត្រពេលបើកមកដំបូង Default */
+  aspect-ratio: 16 / 11; 
   border-radius: 12px;
-  border: 2px solid #1976D2;
   overflow: hidden;
   background: #EFF6FB;
   display: flex;
@@ -2573,12 +2514,12 @@ async function syncQuoteReaction(post) {
 }
 
 .photo-grid.count-1 .photo {
-  aspect-ratio: 4 / 3; /* ទម្រង់រូប ១ សន្លឹកពេល Default */
+  aspect-ratio: 4 / 3; 
   
 }
 
 .photo-grid.count-4 .photo {
-  aspect-ratio: 1 / 1; /* ទម្រង់រូប ៤ សន្លឹកពេល Default ឱ្យជារាងបួនជ្រុងស្មើគ្នា */
+  aspect-ratio: 1 / 1; 
   
 }
 
@@ -2589,9 +2530,8 @@ async function syncQuoteReaction(post) {
   display: block;
 }
 
-/* ================= សមាមាត្រពេល Expanded (ពេលចុចពង្រីក) ================= */
 .photo-grid.expanded .photo {
-  aspect-ratio: 16 / 10; /* រីកធំទូលាយស្អាត ដូចក្នុងរូបទី ២ របស់អ្នក */
+  aspect-ratio: 16 / 10; 
   width: 100%;
   
 }
@@ -2670,9 +2610,9 @@ async function syncQuoteReaction(post) {
 }
 
 .like-btn[class*="reaction-"] {
-  background: #fff;
-  color: #F2762E;
-  border-color: #F2C48B;
+  background: #1976d218;
+  color: #1976D2;
+  border-color: #1976d218;
 }
 
 .reaction-picker {
@@ -2930,7 +2870,7 @@ async function syncQuoteReaction(post) {
 
 .post-video {
   width:100%;
-  border-radius:15px;
+  border-radius:12px;
   display:block;
   transition:.3s ease;
 }
@@ -3188,44 +3128,35 @@ async function syncQuoteReaction(post) {
   cursor: pointer;
 }
 
-/* ==========================================
-   Carbon Color Highlights (ពណ៌ឆ្លាស់គ្នាច្បាស់ៗ)
-   ========================================== */
-
-/* Variables / Functions (ពណ៌ខៀវភ្លឺ / ស្វាយ) */
 .hljs-keyword,
 .hljs-selector-tag {
-  color: #c678dd !important; /* ស្វាយ - const, let, return, function */
+  color: #c678dd !important; 
   font-weight: 600;
 }
 
 .hljs-title.function_,
 .hljs-title.class_,
 .hljs-attr {
-  color: #61afef !important; /* ខៀវ - pluckDeep, compose, unfold */
+  color: #61afef !important; 
 }
 
-/* Parameters / Arguments (ពណ៌ទឹកក្រូច ឬលឿង) */
 .hljs-params {
   color: #abb2bf !important;
 }
 
-/* Strings (ពណ៌បៃតង) */
 .hljs-string {
-  color: #98c379 !important; /* បៃតង - '.' */
+  color: #98c379 !important; 
 }
 
-/* Numbers & Booleans (ពណ៌ទឹកក្រូចស្អែក) */
 .hljs-number,
 .hljs-literal,
 .hljs-boolean {
-  color: #d19a66 !important; /* 1, 2, true, false, null */
+  color: #d19a66 !important; 
 }
 
-/* Operators & Punctuation (ពណ៌លឿងខ្ចី / ពណ៌ក្រហមព្រឿង) */
 .hljs-operator,
 .hljs-punctuation {
-  color: #56b6c2 !important; /* => , ? , : */
+  color: #56b6c2 !important; 
 }
 
 /* Comments (ពណ៌ប្រផេះ) */
@@ -3234,9 +3165,6 @@ async function syncQuoteReaction(post) {
   font-style: italic;
 }
 
-/* ==========================================
-   IMAGE PREVIEW LIGHTBOX (new, additive only)
-   ========================================== */
 
 .lightbox-overlay {
   position: fixed;
@@ -3391,6 +3319,9 @@ async function syncQuoteReaction(post) {
   padding: 16px;
   margin: 8px 0;
   position: relative;
+  overflow-wrap: break-word;
+  word-break: break-word;
+
 }
 .quote-mark {
   width: 20px;
@@ -3411,4 +3342,112 @@ async function syncQuoteReaction(post) {
   color: #475569;
   line-height: 1.6;
 }
+
+.lightbox-reaction-bar {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 12px;
+}
+
+.lightbox-reaction-bar .like-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.lightbox-reaction-picker {
+  position: static;
+  top: auto;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  background: rgba(0, 0, 0, 0.85);
+  box-shadow: none;
+  animation: none;
+}
+
+.lightbox-reaction-picker .reaction-option {
+  color: #fff;
+}
+
+.lightbox-reaction-picker .reaction-tooltip {
+  background: #000;
+}
+
+.lightbox-thumb {
+  position: relative; /* ត្រូវបន្ថែម បើ rule ដើមមិនទាន់មាន */
+}
+
+.lightbox-thumb-reaction {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+}
+
+.community-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: #EAF1FE;
+  color: #1976D2;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  max-width: 260px;
+}
+
+.community-badge:hover {
+  background: #DCE9FD;
+}
+
+.community-badge-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1976D2;
+  color: #fff;
+}
+
+.community-badge-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.community-badge-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.community-badge-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.community-badge-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.lightbox-thumb-reaction svg { width: 12px; height: 12px; }
 </style>

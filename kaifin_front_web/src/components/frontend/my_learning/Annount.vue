@@ -12,14 +12,12 @@ const announcements = ref([
 <template>
   <div class="announcement-container">
     
-    <!-- Header Row: Title Only -->
     <div class="announcement-header">
       <div class="main-title-box">
         <h2>All Announcement</h2>
       </div>
     </div>
 
-    <!-- Announcement List Cards -->
     <div class="announcement-list">
       <div 
         v-for="item in announcements" 

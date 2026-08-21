@@ -39,7 +39,7 @@ const emojiOpenFor = ref(null)
 const replyOpenFor = ref(null)
 const draft = reactive({
   text: '',
-  images: [], // [{ file, previewUrl }]
+  images: [], 
 })
 
 const lightbox = reactive({
@@ -86,16 +86,14 @@ async function fetchComments() {
       headers: authHeaders()
     })
     if (!res.ok) throw new Error(`Error: ${res.status}`)
-
     const json = await res.json()
     const payload = json?.data ?? json
     const rawComments = payload?.Comments ?? payload?.comments ?? []
-
     comments.value = buildTreeStructure(rawComments)
     emit('comment-count-changed', totalCount.value)
   } catch (err) {
     console.error('Failed to load comments:', err)
-    error.value = 'មិនអាចទាញយកមតិយោបល់បានទេ'
+    error.value = 'can not get cmt'
   } finally {
     isLoading.value = false
   }
@@ -148,18 +146,16 @@ async function postComment() {
 
     const res = await fetch(`${BASE_URL}/api/v1/front/comments/create`, {
       method: 'POST',
-      headers: { ...authHeaders() }, // don't set Content-Type manually — browser sets the boundary
+      headers: { ...authHeaders() }, 
       body: formData
     })
-
     if (!res.ok) throw new Error('Failed to create comment')
-
     draft.text = ''
     draft.images.forEach(img => URL.revokeObjectURL(img.previewUrl))
     draft.images = []
     await fetchComments()
   } catch (err) {
-    alert('មិនអាចផ្ញើមតិយោបល់បានទេ')
+    alert('can not cooment')
   }
 }
 
@@ -188,12 +184,12 @@ async function postReply(comment) {
     replyOpenFor.value = null
     await fetchComments()
   } catch (err) {
-    alert('មិនអាចឆ្លើយតបបានទេ')
+    alert('can not reply')
   }
 }
 
 async function deleteComment(id) {
-  if (!confirm('តើអ្នកពិតជាចង់លុបមតិយោបល់នេះមែនទេ?')) return
+  if (!confirm('do you want delete?')) return
 
   try {
     const res = await fetch(`${BASE_URL}/api/v1/front/comments/delete/${id}`, {
@@ -300,7 +296,7 @@ async function toggleLike(item) {
   } catch (err) {
     item.liked = prevLiked
     item.likes = prevCount
-    alert('មិនអាចធ្វើប្រតិកម្មបានទេ')
+    alert('Cat not use')
   }
 }
 
@@ -362,7 +358,7 @@ function resolveAvatarUrl(raw) {
 
     <p v-if="totalCount" class="embedded-count">{{ totalCount }} comment{{ totalCount > 1 ? 's' : '' }}</p>
 
-    <!-- New top-level comment composer -->
+    <!-- New comment composer -->
     <div class="composer-row">
       <div class="avatar" :style="{ background: currentUser.color }">
         {{ currentUser.initials }}
@@ -598,7 +594,6 @@ function resolveAvatarUrl(raw) {
   --accent: #1976d2;
   --accent-soft: #eff6fb;
   --heart: #f2762e;
-
   font-family: 'Inter', sans-serif;
   color: var(--ink);
   background: var(--canvas);
@@ -632,7 +627,6 @@ function resolveAvatarUrl(raw) {
 }
 
 .card {
-  background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 16px;
@@ -841,7 +835,7 @@ textarea::placeholder {
 
 .bubble {
   background: var(--paper);
-  border: 1px solid var(--line);
+  /* border: 1px solid var(--line); */
   border-radius: 14px;
   padding: 10px 13px;
 }

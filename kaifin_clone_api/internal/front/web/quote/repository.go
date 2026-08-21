@@ -56,7 +56,6 @@ func (r *QuoteRepoImpl) Show(req QuoteShowRequest, viewerID int64) (*QuoteRespon
 		args_filters = append(args_filters, searchArgs...)
 	}
 
-	// viewerID ត្រូវជា arg ចុងក្រោយបំផុត — $(len+1)
 	viewerParamIdx := len(args_filters) + 1
 	args_filters = append(args_filters, viewerID)
 
@@ -77,7 +76,6 @@ func (r *QuoteRepoImpl) Show(req QuoteShowRequest, viewerID int64) (*QuoteRespon
 		return nil, msg.NewErrorResponse("database_error", err)
 	}
 
-	// Count query មិនប៉ះពាល់ (មិនត្រូវការ viewerID) — ដកចេញពី args_filters មុន count
 	countArgs := args_filters[:len(args_filters)-1]
 	var total int
 	countQuery := fmt.Sprintf(

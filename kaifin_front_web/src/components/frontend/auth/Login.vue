@@ -24,6 +24,7 @@ function selectType(t) {
 
 // login API
 async function onSignIn() {
+  const inputIdentity = user_name.value.trim();
   if (!user_name.value) {
     alert("Please enter username");
     return;
@@ -34,14 +35,15 @@ async function onSignIn() {
     return;
   }
 
-  if (password.value.length < 6) {
-    alert("Password must be at least 6 characters");
+  if (password.value.length < 8) {
+    alert("Password must be at least 8 characters");
     return;
   }
 
   try {
     const payload = {
-      user_name: user_name.value,
+      user_name: inputIdentity,
+      // user_name: user_name.value,
       password: password.value,
       role_id: 4
     }

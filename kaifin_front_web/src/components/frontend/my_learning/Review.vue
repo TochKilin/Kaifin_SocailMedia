@@ -155,7 +155,6 @@ const reviews = ref([
 </template>
 
 <style scoped>
-/* ធានាថា SVG ទាំងអស់មាន background ថ្លា (Transparent) */
 .transparent-svg {
   background-color: transparent !important;
 }
@@ -348,7 +347,6 @@ const reviews = ref([
   gap: 10px;
 }
 
-/* រចនាប័ទ្មប៊ូតុង Like / Dislike ឱ្យដូចរូបភាពគំរូ */
 .action-btn {
   background-color: #1B75D2;
   border: none;

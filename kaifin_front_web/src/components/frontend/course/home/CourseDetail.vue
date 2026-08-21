@@ -6,9 +6,9 @@
       <!-- Main Content Area -->
       <div class="main-content">
         
-        <!-- Top Hero Section rearranged to match the wireframe layout -->
+        <!-- Top Hero -->
         <div class="hero-section">
-          <!-- Row 1: Left Thumbnail & Right Details (Course Name, Pricing, Urgency) -->
+          <!-- Row-->
           <div class="hero-top-row">
             <div class="hero-left-thumb">
               <img :src="course.thumbnail" alt="Course Thumbnail" class="hero-thumb-img" />
@@ -33,7 +33,7 @@
             </div>
           </div>
 
-          <!-- Row 2: Created BY & Instructor Name -->
+          <!-- Row 2-->
           <div class="hero-creator-row">
             <span class="create-by-label">Create BY:</span>
             <span class="instructor-box">{{ course.creator }}</span>
@@ -51,7 +51,7 @@
             </div>
           </div>
 
-          <!-- Row 4: Ratings & Reviews arranged horizontally as requested -->
+          <!-- Row 4: -->
           <div class="hero-stats-row">
             <!-- Rating Group -->
             <div class="stat-item">
@@ -102,58 +102,46 @@
           <button class="subscribe-btn" @click="showSubPopup = true">Start Subscription</button>
         </div>
 
-        <!-- This course includes: -->
-        <div class="course-includes-section">
+        <div class="course-includes-section" v-if="course.includes.length">
           <h2>This course includes:</h2>
           <div class="includes-grid">
-            <div class="include-item">
-              <svg class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-              </svg>
-              <span>40 hours on-demand video</span>
-            </div>
-            <div class="include-item">
-              <svg class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              <span>10 articles</span>
-            </div>
-            <div class="include-item">
-              <svg class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                <polyline points="17 2 12 7 7 2"></polyline>
-              </svg>
-              <span>Access on mobile and TV</span>
-            </div>
-            <div class="include-item">
-              <svg class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-              </svg>
-              <span>7 coding exercises</span>
-            </div>
-            <div class="include-item">
-              <svg class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              <span>100 downloadable resources</span>
-            </div>
-            <div class="include-item">
-              <svg class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="8" r="6"></circle>
-                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
-              </svg>
-              <span>Certificate of completion</span>
-            </div>
+            <div class="include-item" v-for="inc in course.includes" :key="inc.id">
+              <svg v-if="includeIconKey(inc) === 'video'" class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+        <svg v-else-if="includeIconKey(inc) === 'article'" class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <svg v-else-if="includeIconKey(inc) === 'mobile'" class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+          <polyline points="17 2 12 7 7 2"></polyline>
+        </svg>
+        <svg v-else-if="includeIconKey(inc) === 'exercise'" class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <svg v-else-if="includeIconKey(inc) === 'download'" class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <svg v-else-if="includeIconKey(inc) === 'certificate'" class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"></circle>
+          <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+        </svg>
+        <svg v-else class="inc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 8v4M12 16h.01"></path>
+        </svg>
+            <span>{{ inc.text }}</span>
           </div>
         </div>
+      </div>
 
         <!-- Course Content Section -->
         <div class="course-content-section">
@@ -262,12 +250,10 @@
                 <div class="reviewer-info">
                   <span class="reviewer-name">{{ review.name }}</span>
                   <div class="review-stars-date">
-                    <span class="stars">
-                      <svg class="inline-star" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                      <svg class="inline-star" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                      <svg class="inline-star" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                      <svg class="inline-star" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                      <svg class="inline-star" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                   <span class="stars">
+                      <svg v-for="n in review.rating" :key="n" class="inline-star" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
                     </span>
                     <span class="review-date">{{ review.date }}</span>
                   </div>
@@ -278,7 +264,6 @@
           </div>
           <button class="see-more-reviews-btn">See more reviews</button>
         </div>
-
       </div>
 
       <!-- Sticky Sidebar (Right) -->
@@ -312,151 +297,204 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                 </button>
               </div>
-
-              <!-- ដាក់ CourseShare ឱ្យស្ថិតក្នុង share-wrapper ផ្ទាល់ ដើម្បីងាយស្រួលតម្រង់ទីតាំង -->
               <div v-if="showShare" class="share-dropdown-menu">
                 <CourseShare :shareUrl="courseUrl" :shareTitle="course.title" />
               </div>
             </div>
-
           </div>
         </div>
       </div>
-
     </div>
-
-
-    <ShowPopupSubscription 
-  v-if="showSubPopup" 
-  :thumbnail="course.thumbnail"
-  @close="showSubPopup = false"
-  @subscribe="handleCheckout"
-/>
+    <ShowPopupSubscription  v-if="showSubPopup"  :thumbnail="course.thumbnail" @close="showSubPopup = false" @subscribe="handleCheckout"/>
   </div>
 </template>
 
 <script setup>
-import { ref,onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import NavBar from '../../navbar/NavBar.vue'
-import CourseShare from './CourseShare.vue' // <-- បន្ថែមការ import នេះចូលទីនេះ
+import CourseShare from './CourseShare.vue'
 import ShowPopupSubscription from './ShowPopupSubscription.vue'
+
+const route = useRoute()
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+
+function getAuthToken() {
+  return localStorage.getItem('token') || ''
+}
+function authHeaders() {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+function resolveImageUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image/')) return url
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+  const diffMs = Date.now() - d.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays <= 0) return 'today'
+  if (diffDays === 1) return '1 day ago'
+  if (diffDays < 30) return `${diffDays} days ago`
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
+
 const shareWrapperRef = ref(null)
-
 const showSubPopup = ref(false)
+const showShare = ref(false)
+const showFullBio = ref(false)
+const isLoading = ref(false)
+const error = ref(null)
 
+const courseUrl = window.location.href
 
 const handleClickOutside = (event) => {
   if (showShare.value && shareWrapperRef.value && !shareWrapperRef.value.contains(event.target)) {
     showShare.value = false
   }
 }
-
-const showShare = ref(false)
-const courseUrl = window.location.href
 const toggleShare = () => {
   showShare.value = !showShare.value
 }
 
-const showFullBio = ref(false)
-
 const course = ref({
-  title: 'Advanced Vue.js 3 Enterprise Architecture & Full-Stack Mastery',
-  subtitle: 'Master enterprise-grade Vue 3, Composition API, Pinia, TypeScript, and robust backend integrations.',
-  rating: 4.7,
-  ratingsCount: 1054564,
-  studentsCount: 3431679,
-  creator: 'Alex Johnson',
-  lastUpdated: '11/2026',
-  language: 'English (Auto-generated, English [CC])',
-  currentPrice: 9.99,
-  originalPrice: 99.99,
-  thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&auto=format&fit=crop&q=60',
-  sectionsCount: 20,
-  lecturesCount: 300,
-  totalLength: '61h 53m total length',
-  includes: [
-    { text: '40 hours on-demand video' },
-    { text: '10 articles' },
-    { text: 'Access on mobile and TV' },
-    { text: '7 coding exercises' },
-    { text: '100 downloadable resources' },
-    { text: 'Certificate of completion' }
-  ],
-  sections: [
-    {
-      id: 1,
-      title: '🚀 Introduction to Enterprise Architecture',
-      lecturesCount: 8,
-      length: '33min',
-      isOpen: true,
-      lectures: [
-        { id: 101, title: 'Welcome to the Course & Overview', duration: '5:20' },
-        { id: 102, title: 'Setting up the Development Environment', duration: '12:15' },
-        { id: 103, title: 'Architecture Patterns in Modern SPAs', duration: '15:45' }
-      ]
-    },
-    {
-      id: 2,
-      title: '⚡ Advanced Composition API & Custom Hooks',
-      lecturesCount: 14,
-      length: '2h 12min',
-      isOpen: false,
-      lectures: [
-        { id: 201, title: 'Reactivity Deep Dive', duration: '18:10' },
-        { id: 202, title: 'Building Robust Composable Functions', duration: '25:00' }
-      ]
-    },
-    {
-      id: 3,
-      title: '🎯 State Management with Pinia & TypeScript',
-      lecturesCount: 12,
-      length: '1h 45min',
-      isOpen: false,
-      lectures: [
-        { id: 301, title: 'Pinia vs Vuex Architectural Shift', duration: '14:30' },
-        { id: 302, title: 'Typed Stores and Persistence Plugins', duration: '22:15' }
-      ]
-    }
-  ]
+  title: '',
+  subtitle: '',
+  rating: 0,
+  ratingsCount: 0,
+  studentsCount: 0,
+  creator: '',
+  lastUpdated: '',
+  language: 'English',
+  currentPrice: 0,
+  originalPrice: 0,
+  thumbnail: '',
+  sectionsCount: 0,
+  lecturesCount: 0,
+  totalLength: '',
+  sections: [],
+  includes: [],
 })
 
 const instructor = ref({
-  name: 'Alex Johnson',
-  headline: 'Lead Software Architect & Full-Stack Instructor',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=60',
-  rating: 4.7,
-  reviewsCount: 1054564,
-  studentsCount: 3431679,
-  coursesCount: 8,
-  description: 'Alex Johnson is a seasoned software architect with over 15 years of experience building scalable enterprise web applications. Having led engineering teams across Silicon Valley and top global tech firms, Alex is passionate about simplifying complex architectural concepts and empowering developers worldwide to write clean, performant, and maintainable code.'
+  name: '',
+  headline: '',
+  avatar: '',
+  rating: 0,
+  reviewsCount: 0,
+  studentsCount: 0,
+  coursesCount: 0,
+  description: '',
 })
 
-const reviews = ref([
-  {
-    id: 1,
-    name: 'Michael S.',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY8fMTfIQbPeVo5WqFcHfsRCLsOnjcxDIE1GTZSyM2WQ&s',
-    date: '1 day ago',
-    comment: 'Incredible depth! This course completely structured how I build large-scale Vue applications. Highly recommended.'
-  },
-  {
-    id: 2,
-    name: 'Elena R.',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSchjGHCd6XrkNtEL35Np92ug80zkIJ7NaGunX50fJYlg&s=10',
-    date: '3 days ago',
-    comment: 'The section on TypeScript integration and custom composables alone is worth ten times the price.'
-  },
-  {
-    id: 3,
-    name: 'David K.',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=60',
-    date: '5 days ago',
-    comment: 'Clear, concise, and incredibly up-to-date. Alex explains the "why" behind every architectural decision.'
+const reviews = ref([])
+
+function mapCourseDetail(raw) {
+  return {
+    title: raw.title || '',
+    subtitle: raw.subtitle || raw.description || '',
+    rating: Number(raw.rating) || 0,
+    ratingsCount: Number(raw.ratings_count) || 0,
+    studentsCount: Number(raw.students_count) || 0,
+    creator: raw.instructor?.name?.trim() || `Instructor #${raw.instructor_id}`,
+    lastUpdated: formatDate(raw.updated_at || raw.created_at),
+    language: 'English', 
+    currentPrice: raw.current_price ?? 0,
+    originalPrice: raw.original_price ?? 0,
+    thumbnail: resolveImageUrl(raw.thumbnail),
+    sectionsCount: raw.sections_count ?? (raw.sections ? raw.sections.length : 0),
+    lecturesCount: raw.lectures_count ?? 0,
+    totalLength: raw.total_length ?? '',
+    sections: (raw.sections || []).map((s, i) => ({
+      id: s.id,
+      title: s.title,
+      lecturesCount: s.lectures_count ?? (s.lectures ? s.lectures.length : 0),
+      length: s.length ?? '',
+      isOpen: i === 0,
+      lectures: (s.lectures || []).map((l) => ({
+        id: l.id,
+        title: l.title,
+        duration: l.duration,
+      })),
+    })),
+    includes: (raw.includes || []).map((inc) => ({
+      id: inc.id,
+      icon: inc.icon,
+      text: inc.text,
+    })),
   }
-])
+}
+
+function mapInstructor(raw) {
+  const ins = raw.instructor || {}
+  return {
+    name: ins.name?.trim() || `Instructor #${raw.instructor_id}`,
+    headline: ins.headline || '',
+     avatar: resolveAvatarUrl(ins.avatar || ''),
+    rating: Number(ins.rating) || 0,
+    reviewsCount: Number(ins.reviews_count) || 0,
+    studentsCount: Number(ins.students_count) || 0,
+    coursesCount: Number(ins.courses_count) || 0,
+    description: ins.description || '',
+  }
+}
+
+function mapReviews(raw) {
+  return (raw.reviews || []).map((r) => ({
+    id: r.id,
+    name: r.reviewer_name || 'Anonymous',
+        avatar: resolveAvatarUrl(r.reviewer_avatar || ''), 
+    date: formatDate(r.created_at),
+    comment: r.comment || '',
+    rating: Number(r.rating) || 0,
+  }))
+}
+
+async function loadCourseDetail() {
+  const id = route.params.id
+  if (!id) {
+    error.value = 'Missing course id'
+    return
+  }
+
+  isLoading.value = true
+  error.value = null
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/courses/show/${id}`, {
+      headers: { ...authHeaders() },
+      cache: 'no-store',
+    })
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`API ${res.status} ${res.statusText}: ${text}`)
+    }
+
+    const json = await res.json()
+    const raw = json?.data ?? json
+
+    if (!raw || !raw.id) {
+      throw new Error('Course not found')
+    }
+
+    course.value = mapCourseDetail(raw)
+    instructor.value = mapInstructor(raw)
+    reviews.value = mapReviews(raw)
+  } catch (e) {
+    error.value = e.message || 'Failed to load course'
+    console.error('Failed to load course detail', e)
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const toggleSection = (id) => {
-  const sec = course.value.sections.find(s => s.id === id)
+  const sec = course.value.sections.find((s) => s.id === id)
   if (sec) sec.isOpen = !sec.isOpen
 }
 
@@ -464,15 +502,38 @@ const handleSubscribe = () => {
   showSubPopup.value = true
 }
 
+const handleCheckout = () => {
+  showSubPopup.value = false
+}
+
+function includeIconKey(inc) {
+  const icon = (inc.icon || '').toLowerCase().trim()
+  const known = ['video', 'article', 'mobile', 'exercise', 'download', 'certificate']
+  if (known.includes(icon)) return icon
+  const text = (inc.text || '').toLowerCase()
+  if (text.includes('video')) return 'video'
+  if (text.includes('article')) return 'article'
+  if (text.includes('mobile') || text.includes('tv')) return 'mobile'
+  if (text.includes('exercise') || text.includes('coding')) return 'exercise'
+  if (text.includes('download') || text.includes('resource')) return 'download'
+  if (text.includes('certificate')) return 'certificate'
+  return 'default'
+}
+
+function resolveAvatarUrl(raw) {
+  if (!raw) return ''
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
+  return `${BASE_URL}/uploads/${raw}`
+}
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-});
+  loadCourseDetail()
+  document.addEventListener('click', handleClickOutside)
+})
 
-// ដក Event ចេញវិញនៅពេល Component ត្រូវបិទ ដើម្បីកុំឱ្យធ្ងន់ App
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside);
-});
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
@@ -494,6 +555,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   position: relative;
+
 }
 
 .main-content {
@@ -637,7 +699,6 @@ onBeforeUnmount(() => {
   color: #0f172a;
 }
 
-/* Horizontal alignment for Rating, Reviews, Students */
 .hero-stats-row {
   display: flex;
   align-items: center;
@@ -1223,11 +1284,10 @@ onBeforeUnmount(() => {
   }
 }
 
-/* ─── កែសម្រួលត្រង់ចំណុចនេះ: ដក border-radius ចេញ ─── */
 .review-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 0; /* កំណត់ជា 0 ដើម្បីដកកោងចេញ */
+  border-radius: 0; 
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -1412,7 +1472,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow: visible !important; /* ការពារកុំឱ្យบัง dropdown */
+  overflow: visible !important;
 }
 
 .share-wrapper {

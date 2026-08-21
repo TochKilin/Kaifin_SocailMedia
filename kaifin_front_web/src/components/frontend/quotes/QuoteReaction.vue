@@ -8,13 +8,11 @@
         @click.stop="$emit('select', reaction)"
         :data-tooltip="reaction.name"
       >
-        <!-- ១. បើជា Emoji -->
+
         <span v-if="reaction.type === 'emoji'" class="emoji">{{ reaction.content }}</span>
 
-        <!-- ២. បើជា Image ឬ SVG File -->
         <img v-else-if="reaction.type === 'image'" :src="reaction.content" class="reaction-img" :alt="reaction.name" />
 
-        <!-- ៣. បើជា SVG Raw Code -->
         <span v-else-if="reaction.type === 'svg'" v-html="reaction.content" class="reaction-svg"></span>
       </button>
     </div>
@@ -65,21 +63,20 @@ defineEmits(['select', 'close'])
   justify-content: center;
   width: 44px;
   height: 44px;
-  position: relative; /* ចាំបាច់សម្រាប់កន្លែងដាក់ Tooltip */
+  position: relative;
 }
 
 .reaction-icon-btn:hover {
   transform: scale(1.3);
 }
 
-/* ── Custom Tooltip Styles ── */
 .reaction-icon-btn::before {
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background-color: #1B75D2; /* ពណ៌ដែលអ្នកចង់បាន */
+  background-color: #1B75D2; 
   color: #ffffff;
   padding: 4px 8px;
   border-radius: 6px;
@@ -93,7 +90,6 @@ defineEmits(['select', 'close'])
   box-shadow: 0 4px 12px rgba(27, 117, 210, 0.2);
 }
 
-/* ព្រួញតូចក្រោម Tooltip */
 .reaction-icon-btn::after {
   content: '';
   position: absolute;
@@ -109,7 +105,6 @@ defineEmits(['select', 'close'])
   pointer-events: none;
 }
 
-/* បង្ហាញ Tooltip ពេល Hover */
 .reaction-icon-btn:hover::before,
 .reaction-icon-btn:hover::after {
   opacity: 1;
@@ -117,7 +112,6 @@ defineEmits(['select', 'close'])
   transform: translateX(-50%) translateY(0);
 }
 
-/* ពង្រីកទំហំ Sticker ឱ្យធំច្បាស់ស្អាតល្អ */
 .reaction-img, 
 .reaction-svg {
   width: 34px;

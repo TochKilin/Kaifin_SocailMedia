@@ -133,3 +133,27 @@ cannot_fetch_quotes: "មិនអាចទាញយក Quotes បានទេ"
 reaction_added: "បានបន្ថែម Reaction ដោយជោគជ័យ"
 reaction_removed: "បានលុប Reaction ដោយជោគជ័យ"
 reaction_types_retrieved: "បានទាញយកប្រភេទ Reaction ដោយជោគជ័យ"
+
+
+course_created: "បង្កើតវគ្គសិក្សាបានជោគជ័យ"
+courses_retrieved: "ទាញយកបញ្ជីវគ្គសិក្សាបានជោគជ័យ"
+course_updated: "កែប្រែវគ្គសិក្សាបានជោគជ័យ"
+course_deleted: "លុបវគ្គសិក្សាបានជោគជ័យ"
+
+invalid_request: "សំណើមិនត្រឹមត្រូវ"
+community_created: "បានបង្កើត Community ដោយជោគជ័យ"
+communities_retrieved: "បានទាញយកបញ្ជី Community ដោយជោគជ័យ"
+community_retrieved: "បានទាញយកព័ត៌មាន Community ដោយជោគជ័យ"
+join_toggled: "បានធ្វើបច្ចុប្បន្នភាពស្ថានភាពចូលរួមដោយជោគជ័យ"
+members_retrieved: "បានទាញយកបញ្ជីសមាជិកដោយជោគជ័យ"
+
+levels_retrieved: "ទាញយកកម្រិតជោគជ័យ"
+status_retrieved: "ទាញយកស្ថានភាពជោគជ័យ"
+checkin_success: "ចុះឈ្មោះប្រចាំថ្ងៃជោគជ័យ"
+
+conversations_retrieved: "ទទួលបានការសន្ទនាដោយជោគជ័យ"
+messages_retrieved: "ទទួលបានសារដោយជោគជ័យ"
+message_sent: "បានផ្ញើសារដោយជោគជ័យ"
+reaction_toggled: "បានផ្លាស់ប្តូរប្រតិកម្មដោយជោគជ័យ"
+marked_as_read: "បានសម្គាល់ថាបានអានដោយជោគជ័យ"
+forbidden: "អ្នកមិនមានសិទ្ធិធ្វើសកម្មភាពនេះទេ"

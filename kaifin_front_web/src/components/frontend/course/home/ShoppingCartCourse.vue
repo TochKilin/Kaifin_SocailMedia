@@ -1,11 +1,11 @@
 <template>
   <div class="shopping-cart-page">
     <NavBar />
-    
     <div class="page-wrapper">
-      <div class="cart-container">
-        
-        <!-- Left Section: Cart Items List -->
+      <p v-if="isLoading" class="state-msg">please wait...</p>
+      <p v-else-if="error" class="state-msg error">{{ error }}</p>
+
+      <div v-else class="cart-container">
         <div class="cart-items-section">
           <div class="cart-header">
             <h1 class="cart-title">Shopping Cart</h1>
@@ -19,7 +19,9 @@
             </div>
           </div>
 
-          <div class="cart-items-list">
+          <p v-if="!cartItems.length" class="state-msg">Your cart is empty</p>
+
+          <div v-else class="cart-items-list">
             <!-- Dynamic Course Items with Image / Avatar Support -->
             <div v-for="item in cartItems" :key="item.id" class="cart-item-card">
               <div class="item-thumb-box">
@@ -41,7 +43,7 @@
                   <span class="instructor-name">{{ item.instructor }}</span>
                 </div>
                 <div class="meta-row">
-                  <!-- Custom Enamel Pin Badge Shape using #1B75D2 -->
+                  <!-- Custom Enamel Pin Badge Shape-->
                   <div class="pin-badge">
                     <div class="pin-left-circle">
                       <svg class="pin-eagle-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -68,11 +70,17 @@
                 <span class="current-price">{{ item.currentPrice }}</span>
                 <span class="original-price">{{ item.originalPrice }}</span>
               </div>
+              <button class="remove-item-btn" @click="removeFromCart(item.id)" title="Remove">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Right Section: Checkout Summary -->
+        <!-- Right -->
         <div class="cart-summary-section">
           <div class="summary-box-card">
             <div class="summary-title-box">
@@ -95,7 +103,7 @@
               </div>
             </div>
 
-            <button class="buying-btn" @click="handleCheckout">
+            <button class="buying-btn" @click="handleCheckout" :disabled="!cartItems.length">
               <span>Buying</span>
             </button>
           </div>
@@ -107,47 +115,97 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavBar from '../../navbar/NavBar.vue'
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
 const router = useRouter()
 
-const cartItems = ref([
-  {
-    id: 1,
-    title: 'Advanced Vue.js 3 Enterprise Architecture',
-    instructor: 'Kilin Dev',
-    instructorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=300&q=80',
-    level: 10,
-    rating: 4.5,
-    currentPrice: 50,
-    originalPrice: 90
-  },
-  {
-    id: 2,
-    title: 'ASP.NET Core Web API & Microservices',
-    instructor: 'Vuthea Tech',
-    instructorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=300&q=80',
-    level: 12,
-    rating: 4.8,
-    currentPrice: 40,
-    originalPrice: 80
-  },
-  {
-    id: 3,
-    title: 'Full-Stack Database Management with MySQL',
-    instructor: 'Dara Code',
-    instructorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-    thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=300&q=80',
-    level: 13,
-    rating: 4.2,
-    currentPrice: 60,
-    originalPrice: 99
+function getAuthToken() {
+  return localStorage.getItem('token') || ''
+}
+function authHeaders() {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+function resolveImageUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image/')) return url
+  const path = url.startsWith('/') ? url : `/uploads/${url}`
+  return `${BASE_URL}${path}`
+}
+
+const cartItems = ref([])
+const isLoading = ref(false)
+const error = ref(null)
+function mapCartItem(it) {
+  return {
+    id: it.course_id,
+    title: it.title,
+    instructor: it.instructor_name || 'Unknown',
+    instructorAvatar: resolveImageUrl(it.instructor_avatar),
+    thumbnail: resolveImageUrl(it.thumbnail),
+    level: it.level_id || 1,
+    rating: Number(it.rating) || 0,
+    currentPrice: it.current_price,
+    originalPrice: it.original_price,
   }
-])
+}
+
+async function fetchCart() {
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/cart/show`, {
+      headers: { ...authHeaders() },
+    })
+
+    const raw = await res.text()
+    let data = null
+    if (raw) {
+      try { data = JSON.parse(raw) } catch {
+        throw new Error(`Server returned non-JSON response (status ${res.status})`)
+      }
+    }
+    if (!res.ok) {
+      throw new Error(data?.message || `Request failed with status ${res.status}`)
+    }
+
+    cartItems.value = (data?.data?.items || []).map(mapCartItem)
+  } catch (e) {
+    console.error('Failed to fetch cart', e)
+    error.value = 'មិនអាចទាញ Cart បានទេ'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function removeFromCart(courseId) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/cart/remove/${courseId}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() },
+    })
+
+    const raw = await res.text()
+    let data = null
+    if (raw) {
+      try { data = JSON.parse(raw) } catch {
+        throw new Error(`Server returned non-JSON response (status ${res.status})`)
+      }
+    }
+    if (!res.ok) {
+      throw new Error(data?.message || `Request failed with status ${res.status}`)
+    }
+    cartItems.value = cartItems.value.filter(item => item.id !== courseId)
+  } catch (e) {
+    console.error('Failed to remove item from cart', e)
+    alert(e.message || 'មិនអាចលុប item នេះបានទេ')
+  }
+}
+
+onMounted(fetchCart)
 
 const calculatedTotal = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + item.currentPrice, 0)
@@ -203,7 +261,6 @@ const handleCheckout = () => {
   padding: 0;
 }
 
-/* Left Section Styles */
 .cart-items-section {
   flex: 1;
   border: 1px solid #e2e8f0;
@@ -359,7 +416,6 @@ const handleCheckout = () => {
   gap: 12px;
 }
 
-/* Custom Enamel Pin Badge Style using #1B75D2 */
 .pin-badge {
   display: inline-flex;
   align-items: center;
@@ -462,7 +518,6 @@ const handleCheckout = () => {
   margin-top: 2px;
 }
 
-/* Right Section Styles */
 .cart-summary-section {
   width: 320px;
   border: 1px solid #e2e8f0;
@@ -492,7 +547,6 @@ const handleCheckout = () => {
   color: #64748b;
 }
 
-/* New Calculation Block Styles */
 .summary-calculation-block {
   display: flex;
   flex-direction: column;
@@ -566,5 +620,24 @@ const handleCheckout = () => {
 
 .buying-btn:active {
   transform: scale(0.98);
+}
+
+.remove-item-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+.remove-item-btn:hover {
+  color: #dc2626;
+}
+.remove-item-btn svg {
+  width: 18px;
+  height: 18px;
 }
 </style>

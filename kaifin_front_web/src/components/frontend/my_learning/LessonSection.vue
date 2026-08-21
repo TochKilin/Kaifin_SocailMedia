@@ -62,7 +62,7 @@ const toggleDropdown = () => {
       <div class="dropdown-inner">
         <ul class="sub-lesson-list">
           
-          <!-- Sub-item 1: Video -->
+          <!-- Sub-item Video -->
           <li class="sub-item">
             <div class="sub-info">
               <div class="sub-icon-box">
@@ -76,7 +76,7 @@ const toggleDropdown = () => {
             </span>
           </li>
 
-          <!-- Sub-item 2: Document / File -->
+          <!-- Sub-item  File -->
           <li class="sub-item">
             <div class="sub-info">
               <div class="sub-icon-box">
@@ -104,7 +104,7 @@ const toggleDropdown = () => {
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border: none; /* ដក border របស់កាតមេចេញ */
+  border: none; 
   border-radius: 14px;
   margin-bottom: 12px;
   overflow: visible;

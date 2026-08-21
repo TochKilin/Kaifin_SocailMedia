@@ -101,7 +101,7 @@ const selectBank = (bank) => {
 }
 
 .modal-content {
-  background-color: #ffffff; /* ពណ៌សស្អាត */
+  background-color: #ffffff; 
   width: 100%;
   max-width: 440px;
   border-radius: 28px;
@@ -112,7 +112,6 @@ const selectBank = (bank) => {
   border: 1.5px solid #e2e8f0;
 }
 
-/* Close Button */
 .close-btn {
   position: absolute;
   top: 18px;
@@ -264,7 +263,6 @@ const selectBank = (bank) => {
   color: #0f172a;
 }
 
-/* Promotion Row inside container */
 .promo-row {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -276,7 +274,6 @@ const selectBank = (bank) => {
   color: #0284c7;
 }
 
-/* Pay Now Button */
 .pay-btn {
   width: 100%;
   background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);

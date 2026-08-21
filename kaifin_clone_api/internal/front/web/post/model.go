@@ -38,31 +38,30 @@ type ShowPostRequest struct {
 	Search     string         `query:"search"`
 	CurrencyID int            `query:"currency_id"`
 	UserID     string         `query:"user_id"`
+	FeedOnly   bool           `query:"feed_only"`
 }
 
 type Post struct {
-	ID            int64     `json:"id" db:"id"`
-	Username      string    `json:"user_name" db:"user_name"`
-	UserID        int64     `json:"user_id" db:"user_id"`
-	ProfileImages *string   `json:"profile_images" db:"profile_images"`
-	CommunityID   *int64    `json:"community_id" db:"community_id"`
-	Caption       string    `json:"caption" db:"caption"`
-	PostType      string    `json:"post_type" db:"post_type"`
-	CodeContent   *string   `json:"code_content" db:"code_content"`
-	LinkURL       *string   `json:"link_url" db:"link_url"`
-	ViewsCount    int       `json:"views_count" db:"views_count"`
-	CreatedAt     time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
-	Images        *string   `json:"images" db:"images"`
-	Hashtags      *string   `json:"tag_name" db:"tag_name"`
-	TagData       *string   `json:"tag_data" db:"tag_data"`
-	CommentCount  int       `json:"comment_count" db:"comment_count"`
-	StickerIDs    *string   `json:"sticker_ids" db:"sticker_ids"`
-	VideoURL      *string   `json:"video_path" db:"video_path"`
-	ThumbnailURL  *string   `json:"thumbnail_path" db:"thumbnail_path"`
-	VideoDuration *int      `db:"duration" json:"duration"`
-
-	// ============ Repost fields (ok.ru style) ============
+	ID                      int64      `json:"id" db:"id"`
+	Username                string     `json:"user_name" db:"user_name"`
+	UserID                  int64      `json:"user_id" db:"user_id"`
+	ProfileImages           *string    `json:"profile_images" db:"profile_images"`
+	CommunityID             *int64     `json:"community_id" db:"community_id"`
+	Caption                 string     `json:"caption" db:"caption"`
+	PostType                string     `json:"post_type" db:"post_type"`
+	CodeContent             *string    `json:"code_content" db:"code_content"`
+	LinkURL                 *string    `json:"link_url" db:"link_url"`
+	ViewsCount              int        `json:"views_count" db:"views_count"`
+	CreatedAt               time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt               time.Time  `json:"updated_at" db:"updated_at"`
+	Images                  *string    `json:"images" db:"images"`
+	Hashtags                *string    `json:"tag_name" db:"tag_name"`
+	TagData                 *string    `json:"tag_data" db:"tag_data"`
+	CommentCount            int        `json:"comment_count" db:"comment_count"`
+	StickerIDs              *string    `json:"sticker_ids" db:"sticker_ids"`
+	VideoURL                *string    `json:"video_path" db:"video_path"`
+	ThumbnailURL            *string    `json:"thumbnail_path" db:"thumbnail_path"`
+	VideoDuration           *int       `db:"duration" json:"duration"`
 	RepostID                *int64     `json:"repost_id" db:"repost_id"`
 	RepostedByUserID        *int64     `json:"reposted_by_user_id" db:"reposted_by_user_id"`
 	RepostedByUsername      *string    `json:"reposted_by_username" db:"reposted_by_username"`
@@ -75,10 +74,6 @@ type Post struct {
 type CreateShareRequest struct {
 	PostID int64 `json:"post_id" form:"post_id" validate:"required"`
 }
-
-// type RepostQuoteRequest struct {
-// 	QuoteID int64 `json:"quote_id" validate:"required"`
-// }
 
 func (u *CreateShareRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	if err := c.Bind().Body(u); err != nil {
@@ -129,16 +124,20 @@ func (u *CreatePostRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 }
 
 func (u *ShowPostRequest) bind(c fiber.Ctx, v *utls.Validator) error {
-	if err := c.Bind().Query(u); err != nil { // call url query string
+	if err := c.Bind().Query(u); err != nil {
 		return err
 	}
 
 	if u.PageOption.Page == 0 {
-		if p, err := strconv.Atoi(c.Query("page")); err == nil { // Atio = convert to integer
+		if p, err := strconv.Atoi(c.Query("page")); err == nil {
 			u.PageOption.Page = p
 		} else {
 			u.PageOption.Page = 1
 		}
+	}
+
+	if v := c.Query("feed_only"); v == "true" || v == "1" {
+		u.FeedOnly = true
 	}
 
 	if u.PageOption.Perpage == 0 {

@@ -26,12 +26,6 @@ func NewPostHandlerImpl(dbpool *sqlx.DB, rdb *redis.Client) *PostMusicHandlerImp
 	}
 }
 
-// currentUser pulls the authenticated user out of c.Locals.
-//
-// Matches pkg/middleware/jwt.go's handleUserContext, which stores the
-// claims as a *value* (not pointer) under the key "UserContext":
-//
-//	c.Locals("UserContext", uCtx) // uCtx is types.UserContext
 func currentUser(c fiber.Ctx) *share.UserContext {
 	raw := c.Locals("UserContext")
 	if raw == nil {
@@ -44,12 +38,6 @@ func currentUser(c fiber.Ctx) *share.UserContext {
 	return &userCtx
 }
 
-// unauthorized is mostly a defensive fallback: the routes in this module
-// aren't in middleware's publicPaths list, so the JWT middleware already
-// rejects unauthenticated requests before they ever reach this handler.
-// This only fires if currentUser() somehow can't read what the
-// middleware set (e.g. a type/key mismatch), so it's still worth
-// keeping — just never expected to trigger in normal use.
 func unauthorized(c fiber.Ctx) error {
 	msg, err_msg := translate.TranslateWithError(c, "unauthorized")
 	if err_msg != nil {
@@ -57,9 +45,7 @@ func unauthorized(c fiber.Ctx) error {
 			response.NewResponseError(err_msg.ErrorString(), constants.Translate_Failed, err_msg.Err),
 		)
 	}
-	// NEVER pass nil as the error argument here — pkg/http/errors.go:30
-	// dereferences it directly and panics on nil, which previously took
-	// the whole process down instead of just failing this request.
+
 	return c.Status(fiber.StatusUnauthorized).JSON(
 		response.NewResponseError(msg, constants.Invalid_request, fmt.Errorf("unauthorized: no user context on request")),
 	)
@@ -88,8 +74,6 @@ func respondError(c fiber.Ctx, e *error_responses.ErrorResponse) error {
 		response.NewResponseError(msg, constants.Generic_error, e.Err),
 	)
 }
-
-// ---------- Create ----------
 
 func (h *PostMusicHandlerImpl) Create(c fiber.Ctx) error {
 	userCtx := currentUser(c)
@@ -120,8 +104,6 @@ func (h *PostMusicHandlerImpl) Create(c fiber.Ctx) error {
 	)
 }
 
-// ---------- Show / List ----------
-
 func (h *PostMusicHandlerImpl) Show(c fiber.Ctx) error {
 	var req ShowPostRequest
 	v := utls.NewValidator()
@@ -129,8 +111,6 @@ func (h *PostMusicHandlerImpl) Show(c fiber.Ctx) error {
 		return badRequest(c, err)
 	}
 
-	// Public endpoint: an anonymous request still works, it just only
-	// sees audience = 'everyone' posts (see PostServiceImpl.Show).
 	h.ps.UserCtx = currentUser(c)
 
 	list, e := h.ps.Show(req)
@@ -148,8 +128,6 @@ func (h *PostMusicHandlerImpl) Show(c fiber.Ctx) error {
 		response.NewResponse(msg, constants.Generic_success, list),
 	)
 }
-
-// ---------- Update ----------
 
 func (h *PostMusicHandlerImpl) Update(c fiber.Ctx) error {
 	userCtx := currentUser(c)
@@ -184,8 +162,6 @@ func (h *PostMusicHandlerImpl) Update(c fiber.Ctx) error {
 		response.NewResponse(msg, constants.Generic_success, updated),
 	)
 }
-
-// ---------- Delete ----------
 
 func (h *PostMusicHandlerImpl) Delete(c fiber.Ctx) error {
 	userCtx := currentUser(c)

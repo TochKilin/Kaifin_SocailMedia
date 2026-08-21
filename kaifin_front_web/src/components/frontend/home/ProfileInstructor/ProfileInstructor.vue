@@ -9,9 +9,7 @@ import TabsFeed from './TabsFeed.vue';
 import FeedBackCourse from './FeedBackCourse.vue';
 
 const router = useRouter();
-
 const isCreateCourseOpen = ref(false);
-
 const openCreateCourseModal = () => {
   isCreateCourseOpen.value = true;
 };
@@ -23,7 +21,6 @@ const closeCreateCourseModal = () => {
 const route = useRoute();
 const profileId = ref(route.params.id);
 const profileType = ref(route.query.type || 'Instructor');
-
 const profileData = ref({
   username: profileType.value === 'Instructor' ? 'Instructor Pheourn Sophea' : 'User Profile',
   profileImage: Phea,
@@ -217,12 +214,8 @@ const handleCourseSubmit = (courseData) => {
     <NavBar/>
     <div class="profile-page-container">
       <div class="profile-layout-grid">
-
-        <!-- ផ្នែកខាងឆ្វេង -->
         <div class="profile-left-section">
-
           <div class="wrap-tabs">
-            <!-- Header Box -->
             <div class="profile-header-card">
               <div class="profile-avatar-large">
                 <img :src="profileData.profileImage" alt="Profile Avatar" />
@@ -251,7 +244,6 @@ const handleCourseSubmit = (courseData) => {
               </div>
             </div>
 
-            <!-- Navigation Tabs -->
             <div class="profile-tabs-wrapper">
               <div class="profile-tabs-row">
                 <button
@@ -267,9 +259,7 @@ const handleCourseSubmit = (courseData) => {
             </div>
           </div>
 
-          <!-- Sub Content Box -->
           <div class="profile-content-box">
-
             <template v-if="activeTab !== 'Article' && activeTab !== 'Feed' && activeTab !== 'Save' && activeTab !== 'Course' && activeTab !== 'Like' && activeTab !== 'Feedback'">
               <div class="instructor-bio-area">
                 <div class="bio-title-wrapper">
@@ -300,11 +290,7 @@ const handleCourseSubmit = (courseData) => {
                 </div>
               </div>
             </template>
-
-            <!-- Dynamic Tab Content Area -->
             <div class="dynamic-tab-content-area">
-
-              <!-- Course Tab Content -->
               <template v-if="activeTab === 'Course'">
                 <div class="course-tab-container">
                   <div class="course-top-action-bar">
@@ -366,25 +352,22 @@ const handleCourseSubmit = (courseData) => {
                     </div>
                   </div>
 
-    <!-- See More Button -->
-    <div class="see-more-wrapper">
-      <button class="see-more-feedback-btn">
-        <span>{{ showAll ? 'Show less' : 'See more' }}</span>
-        <svg class="down-arrow-icon" :class="{ 'rotate-icon': showAll }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <polyline points="19 12 12 19 5 12"></polyline>
-        </svg>
-      </button>
-    </div>
+                  <div class="see-more-wrapper">
+                    <button class="see-more-feedback-btn">
+                      <span>{{ showAll ? 'Show less' : 'See more' }}</span>
+                      <svg class="down-arrow-icon" :class="{ 'rotate-icon': showAll }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <polyline points="19 12 12 19 5 12"></polyline>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </template>
 
-              <!-- Feed Tab Content -->
               <template v-else-if="activeTab === 'Feed'">
                 <TabsFeed :profileData="profileData" />
               </template>
 
-              <!-- Article Tab Content -->
               <template v-else-if="activeTab === 'Article'">
                 <div class="tab-list-container">
                   <div v-for="(article, index) in tabContents.Article" :key="index" class="article-custom-card">
@@ -438,7 +421,6 @@ const handleCourseSubmit = (courseData) => {
                 </div>
               </template>
 
-              <!-- Save Tab Content -->
               <template v-else-if="activeTab === 'Save'">
                 <div class="tab-list-container">
                   <div v-for="(item, index) in tabContents.Save" :key="index" class="feed-item-card">
@@ -489,24 +471,20 @@ const handleCourseSubmit = (courseData) => {
                 </div>
               </template>
 
-              <!-- Like Tab Content -->
               <template v-else-if="activeTab === 'Like'">
                 <TabsFeed :profileData="profileData" />
               </template>
 
-              <!-- Group Tab Content -->
               <template v-else-if="activeTab === 'Group'">
                 <div class="tab-list-container">
                   <GroupList />
                 </div>
               </template>
 
-              <!-- Feedback Tab Content -->
               <template v-else-if="activeTab === 'Feedback'">
                 <FeedBackCourse />
               </template>
 
-              <!-- Other Tabs Content -->
               <template v-else>
                 <div class="tab-list-container">
                   <h3 class="tab-category-title">📂 {{ activeTab }} List</h3>
@@ -520,14 +498,10 @@ const handleCourseSubmit = (courseData) => {
                   </div>
                 </div>
               </template>
-
             </div>
-
           </div>
-
         </div>
 
-        <!-- ផ្នែកខាងស្តាំ -->
         <div class="profile-right-sidebar">
           <div class="stat-combined-card">
             <div class="stat-item">
@@ -564,7 +538,6 @@ const handleCourseSubmit = (courseData) => {
 
       </div>
 
-      <!-- Create Course Modal -->
       <Teleport to="body">
         <Transition name="modal-fade">
           <div v-if="isCreateCourseOpen" class="modal-overlay" @click.self="closeCreateCourseModal">
@@ -576,7 +549,6 @@ const handleCourseSubmit = (courseData) => {
           </div>
         </Transition>
       </Teleport>
-
     </div>
   </div>
 </template>
@@ -799,7 +771,6 @@ const handleCourseSubmit = (courseData) => {
   gap: 16px;
 }
 
-/* Course Tab Component Styles (White Theme) */
 .course-tab-container {
   display: flex;
   flex-direction: column;
@@ -1578,18 +1549,17 @@ const handleCourseSubmit = (courseData) => {
   font-size: 14px;
 }
 
-/* --- Create Course Modal --- */
 .modal-overlay {
   position: fixed;
-  top: 64px; /* កម្ពស់ស្មើនឹង Navbar របស់អ្នក (អាចកែជា 70px ឬ 80px តាមជាក់ស្តែង) */
+  top: 64px;
   left: 0;
   width: 100vw;
-  height: calc(100vh - 64px); /* កម្ពស់ពេញអេក្រង់ដក Navbar ចេញ */
-  background-color: #97999a8b; /* ពណ៌ផ្ទៃខាងក្រោយស្រអាប់ស្អាត */
+  height: calc(100vh - 64px); 
+  background-color: #97999a8b; 
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* ឱ្យប្រអប់ចាប់ផ្តើមពីផ្នែកខាងលើចុះមក */
-  overflow-y: auto; /* អនុញ្ញាតឱ្យអូសចុះឡើងបានពេល nội dung វែង */
+  align-items: flex-start; 
+  overflow-y: auto; 
   z-index: 1000;
   /* padding: 30px 20px; */
   padding-top: 12px;
@@ -1602,7 +1572,6 @@ const handleCourseSubmit = (courseData) => {
   border-radius: 12px;
   width: 100%;
   max-width: 800px;
-  /* box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); */
   margin-bottom: 40px;
   box-sizing: border-box;
 }
@@ -1698,7 +1667,6 @@ const handleCourseSubmit = (courseData) => {
   padding: 16px 20px;
 }
 
-/* Transition */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.25s ease;

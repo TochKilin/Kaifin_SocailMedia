@@ -3,6 +3,8 @@
     <NavBar />
     
     <div class="page-wrapper">
+        <p v-if="isLoading" class="state-msg">កំពុងផ្ទុក...</p>
+        <p v-else-if="error" class="state-msg error">{{ error }}</p>
       <div class="qr-container">
         
         <!-- Header Section above QR Code -->
@@ -91,41 +93,69 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import NavBar from '../../navbar/NavBar.vue'
 
-const cartItems = ref([
-  {
-    id: 1,
-    title: 'Advanced Vue.js 3 Enterprise Architecture',
-    instructor: 'Alex Johnson',
-    instructorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60',
-    level: 'Advanced',
-    currentPrice: 50,
-    originalPrice: 90,
-    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=100&auto=format&fit=crop&q=60'
-  },
-  {
-    id: 2,
-    title: 'ASP.NET Core Web API & Microservices',
-    instructor: 'Sarah Jenkins',
-    instructorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60',
-    level: 'Intermediate',
-    currentPrice: 40,
-    originalPrice: 80,
-    thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=100&auto=format&fit=crop&q=60'
-  },
-  {
-    id: 3,
-    title: 'Full-Stack Database Management with MySQL',
-    instructor: 'David Miller',
-    instructorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=60',
-    level: 'Beginner to Pro',
-    currentPrice: 60,
-    originalPrice: 99,
-    thumbnail: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=100&auto=format&fit=crop&q=60'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const router = useRouter()
+
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+function resolveImageUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image/')) return url
+  const path = url.startsWith('/') ? url : `/uploads/${url}`
+  return `${BASE_URL}${path}`
+}
+
+const cartItems = ref([])
+const isLoading = ref(false)
+const error = ref(null)
+const isPaying = ref(false)
+
+function mapCartItem(it) {
+  return {
+    id: it.course_id,
+    title: it.title,
+    instructor: it.instructor_name || 'Unknown',
+    instructorAvatar: resolveImageUrl(it.instructor_avatar),
+    thumbnail: resolveImageUrl(it.thumbnail),
+    level: it.level_id || 1,
+    currentPrice: it.current_price,
+    originalPrice: it.original_price,
   }
-])
+}
+
+async function fetchCart() {
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/cart/show`, {
+      headers: { ...authHeaders() },
+    })
+    const raw = await res.text()
+    let data = null
+    if (raw) {
+      try { data = JSON.parse(raw) } catch {
+        throw new Error(`Server returned non-JSON response (status ${res.status})`)
+      }
+    }
+    if (!res.ok) {
+      throw new Error(data?.message || `Request failed with status ${res.status}`)
+    }
+    cartItems.value = (data?.data?.items || []).map(mapCartItem)
+  } catch (e) {
+    console.error('Failed to fetch cart', e)
+    error.value = 'មិនអាចទាញ Cart បានទេ'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(fetchCart)
 
 const calculatedTotal = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + item.currentPrice, 0)
@@ -135,15 +165,45 @@ const calculatedOriginalTotal = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + item.originalPrice, 0)
 })
 
-// Dynamically generate a real QR code based on the checkout total
 const qrCodeUrl = computed(() => {
   const checkoutData = `checkout://pay?amount=${calculatedTotal.value}&items=${cartItems.value.length}`
   return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(checkoutData)}&margin=10`
 })
 
-const handlePayment = () => {
-  console.log('Processing payment for total:', calculatedTotal.value)
-  alert(`Payment processed successfully! Amount: $${calculatedTotal.value}`)
+// ⚠️ TODO: replace with a real POST /checkout call once the orders API is ready
+const handlePayment = async () => {
+  if (isPaying.value || cartItems.value.length === 0) return
+  isPaying.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/course-enrollments/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+      },
+      body: JSON.stringify({
+        course_ids: cartItems.value.map(item => item.id),
+      }),
+    })
+    const raw = await res.text()
+    let data = null
+    if (raw) {
+      try { data = JSON.parse(raw) } catch {
+        throw new Error(`Server returned non-JSON response (status ${res.status})`)
+      }
+    }
+    if (!res.ok) {
+      throw new Error(data?.message || `Request failed with status ${res.status}`)
+    }
+
+    alert(`ការទូទាត់ជោគជ័យ! ចំនួនទឹកប្រាក់: $${calculatedTotal.value}`)
+    router.push('/my-learning') // ឬ route ណាមួយសម្រាប់ enrolled courses
+  } catch (e) {
+    console.error('Payment/enrollment failed', e)
+    error.value = 'ការទូទាត់មិនជោគជ័យ សូមព្យាយាមម្តងទៀត'
+  } finally {
+    isPaying.value = false
+  }
 }
 </script>
 
@@ -208,7 +268,6 @@ const handlePayment = () => {
   color: #0f172a;
 }
 
-/* QR Code Section */
 .qr-box-section {
   display: flex;
   justify-content: center;
@@ -228,7 +287,7 @@ const handlePayment = () => {
   align-items: center;
   justify-content: center;
   position: relative;
-  border: 2px solid #1B75D2; /* Updated border color to #1B75D2 */
+  border: 2px solid #1B75D2; 
 }
 
 .real-qr-image {
@@ -238,7 +297,6 @@ const handlePayment = () => {
   border-radius: 8px;
 }
 
-/* Order Details Section */
 .order-details-section {
   display: flex;
   flex-direction: column;

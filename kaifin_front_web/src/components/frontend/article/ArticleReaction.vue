@@ -1,6 +1,7 @@
 <script setup>
 import { REACTIONS } from '../../../components/reaction/reactions.js'
 
+// prop emit
 const props = defineProps({
   modelValue: {
     type: String,
@@ -9,7 +10,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'react'])
-
 const selectReaction = (reaction) => {
   emit('update:modelValue', reaction.key)
   emit('react', reaction)
@@ -18,18 +18,10 @@ const selectReaction = (reaction) => {
 
 <template>
   <div class="reactions-bar-container">
-    <div 
-      v-for="reaction in REACTIONS" 
-      :key="reaction.key"
-      class="reaction-item"
-      :class="{ active: modelValue === reaction.key }"
-      @click="selectReaction(reaction)"
-    >
+    <div  v-for="reaction in REACTIONS"  :key="reaction.key"  class="reaction-item" :class="{ active: modelValue === reaction.key }"  @click="selectReaction(reaction)" >
       <div class="reaction-icon-wrapper" v-html="reaction.icon"></div>
-      
       <!-- Custom Tooltip with #1B75D2 Background -->
       <span class="reaction-tooltip">{{ reaction.label }}</span>
-
       <span v-if="reaction.private" class="private-lock-badge">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
       </span>
@@ -38,6 +30,7 @@ const selectReaction = (reaction) => {
 </template>
 
 <style scoped>
+/* Main content style  */
 .reactions-bar-container {
   display: flex;
   flex-direction: column;
@@ -52,7 +45,7 @@ const selectReaction = (reaction) => {
   user-select: none;
   margin-top: 50px;
 }
-
+/* Reaction type item  */
 .reaction-item {
   position: relative;
   width: 38px;
@@ -68,7 +61,7 @@ const selectReaction = (reaction) => {
   transform: scale(1.25);
 }
 
-/* Custom Tooltip Styling with #1B75D2 Color */
+/* tool tyke hove reaction */
 .reaction-tooltip {
   position: absolute;
   left: 50px;
@@ -116,6 +109,7 @@ const selectReaction = (reaction) => {
   padding: 8px;
 }
 
+/* Private reaction  */
 .private-lock-badge {
   position: absolute;
   bottom: -2px;

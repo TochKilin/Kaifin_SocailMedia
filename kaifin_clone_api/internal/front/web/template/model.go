@@ -9,7 +9,6 @@ import (
 )
 
 type ShowTemplateRequest struct {
-	// មិនត្រូវការ field ណាមួយសម្រាប់ list templates ទាំងអស់
 }
 
 type Template struct {

@@ -13,11 +13,14 @@ import Nita from "@/assets/team_images/nita.jpg";
 import Pa from "@/assets/team_images/pa.jpg";
 import Roth from "@/assets/team_images/roth.jpg";
 import Yuri from "@/assets/team_images/yuri.jpg";
-
-
+import Bongheang from "@/assets/team_images/bongheang.jpg";
+import Chea from "@/assets/team_images/chea.jpg";
+import Chit from "@/assets/team_images/chit.jpg";
+import Daimen from "@/assets/team_images/yuri.jpg";
+import Sal from "@/assets/team_images/visal.jpg";
 
 const logoUrl = ref(Logo);
-
+// Speak item developer
 const speakers = ref([
   {
     name: "Pheaurn Sophea",
@@ -100,77 +103,46 @@ const speakers = ref([
     isOffset: true
   },
   {
-    name: "James Wilson (Full-Stack Engineer)",
+    name: "Bong Heang (Full-Stack Engineer)",
     bio: "Talking about work experience in developing high-performance web applications using modern full-stack technologies.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=60",
+    image: Bongheang,
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     isOffset: false
   },
   {
-    name: "Amina Khan (Blockchain Developer)",
+    name: "Yon Rachit Bio (Blockchain Developer)",
     bio: "Covering work experience in smart contract development, security audits, and decentralized app architectures.",
-    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=60",
+    image: Chit,
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     isOffset: true
   },
   {
-    name: "Lucas Martinez (Mobile Specialist)",
+    name: "Chea Chea Ko (Mobile Specialist)",
     bio: "Sharing work experience in cross-platform mobile app development, performance tuning, and UI integration.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=60",
+    image: Chea,
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     isOffset: false
   },
   {
-    name: "Chloe Bennett (QA Lead)",
+    name: "Kong Dai baba (QA Lead)",
     bio: "Discussing work experience in establishing automated testing frameworks and ensuring software release quality.",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=60",
+    image: Daimen,
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     isOffset: true
   },
   {
-    name: "Nathaniel Wright (Solutions Architect)",
+    name: "Horn Visal (Solutions Architect)",
     bio: "Presenting work experience in bridging technical requirements with business goals for large-scale enterprise clients.",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&auto=format&fit=crop&q=60",
+    image: Sal,
     github: "https://github.com",
     linkedin: "https://linkedin.com",
     isOffset: false
   },
-  {
-    name: "Zoe Adams (Growth Marketer)",
-    bio: "Sharing work experience in user acquisition, digital marketing campaigns, and growth metric tracking.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=500&auto=format&fit=crop&q=60",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    isOffset: true
-  },
-  {
-    name: "Ryan O'Connor (Systems Engineer)",
-    bio: "Talking about work experience in low-level system optimization, hardware integration, and performance tuning.",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=500&auto=format&fit=crop&q=60",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    isOffset: false
-  },
-  {
-    name: "Sophia Martinez (Community Manager)",
-    bio: "Covering work experience in developer advocacy, community building, and organizing technical events globally.",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=60",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    isOffset: true
-  },
-  {
-    name: "Daniel Kim (Innovations Lead)",
-    bio: "Sharing work experience in exploring emerging technologies and managing research-to-product innovation cycles.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=60",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    isOffset: false
-  }
+  
 ]);
 </script>
 
@@ -203,35 +175,22 @@ const speakers = ref([
             </p>
           </div>
         </div>
-
-        <!-- Video Section -->
-        <!-- <div class="video-section">
-          <div class="video-wrapper">
-            <iframe 
-              src="https://pixabay.com/videos/download/video-215471_medium.mp4" 
-              title="YouTube video player" 
-              frameborder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowfullscreen>
-            </iframe>
-          </div>
-        </div> -->
         <div class="video-section">
-  <div class="video-wrapper">
-    <video
-      controls
-      playsinline
-      preload="metadata"
-      poster=""
-    >
-      <source
-        src="https://pixabay.com/videos/download/video-215471_medium.mp4"
-        type="video/mp4"
-      />
-      Your browser does not support the video tag.
-    </video>
-  </div>
-</div>
+          <div class="video-wrapper">
+            <video
+              controls
+              playsinline
+              preload="metadata"
+              poster=""
+            >
+              <source
+                src="https://pixabay.com/videos/download/video-215471_medium.mp4"
+                type="video/mp4"
+              />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
 
         <!-- Developer Teams Section -->
         <div class="speakers-section">
@@ -301,6 +260,7 @@ const speakers = ref([
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
 
+ /* Main container */
 .about-container {
   min-height: 100vh;
   width: 1251px;

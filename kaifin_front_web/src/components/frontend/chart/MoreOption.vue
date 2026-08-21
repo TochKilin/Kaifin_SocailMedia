@@ -19,7 +19,6 @@
 import { ref } from 'vue';
 const emit = defineEmits(['close', 'action'])
 
-// SVG Icons ដែលមានពណ៌ #000 ទាំងអស់
 const options = ref([
   { 
     name: 'Unread', 
@@ -76,7 +75,7 @@ const handleOption = (option) => {
 
 <style scoped>
 .more-option-modal {
-  background-color: #ffffff; /* ផ្ទៃខាងក្រោយពណ៌ស */
+  background-color: #ffffff; 
   width: 320px;
   border-radius: 20px;
   padding: 20px;
@@ -140,7 +139,7 @@ const handleOption = (option) => {
 
 .label {
   font-weight: 600;
-  color: #1a1a1a; /* អត្ថបទពណ៌ខ្មៅ/ដិត */
+  color: #1a1a1a; 
   font-size: 15px;
 }
 </style>

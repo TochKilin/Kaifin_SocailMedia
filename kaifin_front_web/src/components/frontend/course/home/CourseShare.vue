@@ -130,7 +130,6 @@ const copyLink = () => {
   height: 20px;
 }
 
-/* Specific button brand colors matching the screenshot */
 .native-share {
   background-color: #1b75d2;
 }

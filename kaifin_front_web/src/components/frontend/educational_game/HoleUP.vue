@@ -1,13 +1,11 @@
 <template>
   <div class="page-wrapper">
-    <!-- Your Custom NavBar Component -->
     <NavBar />
-
-    <!-- Main Content Page -->
+    <!-- Main content page -->
     <div class="hole-up-page">
       <div class="hole-up-card">
         
-        <!-- 1. Header Row (Back, Title, Actions) -->
+        <!-- Header-->
         <div class="card-header-row">
           <button class="header-icon-btn" @click="goBack" title="Back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -15,9 +13,7 @@
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
           </button>
-          
           <span class="header-title">{{ isPlaying ? currentGame?.name : 'Game Details' }}</span>
-
           <div class="header-right-actions">
             <button class="header-icon-btn" title="Bookmark">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -34,10 +30,10 @@
           </div>
         </div>
 
-        <!-- Scrollable Body Content -->
+        <!-- Scroll body -->
         <div class="card-body-scroll" v-if="!isPlaying">
           
-          <!-- 2. Game Image / Media Preview Box -->
+          <!-- 2. Game Imag -->
           <div class="preview-media-box" @click="startGame">
             <img 
               v-if="currentGame?.image" 
@@ -56,7 +52,6 @@
             </div>
           </div>
 
-          <!-- 3. Tags / Badges Row -->
           <div class="badges-row">
             <span class="badge trending">
               <svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.229 1-3.032.5.803.5 2.032.5 3.032z"></path></svg>
@@ -72,13 +67,11 @@
             </span>
           </div>
 
-          <!-- 4. Title & Developer -->
           <div class="title-dev-section">
             <h2 class="game-title">{{ currentGame?.name || 'SpelunKing' }}</h2>
             <p class="developer-text">By {{ currentGame?.developer || 'Mad Data' }}</p>
           </div>
 
-          <!-- 5. Meta Info -->
           <div class="meta-info-row">
             <div class="meta-item">
               <svg class="meta-svg highlight-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -94,7 +87,6 @@
             </div>
           </div>
 
-          <!-- 6. About Section -->
           <div class="about-section">
             <h3 class="section-heading">About</h3>
             <p class="about-text">
@@ -102,7 +94,6 @@
             </p>
           </div>
 
-          <!-- 7. PLAY NOW Button -->
           <button class="play-action-btn" @click="startGame">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -110,7 +101,6 @@
             <span>PLAY NOW</span>
           </button>
 
-          <!-- 8. Screenshots Section -->
           <div class="screenshots-section" v-if="currentGame?.screenshots && currentGame.screenshots.length > 0">
             <h3 class="section-heading flex-heading">
               <svg class="heading-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
@@ -122,10 +112,7 @@
               </div>
             </div>
           </div>
-
         </div>
-
-        <!-- Embedded Game Container (Displays when PLAY NOW is clicked) -->
         <div class="game-embed-container" v-if="isPlaying">
           <button class="close-game-btn" @click="stopGame" title="Close Game">✕ Close Game</button>
           <iframe 
@@ -137,7 +124,6 @@
             allowfullscreen>
           </iframe>
         </div>
-
       </div>
     </div>
   </div>
@@ -277,7 +263,6 @@ const goBack = () => {
   gap: 8px;
 }
 
-/* Scrollable Body Content */
 .card-body-scroll {
   flex: 1;
   overflow-y: auto;
@@ -289,7 +274,6 @@ const goBack = () => {
   scrollbar-width: thin;
 }
 
-/* Preview Media Box */
 .preview-media-box {
   position: relative;
   width: 100%;
@@ -338,7 +322,6 @@ const goBack = () => {
   margin-left: 2px;
 }
 
-/* Badges Row */
 .badges-row {
   display: flex;
   gap: 8px;
@@ -368,7 +351,6 @@ const goBack = () => {
   color: #f59e0b;
 }
 
-/* Title & Developer */
 .title-dev-section {
   display: flex;
   flex-direction: column;
@@ -389,7 +371,7 @@ const goBack = () => {
   margin: 0;
 }
 
-/* Meta Info Row */
+
 .meta-info-row {
   display: flex;
   gap: 16px;
@@ -424,7 +406,6 @@ const goBack = () => {
   font-size: 14px;
 }
 
-/* About Section */
 .about-section {
   display: flex;
   flex-direction: column;
@@ -457,7 +438,6 @@ const goBack = () => {
   margin: 0;
 }
 
-/* Play Now Button */
 .play-action-btn {
   width: 100%;
   height: 56px;
@@ -487,7 +467,6 @@ const goBack = () => {
   background-color: #1562b8;
 }
 
-/* Screenshots Section */
 .screenshots-section {
   display: flex;
   flex-direction: column;
@@ -515,7 +494,6 @@ const goBack = () => {
   object-fit: cover;
 }
 
-/* Game Embed Container Styling */
 .game-embed-container {
   flex: 1;
   width: 100%;

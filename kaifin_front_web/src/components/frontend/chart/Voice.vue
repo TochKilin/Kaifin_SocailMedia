@@ -1,14 +1,11 @@
 <template>
   <div class="voice-recorder-wrapper">
-    <!-- ប៊ូតុងបិទ (Close 'X') -->
     <button class="voice-action-btn" @click="handleClose" title="Cancel">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
     </button>
-
-    <!-- ប៊ូតុង Play / Pause -->
     <button class="voice-play-pause-btn" @click="togglePlay" title="Play/Pause">
       <svg v-if="isPlaying" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <rect x="6" y="4" width="4" height="16"></rect>
@@ -19,32 +16,26 @@
       </svg>
     </button>
 
-    <!-- Waveform SVG Container (ប្រើ Pattern ជាប់គ្នា និង Dynamic Active Width តាមសំឡេងពិត) -->
     <div class="voice-waveform-container">
       <div class="waveform-display">
         <svg width="100%" height="100%" viewBox="0 0 1000 100" preserveAspectRatio="none" version="1.1" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <!-- Pattern គ្រាប់មូលពណ៌ខៀវ (Active) -->
             <pattern id="active-wave" x="0" y="0" width="24" height="100" patternUnits="userSpaceOnUse">
               <rect x="0" y="20" width="24" height="60" rx="12" fill="#1B75D2" />
             </pattern>
 
-            <!-- Pattern គ្រាប់មូលពណ៌ប្រផេះ (Inactive) -->
             <pattern id="inactive-wave" x="0" y="0" width="24" height="100" patternUnits="userSpaceOnUse">
               <rect x="0" y="20" width="24" height="60" rx="12" fill="#d1d5db" />
             </pattern>
           </defs>
 
-          <!-- ផ្នែក Inactive (បង្ហាញពេញទំហឹងនៅខាងក្រោយ) -->
           <rect x="0" y="0" width="1000" height="100" fill="url(#inactive-wave)" />
 
-          <!-- ផ្នែក Active (ទទឹងរត់ប្រែប្រួលតាមកម្រិតសំឡេង ឬ Playback ពីឆ្វេងទៅស្តាំ) -->
           <rect x="0" y="0" :width="activeWidth" height="100" fill="url(#active-wave)" />
         </svg>
       </div>
     </div>
 
-    <!-- រយៈពេល (Duration) -->
     <div class="voice-duration-container">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="voice-clock-icon">
         <circle cx="12" cy="12" r="10"></circle>
@@ -53,8 +44,7 @@
       <span class="voice-duration">{{ formattedDuration }}</span>
     </div>
 
-    <!-- ប៊ូតុង Send -->
-    <button class="voice-send-btn" @click="handleSend" title="Send Voice">
+    <button class="voice-send-btn" @click="handleSend" :disabled="isSending" title="Send Voice">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <line x1="22" y1="2" x2="11" y2="13"></line>
         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -69,6 +59,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 const emit = defineEmits(['close', 'send'])
 
 const isPlaying = ref(false)
+const isSending = ref(false)
 const durationSeconds = ref(0)
 const activeWidth = ref(0) // ទទឹងគិតជា Pixel (ពី 0 ដល់ 1000) សម្រាប់គ្របដណ្តប់ Pattern ពណ៌ខៀវ
 
@@ -111,7 +102,7 @@ onMounted(async () => {
         sum += dataArray[i]
       }
       const average = sum / dataArray.length
-      
+
       // បំប្លែងកម្រិតសំឡេងពិត (average) ឱ្យទៅជាទទឹង pixel ក្នុង viewBox 1000
       // ធានាថាវា dynamically រត់ឡើងចុះតាមការនិយាយ
       const targetWidth = (average / 128) * 1000
@@ -122,6 +113,8 @@ onMounted(async () => {
 
     updateWaveform()
 
+    // ✅ ត្រូវប្រើ timeslice ដើម្បីអោយ ondataavailable fire ជាបន្តបន្ទាប់
+    // (មិនមែនតែម្ដងគត់ពេល stop()) — ធានាថា audioChunks មិនទទេ
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) audioChunks.push(event.data)
     }
@@ -143,7 +136,7 @@ onMounted(async () => {
       }
     }
 
-    mediaRecorder.start()
+    mediaRecorder.start(250) // timeslice 250ms — ធានាថា ondataavailable fire ជាទៀងទាត់
     timerInterval = setInterval(() => { durationSeconds.value++ }, 1000)
 
   } catch (error) {
@@ -188,9 +181,27 @@ function handleClose() {
 }
 
 function handleSend() {
-  stopAll()
-  const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
-  emit('send', audioBlob)
+  if (isSending.value) return
+  isSending.value = true
+
+  clearInterval(timerInterval)
+  cancelAnimationFrame(animationFrameId)
+
+  const finalizeAndSend = () => {
+    if (microphoneStream) microphoneStream.getTracks().forEach(track => track.stop())
+    if (audioContext && audioContext.state !== 'closed') audioContext.close()
+    if (audioElement) audioElement.pause()
+
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+    emit('send', audioBlob)
+  }
+
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.addEventListener('stop', finalizeAndSend, { once: true })
+    mediaRecorder.stop()
+  } else {
+    finalizeAndSend()
+  }
 }
 </script>
 
@@ -199,14 +210,8 @@ function handleSend() {
   display: flex;
   align-items: center;
   gap: 12px;
-  /* background: #ffffff; */
   width: 100%;
   box-sizing: border-box;
-  /* background-color: red; */
-  /* position: absolute; */
-  /* padding: 8px 12px; */
-  /* border-radius: 8px; */
-  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); */
 }
 
 .voice-action-btn {

@@ -36,6 +36,17 @@
         </div>
       </div>
     </div>
+    <Teleport to="body">
+  <div class="toast-stack">
+    <div v-for="t in toasts" :key="t.id" class="toast-item" @click="onNotifClick(t); toasts = toasts.filter(x => x.id !== t.id)">
+      <div class="toast-avatar">
+        <img v-if="t.actor_avatar" :src="t.actor_avatar" alt="" />
+        <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
+      </div>
+      <p class="toast-text"><strong>{{ t.actor_name }}</strong> {{ notifText(t.type) }}</p>
+    </div>
+  </div>
+</Teleport>
   </div>
 </template>
 
@@ -44,14 +55,16 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
-const WS_URL = BASE_URL.replace(/^http/, 'ws') // http://localhost:7070 -> ws://localhost:7070
+// លែងត្រូវការ WS_URL ទៀតហើយ
 
 const router = useRouter()
 const notifications = ref([])
 const unreadCount = ref(0)
 const isOpen = ref(false)
 const isLoading = ref(false)
-let socket = null
+
+let pollTimer = null
+const POLL_INTERVAL = 8000 // 8 វិនាទី — លៃតម្រូវបានតាមចង់
 
 function getAuthToken() {
   return localStorage.getItem('token') || ''
@@ -84,6 +97,8 @@ function notifText(type) {
   switch (type) {
     case 'follow':
       return 'started following you'
+    case 'new_post':
+      return 'shared a new post'
     case 'like':
       return 'liked your post'
     case 'comment':
@@ -93,8 +108,11 @@ function notifText(type) {
   }
 }
 
-async function fetchNotifications() {
-  isLoading.value = true
+// ចាំ id ចុងក្រោយដែលធ្លាប់ឃើញ ដើម្បីដឹងថា notification ណាថ្មី
+let lastSeenId = 0
+
+async function fetchNotifications(isPoll = false) {
+  if (!isPoll) isLoading.value = true
   try {
     const res = await fetch(`${BASE_URL}/api/v1/front/notifications/show`, {
       headers: { ...authHeaders() },
@@ -103,15 +121,27 @@ async function fetchNotifications() {
     const json = await res.json()
     const data = json?.data ?? json
     const list = data.notifications ?? data.Notifications ?? []
-    notifications.value = list.map((n) => ({
+    const mapped = list.map((n) => ({
       ...n,
       actor_avatar: resolveAvatarUrl(n.actor_avatar),
     }))
+
+    // បើកំពុង poll → ស្វែងរក notification ថ្មីៗ ដើម្បីបង្ហាញ toast
+    if (isPoll && lastSeenId > 0) {
+      const newOnes = mapped.filter((n) => n.id > lastSeenId)
+      newOnes.forEach((n) => pushToast(n))
+    }
+
+    if (mapped.length > 0) {
+      lastSeenId = Math.max(...mapped.map((n) => n.id))
+    }
+
+    notifications.value = mapped
     unreadCount.value = data.unread_count ?? data.UnreadCount ?? 0
   } catch (e) {
     console.error('Failed to load notifications', e)
   } finally {
-    isLoading.value = false
+    if (!isPoll) isLoading.value = false
   }
 }
 
@@ -136,10 +166,24 @@ function onNotifClick(n) {
     unreadCount.value = Math.max(0, unreadCount.value - 1)
     markAsRead(n.id)
   }
+
   isOpen.value = false
   if (n.type === 'follow' && n.actor_id) {
     router.push(`/profile/${n.actor_id}`)
+  } else if (n.type === 'new_post' && n.post_id) {
+    router.push(`/posts/${n.post_id}`)
   }
+}
+
+const toasts = ref([])
+let toastSeq = 0
+
+function pushToast(n) {
+  const id = ++toastSeq
+  toasts.value.push({ id: `t${id}`, ...n })
+  setTimeout(() => {
+    toasts.value = toasts.value.filter((t) => t.id !== `t${id}`)
+  }, 5000)
 }
 
 function toggleDropdown() {
@@ -150,45 +194,19 @@ function closeDropdown() {
   isOpen.value = false
 }
 
-// ============= WebSocket connection =============
-function connectWebSocket() {
-  const token = getAuthToken()
-  if (!token) return
+function startPolling() {
+  pollTimer = setInterval(() => {
+    fetchNotifications(true)
+  }, POLL_INTERVAL)
+}
 
-  socket = new WebSocket(`${WS_URL}/api/v1/front/notifications/ws?token=${token}`)
-
-  socket.onopen = () => {
-    console.log('🔔 Notification WS connected')
-  }
-
-  socket.onmessage = (event) => {
-    try {
-      const msg = JSON.parse(event.data)
-      if (msg.type === 'notification') {
-        const n = {
-          ...msg.data,
-          actor_avatar: resolveAvatarUrl(msg.data.actor_avatar),
-        }
-        notifications.value.unshift(n)
-        unreadCount.value += 1
-      }
-    } catch (e) {
-      console.error('Failed to parse WS message', e)
-    }
-  }
-
-  socket.onclose = () => {
-    console.log('🔔 Notification WS closed, retrying in 3s...')
-    setTimeout(connectWebSocket, 3000)
-  }
-
-  socket.onerror = (err) => {
-    console.error('Notification WS error', err)
-    socket.close()
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
   }
 }
 
-// ============= Click outside directive =============
 const vClickOutside = {
   mounted(el, binding) {
     el.__clickOutsideHandler = (e) => {
@@ -203,31 +221,12 @@ const vClickOutside = {
 
 onMounted(() => {
   fetchNotifications()
-  connectWebSocket()
+  startPolling()
 })
 
 onUnmounted(() => {
-  if (socket) socket.close()
+  stopPolling()
 })
-</script>
-
-<script>
-// registers vClickOutside for template usage
-export default {
-  directives: {
-    clickOutside: {
-      mounted(el, binding) {
-        el.__clickOutsideHandler = (e) => {
-          if (!el.contains(e.target)) binding.value()
-        }
-        document.addEventListener('click', el.__clickOutsideHandler)
-      },
-      unmounted(el) {
-        document.removeEventListener('click', el.__clickOutsideHandler)
-      },
-    },
-  },
-}
 </script>
 
 <style scoped>
@@ -378,5 +377,55 @@ export default {
   border-radius: 50%;
   background: #1976D2;
   flex-shrink: 0;
+}
+
+.toast-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.toast-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  padding: 12px 16px;
+  width: 300px;
+  cursor: pointer;
+  animation: toastIn .2s ease;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.toast-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #EFF6FB;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.toast-avatar svg { width: 16px; height: 16px; stroke: #1E6E9C; fill: none; stroke-width: 1.8; }
+
+.toast-text {
+  margin: 0;
+  font-size: 13px;
+  color: #2B2B2B;
+  line-height: 1.4;
 }
 </style>

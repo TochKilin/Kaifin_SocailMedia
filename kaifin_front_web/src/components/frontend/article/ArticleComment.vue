@@ -4,11 +4,13 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 // Comment host api
 const API_BASE = 'http://localhost:7070'
 
+// Author headers token
 function authHeaders() {
   const token = localStorage.getItem('token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
+// Parsjson for api 
 async function parseJson(res) {
   const raw = await res.text()
   let data = null
@@ -25,7 +27,7 @@ async function parseJson(res) {
   return data
 }
 
-// GET comments
+// Get comment api
 async function fetchComments(articleId, { page = 1, perPage = 20 } = {}) {
   const params = new URLSearchParams({ page, per_page: perPage })
   const res = await fetch(
@@ -36,7 +38,7 @@ async function fetchComments(articleId, { page = 1, perPage = 20 } = {}) {
   return data?.data
 }
 
-// POST comments
+// Post comment api
 async function createComment(articleId, { text, parentCommentId = null, imageFiles = [], stickerIds = [] }) {
   const formData = new FormData()
   formData.append('article_id', Number(articleId))
@@ -62,7 +64,7 @@ async function createComment(articleId, { text, parentCommentId = null, imageFil
   return data?.data
 }
 
-// PUT comment
+// Put comment api
 async function updateComment(commentId, text) {
   const res = await fetch(`${API_BASE}/api/v1/front/comments/${commentId}`, {
     method: 'PUT',
@@ -72,7 +74,7 @@ async function updateComment(commentId, text) {
   return parseJson(res)
 }
 
-// DELETE comment
+// Delet commemnt api
 async function deleteComment(commentId) {
   const res = await fetch(`${API_BASE}/api/v1/front/comments/${commentId}`, {
     method: 'DELETE',
@@ -88,16 +90,16 @@ const props = defineProps({
   }
 })
 
+// Emit commment 
 const emit = defineEmits(['submit-comment', 'react', 'reply', 'comment-count-change'])
-
 const comments = ref([])
 const commentsCount = ref(0)
 const isLoading = ref(false)
 const loadError = ref(null)
 const isPosting = ref(false)
-
 const replyingTo = ref(null)
 
+// Time ago on card
 function timeAgo(dateStr) {
   if (!dateStr) return ''
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
@@ -110,8 +112,8 @@ function timeAgo(dateStr) {
   return `${days}d ago`
 }
 
+// Auth card catch 
 const authedImageCache = new Map()
-
 function resolveImageUrl(path) {
   if (!path) return null
   if (path.startsWith('http://') || path.startsWith('https://')) return path
@@ -119,9 +121,7 @@ function resolveImageUrl(path) {
   return `${API_BASE}/uploads/${path}`
 }
 
-// Fetch an authed comment-attachment image and turn it into a blob URL.
-// Comment attachments live under /uploads/comments/* which IS behind auth
-// middleware (unlike profile images) — plain <img src> gets a 401 there.
+// Load Author images
 async function loadAuthedImage(path) {
   const url = resolveImageUrl(path)
   if (!url) return null
@@ -139,10 +139,7 @@ async function loadAuthedImage(path) {
   }
 }
 
-// Map comment articles.
-// avatarUrl uses resolveImageUrl directly (no auth needed, matches Feed.vue).
-// imageUrls (comment attachments) uses loadAuthedImage because that route
-// requires a Bearer token that a plain <img src> can never send.
+// Map comment
 async function mapComment(c) {
   const rawImageUrls = Array.isArray(c.image_urls) ? c.image_urls : []
   const imageUrls = (
@@ -164,6 +161,7 @@ async function mapComment(c) {
   }
 }
 
+// Load comment for card
 async function loadComments() {
   isLoading.value = true
   loadError.value = null
@@ -182,19 +180,18 @@ async function loadComments() {
 
 onMounted(loadComments)
 
+
+// New comment 
 const newCommentText = ref('')
 const activeReactionCommentId = ref(null)
 const selectedImageFiles = ref([])
 const imagePreviewUrls = ref([])
 const fileInputRef = ref(null)
-
 const lightboxOpen = ref(false)
 const lightboxImageUrl = ref('')
-
 const showEmoji = ref(false)
 const pickerTab = ref('stickers')
 const stickerFilterTab = ref('all')
-
 const emojiList = ['😀', '😂', '😍', '🥳', '😎', '🤔', '😢', '😡', '👍', '🙏', '🔥', '🎉', '❤️', '👏', '💡', '✅']
 
 const mockStickers = ref([
@@ -212,6 +209,7 @@ const mockStickers = ref([
   { id: 12, url: 'https://cdn-icons-png.flaticon.com/128/3163/3163559.png', file_name: 'balloon' }
 ])
 
+// Mock sticker
 const stickers = ref(mockStickers.value)
 const selectedStickers = ref([])
 const pickerRef = ref(null)
@@ -226,20 +224,24 @@ function selectStickerFilter(tab) {
   }
 }
 
+// Add new sticker
 function addSticker(sticker) {
   selectedStickers.value.push(sticker)
   showEmoji.value = false
 }
 
+// Remove sticker
 function removeSticker(index) {
   selectedStickers.value.splice(index, 1)
 }
 
+//Add more emoji
 function addEmoji(e) {
   newCommentText.value += e
   showEmoji.value = false
 }
 
+// Reaction hove ron cards
 const REACTIONS = [
   {
     key: 'like',
@@ -268,11 +270,13 @@ const REACTIONS = [
   }
 ]
 
+// Imagae upload for card 
 const triggerImageUpload = () => {
   if (imagePreviewUrls.value.length >= 2) return
   fileInputRef.value?.click()
 }
 
+// handler select imags
 const handleImageSelected = (event) => {
   const files = Array.from(event.target.files)
   if (!files.length) return
@@ -288,6 +292,7 @@ const handleImageSelected = (event) => {
   }
 }
 
+// Remove images
 const removeSelectedImage = (index) => {
   selectedImageFiles.value.splice(index, 1)
   imagePreviewUrls.value.splice(index, 1)
@@ -296,25 +301,30 @@ const removeSelectedImage = (index) => {
   }
 }
 
+// Light box
 const openLightbox = (url) => {
   lightboxImageUrl.value = url
   lightboxOpen.value = true
 }
 
+// Close light box
 const closeLightbox = () => {
   lightboxOpen.value = false
   lightboxImageUrl.value = ''
 }
 
+// Reply commentd
 function startReply(comment) {
   replyingTo.value = { id: comment.id, username: comment.username }
   emit('reply', comment)
 }
 
+// Cancel reply
 function cancelReply() {
   replyingTo.value = null
 }
 
+// handler send article
 const handleSend = async () => {
   const text = newCommentText.value.trim()
   const hasImages = selectedImageFiles.value.length > 0
@@ -347,6 +357,7 @@ const handleSend = async () => {
   }
 }
 
+// Selelect reacion
 const selectReaction = (comment, reaction) => {
   comment.userReaction = reaction.key
   activeReactionCommentId.value = null
@@ -376,28 +387,13 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="comment-input-box">
-      <img
-        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
         alt="Me"
         class="user-avatar-img current-user-img"
       />
       <div class="input-content">
-        <textarea
-          v-model="newCommentText"
-          placeholder="Write your comment here..."
-          maxlength="1000"
-          rows="2"
-          :disabled="isPosting"
-        ></textarea>
-
-        <input
-          type="file"
-          ref="fileInputRef"
-          accept="image/*"
-          multiple
-          style="display: none"
-          @change="handleImageSelected"
-        />
+        <textarea v-model="newCommentText" placeholder="Write your comment here..." maxlength="1000" rows="2" :disabled="isPosting"></textarea>
+        <input type="file" ref="fileInputRef" accept="image/*" multiple style="display: none" @change="handleImageSelected" />
 
         <div class="selected-stickers" v-if="selectedStickers.length">
           <div class="selected-sticker" v-for="(s, index) in selectedStickers" :key="index">
@@ -423,12 +419,7 @@ onBeforeUnmount(() => {
         <div class="input-footer">
           <div class="input-tools">
             <div class="chip-wrap" ref="pickerRef">
-              <button
-                class="tool-icon-btn"
-                title="Emoji"
-                :class="{ 'active-tool': showEmoji }"
-                @click="showEmoji = !showEmoji"
-              >
+              <button class="tool-icon-btn" title="Emoji" :class="{ 'active-tool': showEmoji }"  @click="showEmoji = !showEmoji" >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 0 0 5 0"/></svg>
               </button>
 
@@ -512,12 +503,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
-            <button
-              class="tool-icon-btn"
-              title="Image"
-              @click="triggerImageUpload"
-              :class="{ 'disabled-tool': imagePreviewUrls.length >= 2 }"
-            >
+            <button class="tool-icon-btn"  title="Image" @click="triggerImageUpload" :class="{ 'disabled-tool': imagePreviewUrls.length >= 2 }">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
             </button>
           </div>
@@ -525,11 +511,7 @@ onBeforeUnmount(() => {
             <span class="char-limit" :class="{ 'text-danger': newCommentText.length > 900 }">
               {{ newCommentText.length }}/1000
             </span>
-           <button
-            class="publish-btn"
-            :disabled="isPosting || (!newCommentText.trim() && selectedImageFiles.length === 0 && selectedStickers.length === 0)"
-            @click="handleSend"
-            >
+           <button class="publish-btn" :disabled="isPosting || (!newCommentText.trim() && selectedImageFiles.length === 0 && selectedStickers.length === 0)" @click="handleSend" >
               {{ isPosting ? 'Posting...' : 'Post' }}
             </button>
           </div>
@@ -552,7 +534,6 @@ onBeforeUnmount(() => {
               <span class="author-name">{{ item.username }}</span>
             </div>
             <p class="comment-message">{{ item.text }}</p>
-
             <div v-if="item.imageUrls && item.imageUrls.length > 0" class="comment-images-grid" :class="'grid-count-' + item.imageUrls.length">
               <div
                 v-for="(imgUrl, imgIndex) in item.imageUrls"
@@ -573,19 +554,10 @@ onBeforeUnmount(() => {
                 <span>{{ item.time }}</span>
               </span>
 
-              <div
-                class="reaction-menu-anchor"
-                @mouseenter="activeReactionCommentId = item.id"
-                @mouseleave="activeReactionCommentId = null"
-              >
+              <div class="reaction-menu-anchor" @mouseenter="activeReactionCommentId = item.id"  @mouseleave="activeReactionCommentId = null" >
                 <div v-if="activeReactionCommentId === item.id" class="reactions-popover">
                   <div class="reactions-box">
-                    <button
-                      v-for="reaction in REACTIONS"
-                      :key="reaction.key"
-                      class="popover-emoji"
-                      @click="selectReaction(item, reaction)"
-                    >
+                    <button  v-for="reaction in REACTIONS" :key="reaction.key" class="popover-emoji" @click="selectReaction(item, reaction)">
                       <span class="emoji-svg-wrapper" v-html="reaction.icon"></span>
                       <span class="emoji-tooltip">{{ reaction.label }}</span>
                     </button>
@@ -625,6 +597,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Manin container style */
 .article-comments-container {
   background-color: #ffffff;
   padding: 20px;
@@ -634,6 +607,7 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
+/* Comment header  */
 .comment-header-title {
   display: flex;
   align-items: center;
@@ -685,6 +659,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
+/* Input comment  */
 .input-content {
   flex-grow: 1;
   display: flex;
@@ -707,6 +682,7 @@ onBeforeUnmount(() => {
   color: #9ca3af;
 }
 
+/* Seledt sticker  */
 .selected-stickers {
   display: flex;
   gap: 8px;
@@ -745,6 +721,7 @@ onBeforeUnmount(() => {
   font-size: 10px;
 }
 
+/* Image Previews  */
 .image-preview-list {
   display: flex;
   gap: 8px;
@@ -759,6 +736,7 @@ onBeforeUnmount(() => {
   width: fit-content;
 }
 
+/* Preview comment wrapper  */
 .preview-wrapper {
   position: relative;
   width: 90px;
@@ -814,6 +792,7 @@ onBeforeUnmount(() => {
   transition: background-color 0.15s;
 }
 
+/* Button remove preview */
 .remove-preview-btn:hover {
   background-color: #ef4444;
 }
@@ -1414,6 +1393,7 @@ onBeforeUnmount(() => {
   background-color: rgba(255, 255, 255, 0.4);
 }
 
+/* Animaption css  */
 @keyframes popIn {
   from { opacity: 0; transform: scale(0.9) translateY(4px); }
   to { opacity: 1; transform: scale(1) translateY(0); }

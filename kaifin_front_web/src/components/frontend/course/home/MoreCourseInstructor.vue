@@ -84,7 +84,6 @@
               <span class="original-price">${{ course.originalPrice }}</span>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -94,7 +93,6 @@
           Show more <span class="arrow-down">↓</span>
         </button>
       </div>
-
     </div>
   </div>
 </template>
@@ -206,16 +204,13 @@ const courses = ref([
 </script>
 
 <style scoped>
-/* Import Google Fonts for Khmer */
 @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
 
-/* Page Wrapper with #F7F4F2 Background */
 .page-wrapper {
   min-height: 100vh;
   background-color: #F7F4F2;
 }
 
-/* Hero Banner Full Width Background */
 .hero-banner {
   width: 100%;
   color: #ffffff;
@@ -224,7 +219,6 @@ const courses = ref([
   justify-content: center;
 }
 
-/* Inner Container with max-width: 1252px matching more-courses-container */
 .hero-inner {
   background: linear-gradient(135deg, #1B75D2 0%, #13559a 100%);
   max-width: 1252px;
@@ -256,7 +250,6 @@ const courses = ref([
   line-height: 1.5;
 }
 
-/* Hero Notes Banner Container */
 .hero-notes-container {
   position: relative;
   width: 600px;
@@ -281,8 +274,6 @@ const courses = ref([
   border: 1px solid #ddd;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
-  
-  /* ប្រើ Flexbox ເພື່ອຈັດកណ្តាលអត្ថបទខាងក្នុង */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -310,7 +301,6 @@ const courses = ref([
   color: #475569;
 }
 
-/* Distributed horizontally and slightly rotated */
 .note-1 {
   left: 0px;
   top: 10px;
@@ -361,7 +351,6 @@ const courses = ref([
   }
 }
 
-/* More Courses Container with max-width 1252px, #ffffff Background */
 .more-courses-container {
   max-width: 1252px;
   width: 100%;
@@ -372,7 +361,6 @@ const courses = ref([
   background-color: #ffffff;
 }
 
-/* Title Header Box */
 .section-title {
   font-size: 24px;
   font-weight: 700;
@@ -381,7 +369,6 @@ const courses = ref([
   letter-spacing: -0.5px;
 }
 
-/* Grid Layout set to exactly 4 columns */
 .courses-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -389,7 +376,6 @@ const courses = ref([
   margin-bottom: 36px;
 }
 
-/* Responsive layout for smaller screens */
 @media (max-width: 1200px) {
   .courses-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -402,7 +388,6 @@ const courses = ref([
   }
 }
 
-/* Course Card */
 .course-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
@@ -420,7 +405,6 @@ const courses = ref([
   border-color: #cbd5e1;
 }
 
-/* Thumbnail Box */
 .course-thumb-box {
   width: 100%;
   height: 160px;
@@ -439,7 +423,6 @@ const courses = ref([
   transform: scale(1.05);
 }
 
-/* Course Content Padding */
 .course-content {
   padding: 16px;
   display: flex;
@@ -448,7 +431,6 @@ const courses = ref([
   flex: 1;
 }
 
-/* Course Name */
 .course-name {
   font-size: 16px;
   font-weight: 700;
@@ -457,7 +439,6 @@ const courses = ref([
   line-height: 1.4;
 }
 
-/* Description */
 .course-desc {
   font-size: 13px;
   color: #64748b;
@@ -469,7 +450,6 @@ const courses = ref([
   overflow: hidden;
 }
 
-/* Instructor Row with Profile Avatar */
 .instructor-row {
   display: flex;
   align-items: center;
@@ -496,7 +476,6 @@ const courses = ref([
   color: #334155;
 }
 
-/* Meta Row (Rating & Level) */
 .meta-row {
   display: flex;
   align-items: center;
@@ -532,7 +511,6 @@ const courses = ref([
   border-radius: 20px;
 }
 
-/* Price Row */
 .price-row {
   display: flex;
   align-items: center;
@@ -554,7 +532,6 @@ const courses = ref([
   text-decoration: line-through;
 }
 
-/* Show More Button Wrapper */
 .show-more-wrapper {
   display: flex;
   justify-content: center;

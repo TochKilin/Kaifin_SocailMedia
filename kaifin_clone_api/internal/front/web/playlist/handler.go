@@ -19,8 +19,6 @@ import (
 	"kaifin_clone_api/pkg/utls"
 )
 
-// Same local-disk upload approach as the song module — see the NOTE
-// there for swapping to S3/cloud storage if that's what you actually use.
 const uploadsRoot = "./uploads"
 
 func baseURL() string {

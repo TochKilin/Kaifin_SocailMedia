@@ -16,7 +16,7 @@ func NewAuthUserRouteImpl(app *fiber.App, db *sqlx.DB, rdb *redis.Client, ws *we
 	uh := NewAuthUserHandlerImpl(db, rdb, ws)
 	f := app.Group("/api/v1/front/auth")
 	f.Post("/login-user", uh.UserLogin)
-	// f.Get("/profile", uh.Profile)
+	f.Get("/profile", uh.Profile)
 
 	return &AuthUserRouteImpl{
 		AuthUserHandler: uh,

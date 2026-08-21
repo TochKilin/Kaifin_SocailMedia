@@ -20,7 +20,6 @@ const toggleVoiceRecording = () => {
   isRecording.value = !isRecording.value
 }
 
-// Suggested topics managed dynamically via an array with SVG paths
 const suggestionTopics = ref([
   {
     action: 'Summarize this lesson',
@@ -62,9 +61,7 @@ const suggestionTopics = ref([
       </div>
     </div>
 
-    <!-- Chat Box Messages Area -->
     <div class="chat-messages-box">
-      <!-- Voice Listening Center View inside Message List Area -->
       <div v-if="isRecording" class="voice-center-container">
         <div class="centered-ai-avatar">
           <img src="../../../assets/logos/kaifin_l2.png" alt="AI Logo" class="centered-avatar-img">
@@ -75,7 +72,6 @@ const suggestionTopics = ref([
         </div>
       </div>
 
-      <!-- Normal Messages List -->
       <div v-else class="messages-list">
         <!-- Suggested Questions -->
         <div v-if="aiMessages.length <= 1" class="suggestions-container">
@@ -121,7 +117,6 @@ const suggestionTopics = ref([
           :key="index" 
           :class="['message-row', msg.sender === 'user' ? 'user-row' : 'ai-row']"
         >
-          <!-- Message Bubble Container -->
           <div :class="['message-bubble', msg.sender === 'user' ? 'user-message' : 'ai-message']">
             <div class="message-content-inner">
               <div class="message-header-info">
@@ -138,12 +133,10 @@ const suggestionTopics = ref([
               <div class="message-text">{{ msg.text }}</div>
             </div>
 
-            <!-- Embedded Avatar inside AI Message Bubble (Left side) -->
             <div v-if="msg.sender !== 'user'" class="embedded-ai-avatar">
               <img src="https://api.iconify.design/fluent-emoji:robot.svg" alt="AI Avatar" class="embedded-avatar-img" />
             </div>
 
-            <!-- Embedded Avatar inside User Message Bubble (Right side) -->
             <div v-if="msg.sender === 'user'" class="embedded-user-avatar">
               <img 
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQviRBCXJg2bQzezRkEvJn1WPzCRfqWImgvCxdf6Za_A5tGlGilZpuM6Kk&s=10" 
@@ -290,7 +283,6 @@ const suggestionTopics = ref([
   position: relative;
 }
 
-/* Voice Center View inside message box */
 .voice-center-container {
   flex: 1;
   display: flex;

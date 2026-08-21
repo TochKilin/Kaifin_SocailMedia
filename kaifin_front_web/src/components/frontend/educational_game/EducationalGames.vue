@@ -1,8 +1,7 @@
 <template>
   <div class="app-container">
     <NavBar />
-
-    <!-- PAGE TITLE BANNER -->
+    <!-- Banner-->
     <section class="page-title-banner">
       <video
         class="page-title-video"
@@ -20,11 +19,9 @@
 
     <div class="dashboard-wrapper">
       <div class="dashboard-main-layout">
-        
-        <!-- SIDEBAR CONTAINER (LEFT) -->
+        <!-- SIDEBAR Left -->
         <div class="sidebar-wrapper">
-          
-          <!-- 1. TOP PROFILE SECTION -->
+          <!-- Top profile -->
           <aside class="filter-sidebar profile-section">
             <div class="user-profile">
               <div class="avatar-box game-avatar">
@@ -45,7 +42,7 @@
             </div>
           </aside>
 
-          <!-- 2. COURSE SECTION -->
+          <!--Course section-->
           <aside class="filter-sidebar">
             <label class="filter-label">COURSE</label>
             <div class="course-list">
@@ -81,7 +78,7 @@
             </div>
           </aside>
 
-          <!-- 3. GRADE LEVEL & DIFFICULTY -->
+          <!-- Grade level -->
           <aside class="filter-sidebar">
             <div class="filter-item">
               <label class="filter-label">
@@ -137,29 +134,24 @@
           </aside>
         </div>
 
-        <!-- MAIN CONTENT AREA -->
+        <!-- Main contend-->
         <div class="dashboard-container">
           <section v-for="cat in gameCategories" :key="cat.id" class="course-section">
             <div class="category-header-wrap">
               <h2 class="category-title">{{ cat.title }}</h2>
             </div>
 
-            <!-- ITCH.IO STYLE CARDS GRID -->
+            <!-- Card grid -->
             <div class="itch-games-grid">
               <div v-for="game in cat.games" :key="game.id" class="itch-game-card">
-                
-                <!-- IMAGE CONTAINER (ចុចបញ្ជូន object game ទាំងមូលទៅកាន់ទំព័រ HoleUp) -->
                 <div class="itch-media-box" @click="goToGame(game)">
                   <img :src="game.image" :alt="game.name" class="itch-img" />
                 </div>
-
-                <!-- CONTENT DETAILS -->
                 <div class="itch-info-box">
                   <div class="itch-main-content">
                     <div class="itch-title-row">
                       <h3 class="itch-game-title">{{ game.name }}</h3>
                     </div>
-
                     <p class="itch-tags-text">
                       <span v-for="(tag, idx) in game.tags" :key="idx" class="tag-item">
                         #{{ tag }}{{ idx < game.tags.length - 1 ? ', ' : '' }}
@@ -168,8 +160,6 @@
 
                     <p class="itch-desc-text">{{ game.description }}</p>
                   </div>
-                  
-                  <!-- Play Button (ចុចបញ្ជូន object game ទាំងមូលទៅកាន់ទំព័រ HoleUp) -->
                   <button class="play-game-bottom-btn" @click="goToGame(game)">
                     <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="currentColor">
                       <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -177,13 +167,10 @@
                     Play Game
                   </button>
                 </div>
-
               </div>
             </div>
-
           </section>
         </div>
-
       </div>
     </div>
   </div>
@@ -195,8 +182,6 @@ import { useRouter } from 'vue-router'
 import NavBar from '../navbar/NavBar.vue'
 
 const router = useRouter()
-
-// មុខងារបញ្ជូនទិន្នន័យហ្គេមទាំងមូល (Object) ឆ្លងកាត់ router state
 function goToGame(game) {
   router.push({
     path: `/game/${game.id}`,
@@ -277,7 +262,6 @@ const gameCategories = ref([
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* SVG ICON STYLES */
 .svg-icon-xs {
   width: 13px;
   height: 13px;
@@ -303,7 +287,6 @@ const gameCategories = ref([
   stroke-linejoin: round;
 }
 
-/* GLOBAL WRAPPER */
 .app-container {
   width: 100%;
   min-height: 100vh;
@@ -319,7 +302,6 @@ const gameCategories = ref([
   color: #111827;
 }
 
-/* WIDTH 85% */
 .dashboard-main-layout {
   width: 85%;
   max-width: 1251px;
@@ -329,7 +311,6 @@ const gameCategories = ref([
   gap: 20px;
 }
 
-/* LEFT SIDEBAR STYLES */
 .sidebar-wrapper {
   display: flex;
   flex-direction: column;
@@ -473,7 +454,6 @@ const gameCategories = ref([
   color: #1976D2;
 }
 
-/* BUTTONS GRID */
 .grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -509,7 +489,6 @@ const gameCategories = ref([
   border-color: #1976D2;
 }
 
-/* HISTORY PLAY DESIGN */
 .history-list-modern {
   display: flex;
   flex-direction: column;
@@ -584,13 +563,11 @@ const gameCategories = ref([
   font-weight: 500;
 }
 
-/* MAIN CONTENT CONTAINER */
 .dashboard-container {
   flex: 1;
   min-width: 0;
 }
 
-/* PAGE TITLE BANNER */
 .page-title-banner {
   position: relative;
   width: 100vw;
@@ -635,7 +612,7 @@ const gameCategories = ref([
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* COURSE SECTION */
+
 .course-section {
   margin-bottom: 32px;
 }
@@ -653,7 +630,7 @@ const gameCategories = ref([
   margin: 0;
 }
 
-/* ITCH.IO STYLE GRID & CARDS */
+
 .itch-games-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -689,7 +666,7 @@ const gameCategories = ref([
   transform: scale(1.05);
 }
 
-/* INFO SECTION */
+
 .itch-info-box {
   padding-top: 8px;
   display: flex;
@@ -746,7 +723,6 @@ const gameCategories = ref([
   overflow: hidden;
 }
 
-/* PLAY GAME BOTTOM BUTTON */
 .play-game-bottom-btn {
   background: #1976D2;
   color: #ffffff;
@@ -774,7 +750,6 @@ const gameCategories = ref([
   transform: scale(0.98);
 }
 
-/* RESPONSIVE DESIGN */
 @media (max-width: 900px) {
   .dashboard-main-layout {
     width: 95%;

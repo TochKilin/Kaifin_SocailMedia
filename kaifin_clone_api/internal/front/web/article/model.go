@@ -38,7 +38,7 @@ type Article struct {
 type ArticleBlock struct {
 	ID        int64     `json:"id" db:"id"`
 	ArticleID int64     `json:"article_id" db:"article_id"`
-	BlockType string    `json:"block_type" db:"block_type"` // text | image
+	BlockType string    `json:"block_type" db:"block_type"`
 	Title     *string   `json:"title" db:"title"`
 	Content   *string   `json:"content" db:"content"`
 	Position  int       `json:"position" db:"position"`
@@ -51,8 +51,6 @@ type ArticleBlockInput struct {
 	Content   string `json:"content"`
 }
 
-// ---------- Create ----------
-
 type CreateArticleRequest struct {
 	Title           string              `json:"title" validate:"required"`
 	Summary         string              `json:"summary"`
@@ -64,12 +62,6 @@ type CreateArticleRequest struct {
 	Blocks          []ArticleBlockInput `json:"blocks"`
 }
 
-// Note: Create is submitted as multipart/form-data (to support an optional
-// cover_image file), so it's built from form fields in the handler rather
-// than bound from a JSON body.
-
-// ---------- Update ----------
-
 type UpdateArticleRequest struct {
 	Title           string              `json:"title" validate:"required"`
 	Summary         string              `json:"summary"`
@@ -80,10 +72,6 @@ type UpdateArticleRequest struct {
 	Tags            []string            `json:"tags"`
 	Blocks          []ArticleBlockInput `json:"blocks"`
 }
-
-// Note: same as Create — Update is submitted as multipart/form-data too.
-
-// ---------- Show (feed / list) ----------
 
 type ShowArticlesRequest struct {
 	Category        string       `query:"category"`
@@ -117,8 +105,6 @@ type ArticlesResponse struct {
 	PerPage  int       `json:"per_page"`
 }
 
-// ---------- Report ----------
-
 type ReportArticleRequest struct {
 	ArticleID  int64  `json:"article_id" validate:"required"`
 	ReportType string `json:"report_type" validate:"required,oneof=bug feedback feature other"`
@@ -134,8 +120,6 @@ func (r *ReportArticleRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	}
 	return nil
 }
-
-// ---------- helpers ----------
 
 func (a *Article) new(req *CreateArticleRequest, uctx *share.UserContext) error {
 	a.UserID = uctx.UserID

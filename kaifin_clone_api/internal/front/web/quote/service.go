@@ -48,7 +48,7 @@ func (s *QuoteServiceImpl) ShowOne(id int64, viewerID *int64) (*Quote, *error_re
 	if err != nil {
 		return nil, err
 	}
-	// log ការមើល (មិន block response បើ insert fail)
+
 	_ = s.Repo.IncrementView(id, viewerID)
 	return q, nil
 }

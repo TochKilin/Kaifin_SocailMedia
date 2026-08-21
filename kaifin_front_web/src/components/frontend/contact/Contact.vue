@@ -14,26 +14,21 @@ const successMessage = ref('')
 // Typing Animation States
 const fullText = "Let’s Get In Touch"
 const typedText = ref('')
-let isDeleting = false // សម្រាប់ឆែកថាកំពុងវាយ ឬកំពុងលុប
+let isDeleting = false 
 
 const typeWriter = () => {
   const currentTextLength = typedText.value.length
 
   if (!isDeleting && currentTextLength < fullText.length) {
-    // ដំណាក់កាលកំពុងវាយអក្សរបញ្ជូល (Typing)
     typedText.value = fullText.substring(0, currentTextLength + 1)
-    setTimeout(typeWriter, 150) // ល្បឿនវាយ
+    setTimeout(typeWriter, 150) 
   } 
   else if (isDeleting && currentTextLength > 0) {
-    // ដំណាក់កាលកំពុងលុបអក្សរ (Deleting)
     typedText.value = fullText.substring(0, currentTextLength - 1)
-    setTimeout(typeWriter, 50) // ល្បឿនលុប (លឿនជាងវាយបន្តិច)
+    setTimeout(typeWriter, 50)
   } 
   else {
-    // ប្ដូរស្ថានភាពរវាងការវាយ និងការលុប ពេលវាដើរដល់ចុងបញ្ចប់
     isDeleting = !isDeleting
-    
-    // បើវាយពេញហើយ ផ្អាក 2 វិនាទីសិនមុនលុបវិញ, បើលុបអស់ហើយ ផ្អាក 0.5 វិនាទីមុនវាយវិញ
     const delay = isDeleting ? 2000 : 500 
     setTimeout(typeWriter, delay)
   }
@@ -50,7 +45,6 @@ const handleSubmit = () => {
   }
 
   isSubmitting.value = true
-  
   setTimeout(() => {
     isSubmitting.value = false
     successMessage.value = 'sucess!'
@@ -95,7 +89,7 @@ const handleSubmit = () => {
             </div>
           </div>
 
-          <!-- Right Side: Simple & Clean Form -->
+          <!-- Right Side-->
           <div class="contact-form-side">
             <form @submit.prevent="handleSubmit" class="form-container">
               
@@ -135,7 +129,6 @@ const handleSubmit = () => {
                   required
                 ></textarea>
               </div>
-
               <button type="submit" class="submit-btn" :disabled="isSubmitting">
                 <span v-if="isSubmitting">Submitting...</span>
                 <span v-else>Submit</span>
@@ -145,9 +138,8 @@ const handleSubmit = () => {
 
         </div>
 
-        <!-- Footer Bar: Visit Us & Socials -->
+        <!-- Footer Bar -->
         <div class="contact-footer-bar">
-          
           <div class="visit-us-section">
             <h3 class="footer-heading">Visit Us</h3>
             <div class="info-items">
@@ -173,16 +165,14 @@ const handleSubmit = () => {
               </a>
             </div>
           </div>
-
         </div>
-
       </div>
     </section>
   </div>
 </template>
 
 <style scoped>
-/* Page & Container Theme */
+
 .page-container {
   min-height: 100vh;
   display: flex;
@@ -217,7 +207,6 @@ const handleSubmit = () => {
   justify-content: space-between;
 }
 
-/* Grid Layout */
 .contact-grid {
   display: grid;
   grid-template-columns: 1fr 1.25fr;
@@ -228,14 +217,6 @@ const handleSubmit = () => {
   align-items: center;
 }
 
-@media (max-width: 768px) {
-  .contact-grid {
-    grid-template-columns: 1fr;
-    padding: 30px 20px;
-  }
-}
-
-/* Left Side (Creative Minimalist) */
 .contact-info-side {
   display: flex;
   flex-direction: column;
@@ -280,10 +261,10 @@ const handleSubmit = () => {
   color: #0f172a;
   margin-bottom: 16px;
   letter-spacing: -0.5px;
-  min-height: 48px; /* ជួយទប់កុំឱ្យ Layout រំកិលពេលអក្សរកំពុងលេចឡើង */
+  min-height: 48px; 
 }
 
-/* Typing Cursor Effect */
+
 .cursor {
   font-weight: 400;
   color: #3b82f6;
@@ -302,7 +283,6 @@ const handleSubmit = () => {
   margin-bottom: 30px;
 }
 
-/* Creative Decorative Elements */
 .creative-shapes {
   display: flex;
   align-items: center;
@@ -399,7 +379,6 @@ const handleSubmit = () => {
   border: 1px solid #bbf7d0;
 }
 
-/* Footer Bottom Bar (Simple & Clean) */
 .contact-footer-bar {
   background: #ffffff;
   padding: 30px 50px;
@@ -480,11 +459,96 @@ const handleSubmit = () => {
   background-color: #229ed9;
 }
 
+/* ==========================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================== */
 @media (max-width: 768px) {
   .contact-footer-bar {
     flex-direction: column;
     align-items: flex-start;
     padding: 25px 20px;
+  }
+}
+
+/* Tablet (Max Width: 992px) */
+@media (max-width: 992px) {
+  .contact-wrapper {
+    padding: 24px 16px;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
+    padding: 36px 30px;
+    gap: 32px;
+  }
+
+  .contact-form-side {
+    padding: 0;
+  }
+
+  .contact-footer-bar {
+    padding: 24px 30px;
+  }
+}
+
+/* Mobile Devices (Max Width: 768px) */
+@media (max-width: 768px) {
+  .contact-wrapper {
+    padding: 16px 12px;
+  }
+
+  .contact-grid {
+    padding: 24px 18px;
+    gap: 24px;
+  }
+
+  .main-title {
+    min-height: auto;
+    margin-bottom: 12px;
+  }
+
+  .description-text {
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  .contact-footer-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 18px;
+    gap: 20px;
+  }
+
+  .visit-us-section,
+  .follow-us-section {
+    width: 100%;
+  }
+}
+
+/* Small Mobile Devices (Max Width: 480px) */
+@media (max-width: 480px) {
+  .contact-card {
+    border-radius: 12px;
+  }
+
+  .contact-grid {
+    padding: 20px 14px;
+  }
+
+  .badge-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .input-group input,
+  .input-group textarea {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .submit-btn {
+    padding: 12px;
+    font-size: 14px;
   }
 }
 </style>

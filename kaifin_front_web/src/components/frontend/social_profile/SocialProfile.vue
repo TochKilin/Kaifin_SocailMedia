@@ -10,11 +10,9 @@
       <!-- Cover Image Section -->
       <div class="cover-container">
         <img :src="profile.coverUrl || '/default-cover.jpg'" alt="Cover Image" class="cover-image" />
-        
-        <!-- Gradient Overlay សម្រាប់បាញ់ពណ៌ស្រអាប់ពីក្រោមឡើងលើ -->
+      
         <div class="cover-gradient-overlay"></div>
 
-        <!-- Group of Buttons (Minimalist Circular Style) -->
         <div class="cover-actions-group">
           <div class="action-buttons-row">
             <button class="icon-action-btn" @click="handleSetting" aria-label="Settings">
@@ -44,7 +42,6 @@
             </button>
         </div>
 
-        <!-- Hidden file input សម្រាប់ cover upload (មិនប៉ះពាល់ layout/UI) -->
         <input
           type="file"
           ref="coverFileInput"
@@ -54,34 +51,27 @@
         />
       </div>
 
-      <!-- 1. Profile Main Card (សម្រាប់ Header, Name និង Bio) -->
       <div class="profile-card-section">
         <div class="profile-header-row">
-          <!-- <div class="avatar-container">
-            <img :src="profile.avatarUrl" :alt="profile.name" class="avatar-image" />
-          </div> -->
+          <div class="avatar-wrapper">
+            <div class="avatar-container">
+              <img :src="profile.avatarUrl" :alt="profile.name" class="avatar-image" />
+            </div>
+            <button class="avatar-camera-btn" @click="handleChangeAvatar" :disabled="isUploadingAvatar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </button>
+          </div>
 
-<div class="avatar-wrapper">
-  <div class="avatar-container">
-    <img :src="profile.avatarUrl" :alt="profile.name" class="avatar-image" />
-  </div>
-  <button class="avatar-camera-btn" @click="handleChangeAvatar" :disabled="isUploadingAvatar">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-      <circle cx="12" cy="13" r="4"></circle>
-    </svg>
-  </button>
-</div>
-
-<input
-  type="file"
-  ref="avatarFileInput"
-  accept="image/png, image/jpeg, image/gif"
-  style="display: none"
-  @change="onAvatarFileSelected"
-/>
-
-
+          <input
+            type="file"
+            ref="avatarFileInput"
+            accept="image/png, image/jpeg, image/gif"
+            style="display: none"
+            @change="onAvatarFileSelected"
+          />
 
           <div class="profile-title-area">
             <div class="name-row">
@@ -98,7 +88,6 @@
         </p>
       </div>
 
-      <!-- 2. Profile Meta Card -->
       <div class="profile-meta-card">
         <div class="profile-meta">
           <div class="meta-item">
@@ -118,7 +107,6 @@
         </div>
       </div>
 
-      <!-- 3. Navigation Tabs Card -->
       <div class="tabs-card-section">
         <div class="tabs-container">
           <div 
@@ -133,30 +121,26 @@
           </div>
         </div>
 
-        <!-- Content Body -->
         <div class="content-body">
-<!-- ត្រូវប្រាកដថាដូចនេះ -->
-<PostsCard v-if="currentTab === 'Done' && profile.userId" :userId="profile.userId" />
+          <PostsCard v-if="currentTab === 'Done' && profile.userId" :userId="profile.userId" />
         </div>
       </div>
 
     </div>
-  </div>
-
-
-
-  <!-- Edit Profile Modal -->
-<div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2 class="modal-title">Edit your personal information</h2>
-      <button class="modal-close-btn" @click="closeEditModal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
     </div>
+
+      <!-- Edit Profile Modal -->
+    <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 class="modal-title">Edit your personal information</h2>
+          <button class="modal-close-btn" @click="closeEditModal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
 
     <div class="modal-form-grid">
       <div class="form-field">
@@ -282,44 +266,6 @@ function formatJoinedDate(value) {
   return 'Joined ' + d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
 }
 
-// async function loadProfile() {
-//   isLoadingProfile.value = true
-//   profileError.value = null
-
-//   const targetUserId = route.params?.id || getCurrentUserId()
-
-//   try {
-//     const res = await fetch(
-//       `${BASE_URL}/api/v1/front/profile/show?id=${targetUserId}`,
-//       { headers: { ...authHeaders() } }
-//     )
-//     if (!res.ok) {
-//       const text = await res.text().catch(() => '')
-//       throw new Error(`API ${res.status} ${res.statusText}: ${text}`)
-//     }
-//     const json = await res.json()
-//     const data = json?.data ?? json
-
-//     profile.value = {
-//       ...profile.value,
-//       userId: data.id,
-//       name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.user_name,
-//       handle: '@' + data.user_name,
-//       avatarUrl: resolveAvatarUrl(data.profile_images),
-//       coverUrl: resolveCoverUrl(data.cover_images),
-//       location: data.location ?? '',                
-//       relationship_status: data.relationship_status ?? '', 
-//       bio: data.bios ?? '',
-//       postsCount: data.post_count ?? 0,
-//       joinedDate: formatJoinedDate(data.created_at),
-//     }
-//   } catch (e) {
-//     profileError.value = e.message || 'Failed to load profile'
-//     console.error('Failed to load profile', e)
-//   } finally {
-//     isLoadingProfile.value = false
-//   }
-// }
 async function loadProfile() {
   isLoadingProfile.value = true
   profileError.value = null
@@ -533,12 +479,12 @@ async function onAvatarFileSelected(event) {
 
   const allowedTypes = ['image/png', 'image/jpeg', 'image/gif']
   if (!allowedTypes.includes(file.type)) {
-    alert('សូមជ្រើសរើសរូបភាព PNG, JPG, ឬ GIF ប៉ុណ្ណោះ')
+    alert('PNG, JPG, ឬ GIF')
     event.target.value = ''
     return
   }
   if (file.size > 5 * 1024 * 1024) {
-    alert('ទំហំរូបភាពត្រូវតែតិចជាង 5MB')
+    alert('size 5MB')
     event.target.value = ''
     return
   }
@@ -568,7 +514,7 @@ async function onAvatarFileSelected(event) {
     profile.value.avatarUrl = resolveAvatarUrl(data.profile_images)
   } catch (e) {
     console.error('Failed to upload avatar', e)
-    alert('ការ upload avatar បរាជ័យ, សូមព្យាយាមម្តងទៀត')
+    alert('upload avatar failse')
   } finally {
     isUploadingAvatar.value = false
     event.target.value = ''
@@ -596,9 +542,7 @@ async function onAvatarFileSelected(event) {
   max-width: 700px;
   width: 100%;
   margin: 0 auto;
-  /* background-color: #ffffff; */
-  /* padding-left: 12px;
-  padding-right: 12px; */
+
 
 }
 
@@ -699,7 +643,7 @@ async function onAvatarFileSelected(event) {
   transform: scale(1.05);
 }
 
-/* 1. Profile Main Card */
+
 .profile-card-section {
   background-color: #ffffff;
   padding: 0 16px;
@@ -818,7 +762,7 @@ async function onAvatarFileSelected(event) {
   text-decoration: underline;
 }
 
-/* 2. Profile Meta Card */
+
 .profile-meta-card {
   background-color: #ffffff;
   padding: 14px 16px;
@@ -841,7 +785,7 @@ async function onAvatarFileSelected(event) {
   gap: 6px;
 }
 
-/* 3. Navigation Tabs Card */
+
 .tabs-card-section {
   background-color: #ffffff;
   border-top-left-radius: 12px;

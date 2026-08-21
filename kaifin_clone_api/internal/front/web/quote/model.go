@@ -14,7 +14,7 @@ type QuoteShowRequest struct {
 	Sorts      []share.Sort   `json:"sorts,omitempty" query:"sorts"`
 	Filters    []share.Filter `json:"filters,omitempty" query:"filters"`
 	Search     string         `json:"q,omitempty" query:"q"`
-	Tab        string         `json:"tab,omitempty" query:"tab"` // popular | latest
+	Tab        string         `json:"tab,omitempty" query:"tab"`
 }
 
 type CreateQuoteRequest struct {
@@ -41,7 +41,6 @@ type UpdateQuoteRequest struct {
 	Status     *string `json:"status"`
 }
 
-// mirror to db table column (quotes)
 type Quote struct {
 	ID            int64     `json:"id" db:"id"`
 	UserID        int64     `json:"user_id" db:"user_id"`
@@ -55,7 +54,6 @@ type Quote struct {
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 	ProfileImages string    `json:"profile_images,omitempty" db:"profile_images"`
 
-	// joined field (មិនមែនក្នុង table quotes ទេ តែយកតាម query join)
 	Username         string `json:"username,omitempty" db:"username"`
 	MyReactionTypeID *int16 `json:"my_reaction_type_id,omitempty" db:"my_reaction_type_id"`
 }
@@ -98,7 +96,7 @@ func (u *QuoteShowRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 		u.Search = c.Query("q")
 	}
 	if u.Tab == "" {
-		u.Tab = c.Query("tab") // popular | latest
+		u.Tab = c.Query("tab")
 	}
 
 	if err := v.Validate(u); err != nil {

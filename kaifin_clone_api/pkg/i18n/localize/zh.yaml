@@ -128,3 +128,28 @@ cannot_fetch_quotes: "无法获取 Quotes"
 reaction_added: "Reaction 添加成功"
 reaction_removed: "Reaction 删除成功"
 reaction_types_retrieved: "Reaction 类型获取成功"
+
+
+course_created: "课程创建成功"
+courses_retrieved: "课程列表获取成功"
+course_updated: "课程更新成功"
+course_deleted: "课程删除成功"
+
+# zh.yaml
+invalid_request: "请求无效"
+community_created: "社区创建成功"
+communities_retrieved: "社区列表获取成功"
+community_retrieved: "社区信息获取成功"
+join_toggled: "加入状态更新成功"
+members_retrieved: "成员列表获取成功"
+
+levels_retrieved: "成功获取等级"
+status_retrieved: "成功获取状态"
+checkin_success: "签到成功"
+
+conversations_retrieved: "成功获取对话列表"
+messages_retrieved: "成功获取消息列表"
+message_sent: "消息发送成功"
+reaction_toggled: "反应切换成功"
+marked_as_read: "标记已读成功"
+forbidden: "您没有权限执行此操作"

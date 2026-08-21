@@ -7,7 +7,6 @@ const selectedLecture = ref('All lectures')
 const sortBy = ref('Sort by commented')
 const filterQnA = ref('Filter Q&A')
 
-// Sample Q&A items matching the wireframe design
 const qnaList = ref([
   {
     id: 1,
@@ -257,8 +256,6 @@ const qnaList = ref([
 .qna-card {
   display: flex;
   gap: 16px;
-  /* background-color: #f8fafc; */
-  /* border: 1px solid #e2e8f0; */
   border-radius: 12px;
   padding: 20px;
   align-items: flex-start;

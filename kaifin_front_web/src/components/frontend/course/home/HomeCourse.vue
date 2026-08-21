@@ -1,258 +1,155 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed, onMounted, watch, nextTick  } from "vue";
 import { useRouter } from "vue-router";
 import NavBar from "../../navbar/NavBar.vue";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+
+function getAuthToken() {
+  return localStorage.getItem('token') || ''
+}
+function authHeaders() {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+function resolveImageUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:image/')) return url
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
+function formatCount(n) {
+  n = Number(n) || 0
+  if (n >= 1000) return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'k'
+  return String(n)
+}
+
 const selectedCourseCategory = ref("ALL");
-const selectedCourseType = ref("ALL");
+const selectedCourseType = ref("ALL");    
 const selectedLevel = ref("ALL");
 const searchQuery = ref("");
 const router = useRouter();
 
 const courseCategories = [
-  {
-    label: "ALL",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>`
-  },
-  {
-    label: "Development",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`
-  },
-  {
-    label: "Design",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h11a2 2 0 012 2v13a4 4 0 01-4 4H7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10"/><circle cx="9.5" cy="9.5" r="1.5"/></svg>`
-  },
-  {
-    label: "Business",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`
-  }
+  { label: "ALL", id: null, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>` },
+  { label: "Development", id: 1, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>` },
+  { label: "Design", id: 2, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h11a2 2 0 012 2v13a4 4 0 01-4 4H7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10"/><circle cx="9.5" cy="9.5" r="1.5"/></svg>` },
+  { label: "Business", id: 3, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>` }
 ];
 
 const courseTypes = [
-  {
-    label: "ALL",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>`
-  },
-  {
-    label: "Paid",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12M15 9.5c0-1.4-1.34-2.5-3-2.5s-3 1.1-3 2.5 1.34 2.2 3 2.5c1.66.3 3 1.1 3 2.5s-1.34 2.5-3 2.5-3-1.1-3-2.5"/></svg>`
-  },
-  {
-    label: "Free",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12v8H4v-8M22 7H2v5h20V7zM12 7v13M12 7c-1.5-3-4-5-5.5-3.5S7 7 12 7zM12 7c1.5-3 4-5 5.5-3.5S17 7 12 7z"/></svg>`
-  }
+  { label: "ALL", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>` },
+  { label: "Paid", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12M15 9.5c0-1.4-1.34-2.5-3-2.5s-3 1.1-3 2.5 1.34 2.2 3 2.5c1.66.3 3 1.1 3 2.5s-1.34 2.5-3 2.5-3-1.1-3-2.5"/></svg>` },
+  { label: "Free", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12v8H4v-8M22 7H2v5h20V7zM12 7v13M12 7c-1.5-3-4-5-5.5-3.5S7 7 12 7zM12 7c1.5-3 4-5 5.5-3.5S17 7 12 7z"/></svg>` }
 ];
 
 const courseLevels = [
-  {
-    label: "ALL",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>`
-  },
-  {
-    label: "Beginner",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4zM10 18h4v-9h-4v9zM17 18h4V6h-4v12z" opacity="0.35"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4z"/></svg>`
-  },
-  {
-    label: "Intermediate",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 18h4V6h-4v12z" opacity="0.35"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4zM10 18h4v-9h-4v9z"/></svg>`
-  },
-  {
-    label: "Expert",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4zM10 18h4v-9h-4v9zM17 18h4V6h-4v12z"/></svg>`
-  }
+  { label: "ALL", id: null, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>` },
+  { label: "Beginner", id: 1, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4zM10 18h4v-9h-4v9zM17 18h4V6h-4v12z" opacity="0.35"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4z"/></svg>` },
+  { label: "Intermediate", id: 2, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 18h4V6h-4v12z" opacity="0.35"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4zM10 18h4v-9h-4v9z"/></svg>` },
+  { label: "Expert", id: 3, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 18h4v-4H3v4zM10 18h4v-9h-4v9zM17 18h4V6h-4v12z"/></svg>` }
 ];
 
-const popularCourses = ref([
-  {
-    id: 1,
-    tag: "New",
-    tagType: "badge-new",
-    contentType: "video",
-    title: "Vue 3 Masterclass",
-    thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500&auto=format&fit=crop&q=60",
-    description: "Learn composition API with real projects",
-    instructor: "John Doe",
-    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60",
-    level: "Level 10",
-    rating: "4.8",
-    subscribers: "10k",
-    price: 30,
-    originalPrice: 60,
-    promoText: "Special discount ends soon",
-    isFree: false
-  },
-  {
-    id: 2,
-    tag: "New",
-    tagType: "badge-new",
-    contentType: "article",
-    title: "Advanced Node.js",
-    thumbnail: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=500&auto=format&fit=crop&q=60",
-    description: "Build robust scalable backend APIs",
-    instructor: "Sarah Jenkins",
-    instructorAvatar: "https://media.licdn.com/dms/image/v2/D5622AQGo0R4LOKLEeg/feedshare-shrink_800/B56ZoOgcCeKAAg-/0/1761179985841?e=2147483647&v=beta&t=nfQ2OyeEGnjyvoNkIiohdBFQt1pin0HMMSUBFv4n4u4",
-    level: "Level 10",
-    rating: "4.9",
-    subscribers: "10k",
-    price: 50,
-    originalPrice: 90,
-    promoText: "Limited time offer available",
-    isFree: false
-  },
-  {
-    id: 3,
-    tag: "New",
-    tagType: "badge-new",
-    contentType: "ebook",
-    title: "UI/UX Figma Pro",
-    thumbnail: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=500&auto=format&fit=crop&q=60",
-    description: "Design clean user interfaces easily",
-    instructor: "Michael V.",
-    instructorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=60",
-    level: "Level 10",
-    rating: "4.7",
-    subscribers: "10k",
-    price: 20,
-    originalPrice: 50,
-    promoText: "Flash sale 50% discount",
-    isFree: false
-  },
-  {
-    id: 4,
-    tag: "Free",
-    tagType: "badge-free",
-    contentType: "video",
-    title: "Python Essentials",
-    thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=500&auto=format&fit=crop&q=60",
-    description: "Introduction to programming logic",
-    instructor: "David Miller",
-    instructorAvatar: "https://cdn.khmercoder.com/profiles/4ca64d40-8d91-459f-b327-d7e069191f41.webp",
-    level: "Level 10",
-    rating: "4.6",
-    subscribers: "10k",
-    totalLessons: 30,
-    promoText: "Lifetime free access included",
-    isFree: true
-  },
-  {
-    id: 5,
-    tag: "Free",
-    tagType: "badge-free",
-    contentType: "ebook",
-    title: "Web Security 101",
-    thumbnail: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&auto=format&fit=crop&q=60",
-    description: "Protect your web apps from hackers",
-    instructor: "Emma Watson",
-    instructorAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=60",
-    level: "Level 10",
-    rating: "4.9",
-    subscribers: "10k",
-    totalVideo: "1h 30m",
-    promoText: "Free certificate included",
-    isFree: true
-  }
-]);
+const courses = ref([])
+const total = ref(0)
+const page = ref(1)
+const limit = ref(200)
+const isLoading = ref(false)
+const isLoadingMore = ref(false)
+const error = ref(null)
 
-const latestCourses = ref([
-  {
-    id: 6,
-    tag: "New",
-    tagType: "badge-new",
-    contentType: "video",
-    title: "Fullstack React",
-    instructorAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcK4HuUt3y__WH-qjoH5AEPSNe6ThFjwdQ0qWVKcMR7Q&s",
-    thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500&auto=format&fit=crop&q=60",
-    description: "Next.js & PostgreSQL complete guide",
-    instructor: "Alex Morgan",
-    level: "Level 10",
-    rating: "4.9",
-    subscribers: "10k",
-    price: 55,
-    originalPrice: 99,
-    promoText: "New release special discount",
-    isFree: false
-  },
-  {
-    id: 7,
-    tag: "New",
-    tagType: "badge-new",
-    contentType: "article",
-    title: "Tailwind CSS Mastery",
-    instructorAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5MZXxiaRdWjPXSFlpNaWR2Eugs0zMn0dRz5lT17_qdrXY0gjg_BBT5XzX&s=10",
-    thumbnail: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=500&auto=format&fit=crop&q=60",
-    description: "Craft modern responsive designs fast",
-    instructor: "Jessica Lee",
-    level: "Level 10",
-    rating: "4.8",
-    subscribers: "10k",
-    price: 25,
-    originalPrice: 50,
-    promoText: "Hot trending course today",
-    isFree: false
-  },
-  {
-    id: 8,
-    tag: "Free",
-    tagType: "badge-free",
-    contentType: "ebook",
-    title: "Git & GitHub Workflow",
-    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60",
-    thumbnail: "https://images.unsplash.com/photo-1618401471353-b98aedd04e11?w=500&auto=format&fit=crop&q=60",
-    description: "Version control for professional devs",
-    instructor: "Kevin Hart",
-    level: "Level 10",
-    rating: "4.7",
-    subscribers: "10k",
-    totalVideo: "12h 30m",
-    promoText: "Free starter handbook",
-    isFree: true
-  },
-  {
-    id: 9,
-    tag: "Free",
-    tagType: "badge-free",
-    contentType: "video",
-    title: "Docker & DevOps Basics",
-    instructorAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSh-1ZGJAbdPuM9UkBRxHQ91RDTFywmECt6aaupWZmNFUUGWa22dhgp3S0&s=10",
-    thumbnail: "https://images.unsplash.com/photo-1605745341112-85968b19335b?w=500&auto=format&fit=crop&q=60",
-    description: "Containerize applications seamlessly",
-    instructor: "Chris Hemsworth",
-    level: "Level 10",
-    rating: "4.9",
-    subscribers: "10k",
-    totalLessons: 12,
-    promoText: "Open source module",
-    isFree: true
-  },
-  {
-    id: 10,
-    tag: "Free",
-    tagType: "badge-free",
-    contentType: "article",
-    title: "Cloud Computing Intro",
-    instructorAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7rGiYQz-D9gPYSMbPZPlihNAB9UycpD8CnWUmGWnuyw&s=10",
-    thumbnail: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&auto=format&fit=crop&q=60",
-    description: "AWS fundamentals for beginners",
-    instructor: "Tom Holland",
-    level: "Level 10",
-    rating: "4.5",
-    subscribers: "10k",
-    totalContent: 30,
-    promoText: "Free learning roadmap",
-    isFree: true
+function mapCourse(c) {
+  return {
+    id: c.id,
+    tag: c.is_free ? 'Free' : 'New',
+    tagType: c.is_free ? 'badge-free' : 'badge-new',
+    contentType: c.content_type || 'video',
+    title: c.title,
+    thumbnail: resolveImageUrl(c.thumbnail),
+    description: c.description || c.subtitle || '',
+    instructor: c.instructor_name || `Instructor #${c.instructor_id}`,
+    instructorAvatar: resolveImageUrl(c.instructor_avatar || ''),
+    level: c.level_name || (c.level_id ? `Level ${c.level_id}` : 'Level'),
+    rating: (Number(c.rating) || 0).toFixed(1),
+    subscribers: formatCount(c.students_count),
+    price: c.current_price,
+    originalPrice: c.original_price,
+    promoText: c.promo_text,
+    isFree: c.is_free,
+    totalLessons: c.lectures_count || null,
+    totalVideo: c.total_length || null,
+    createdAt: c.created_at,
+     previewVideo: resolveImageUrl(c.preview_video_url || ''),
   }
-]);
+}
+
+async function loadCourses(targetPage = 1) {
+  const isFirstPage = targetPage === 1
+  if (isFirstPage) { isLoading.value = true; error.value = null }
+  else { isLoadingMore.value = true }
+
+  try {
+    const params = new URLSearchParams()
+    params.set('page', targetPage)
+    params.set('limit', limit.value)
+    if (searchQuery.value.trim()) params.set('search', searchQuery.value.trim())
+
+    const cat = courseCategories.find(c => c.label === selectedCourseCategory.value)
+    if (cat?.id) params.set('category_id', cat.id)
+
+    const lvl = courseLevels.find(l => l.label === selectedLevel.value)
+    if (lvl?.id) params.set('level_id', lvl.id)
+
+    if (selectedCourseType.value === 'Free') params.set('is_free', 'true')
+    else if (selectedCourseType.value === 'Paid') params.set('is_free', 'false')
+
+    const res = await fetch(`${BASE_URL}/api/v1/front/courses/show?${params.toString()}`, {
+      headers: { ...authHeaders() },
+      cache: 'no-store',
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`API ${res.status} ${res.statusText}: ${text}`)
+    }
+    const json = await res.json()
+    const data = json?.data ?? json
+    const rawCourses = data.courses ?? []
+    total.value = data.total ?? 0
+    const mapped = rawCourses.map(mapCourse)
+
+    courses.value = isFirstPage ? mapped : [...courses.value, ...mapped]
+    page.value = targetPage
+  } catch (e) {
+    error.value = e.message || 'Failed to load courses'
+    console.error(e)
+  } finally {
+    isLoading.value = false
+    isLoadingMore.value = false
+  }
+}
+
+const popularCourses = computed(() =>
+  [...courses.value].sort((a, b) => Number(b.rating) - Number(a.rating)).slice(0, 200)
+)
+const latestCourses = computed(() =>
+  [...courses.value].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 200)
+)
+
+onMounted(() => loadCourses(1))
+
+// reload whenever a filter changes
+let searchDebounce = null
+watch([selectedCourseCategory, selectedCourseType, selectedLevel], () => loadCourses(1))
+watch(searchQuery, () => {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => loadCourses(1), 350)
+})
 
 function playVideo(course) {
   alert(`Playing video: "${course.title}"`);
 }
-
 function handleSearch() {
-  if (searchQuery.value.trim()) {
-    alert(`Searching for: "${searchQuery.value}"`);
-  }
+  loadCourses(1)
 }
-
 function clearFilters() {
   selectedCourseCategory.value = "ALL";
   selectedCourseType.value = "ALL";
@@ -260,28 +157,59 @@ function clearFilters() {
   searchQuery.value = "";
 }
 
+
 function enrollCourse(course) {
-  router.push({
-    name: 'AddCardCourse',
-    params: { id: course.id },
-    state: { courseData: course }
-  });
+  router.push({ name: 'AddCardCourse', params: { id: course.id }, state: { courseData: course } });
+}
+function goToCourseDetail(course) {
+  router.push({ name: 'CourseDetail', params: { id: course.id }, state: { courseData: course } });
 }
 
 const showCourseModal = ref(false);
 const selectedCourseData = ref(null);
-
 function closeCourseModal() {
   showCourseModal.value = false;
   selectedCourseData.value = null;
 }
 
-function goToCourseDetail(course) {
-  router.push({
-    name: 'CourseDetail',
-    params: { id: course.id },
-    state: { courseData: course }
-  });
+const hoveredCourseId = ref(null)
+const previewVideoRefs = {}
+let hoverPlayTimer = null
+
+function setPreviewVideoRef(el, courseId) {
+  if (el) previewVideoRefs[courseId] = el
+  else delete previewVideoRefs[courseId]
+}
+
+function onCardMouseEnter(course) {
+  if (course.contentType !== 'video' || !course.previewVideo) return
+  clearTimeout(hoverPlayTimer)
+  hoverPlayTimer = setTimeout(() => {
+    hoveredCourseId.value = course.id
+    nextTick(() => {
+      const el = previewVideoRefs[course.id]
+      if (el) {
+        el.muted = true     
+        el.currentTime = 0
+        const playPromise = el.play()
+        if (playPromise) {
+          playPromise.catch(err => console.warn('Preview play blocked:', err))
+        }
+      }
+    })
+  }, 300)
+}
+
+function onCardMouseLeave(course) {
+  clearTimeout(hoverPlayTimer)
+  if (hoveredCourseId.value === course.id) {
+    hoveredCourseId.value = null
+  }
+  const el = previewVideoRefs[course.id]
+  if (el) {
+    el.pause()
+    el.currentTime = 0
+  }
 }
 </script>
 
@@ -290,7 +218,6 @@ function goToCourseDetail(course) {
     <NavBar/>
     <div class="dashboard-wrapper">
       <div class="dashboard-main-layout">
-
         <!-- SIDEBAR CONTAINER -->
         <div class="sidebar-wrapper">
           <aside class="filter-sidebar">
@@ -375,10 +302,23 @@ function goToCourseDetail(course) {
                 class="course-card" 
                 @click="goToCourseDetail(course)" 
                 style="cursor: pointer;"
+                @mouseenter="onCardMouseEnter(course)"
+                @mouseleave="onCardMouseLeave(course)"
               >
 
                 <div class="card-media-banner">
                   <img :src="course.thumbnail" alt="Thumbnail" class="banner-bg-img" />
+                  <video
+                      v-if="course.contentType === 'video' && course.previewVideo"
+                      :ref="(el) => setPreviewVideoRef(el, course.id)"
+                      :src="course.previewVideo"
+                      class="preview-video"
+                      :class="{ active: hoveredCourseId === course.id }"
+                      muted
+                      loop
+                      playsinline
+                      preload="none"
+                    ></video>
                   <div class="banner-overlay"></div>
                   <div :class="course.tagType">{{ course.tag }}</div>
 
@@ -430,7 +370,7 @@ function goToCourseDetail(course) {
                         <span class="current-price">${{ course.price }}</span>
                         <span class="old-price">${{ course.originalPrice }}</span>
                       </div>
-                      <button class="action-btn buy-btn" @click.stop="enrollCourse(course)">Enroll Now</button>
+                      <button class="action-btn buy-btn" @click.stop="enrollCourse(course)">Buy Now</button>
                     </template>
                     <template v-else>
                       <div class="free-meta-info">
@@ -451,11 +391,9 @@ function goToCourseDetail(course) {
                     </template>
                   </div>
                 </div>
-
                 <div class="card-footer-promo">
                   <span>{{ course.promoText }}</span>
                 </div>
-
               </div>
             </div>
           </section>
@@ -486,15 +424,12 @@ function goToCourseDetail(course) {
                   >
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                   </button>
-
                   <div v-else-if="course.contentType === 'article'" class="content-type-icon" title="Article">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                   </div>
-
                   <div v-else-if="course.contentType === 'ebook'" class="content-type-icon" title="E-book">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                   </div>
-
                   <h3 class="course-title-top">{{ course.title }}</h3>
                 </div>
 
@@ -547,19 +482,15 @@ function goToCourseDetail(course) {
                     </template>
                   </div>
                 </div>
-
                 <div class="card-footer-promo">
                   <span>{{ course.promoText }}</span>
                 </div>
-
               </div>
             </div>
           </section>
-
         </div>
       </div>
     </div>
-
     <div v-if="showCourseModal" class="modal-backdrop" @click.self="closeCourseModal">
       <AddCardCourse :courseData="selectedCourseData" />
     </div>
@@ -568,6 +499,39 @@ function goToCourseDetail(course) {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+.card-media-banner {
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-bg-img {
+  transition: opacity 0.25s ease, transform 0.4s ease;
+}
+
+.course-card:hover .banner-bg-img:not(.is-hidden) {
+  transform: scale(1.06);
+}
+
+.banner-bg-img.is-hidden {
+  opacity: 0;
+}
+
+.preview-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 1;
+}
+
+.preview-video.active {
+  opacity: 1;
+}
 
 .dashboard-wrapper {
   background-color: #F7F4F2;
@@ -586,7 +550,6 @@ function goToCourseDetail(course) {
   gap: 24px;
 }
 
-/* SIDEBAR WRAPPER */
 .sidebar-wrapper {
   display: flex;
   flex-direction: column;
@@ -597,7 +560,6 @@ function goToCourseDetail(course) {
   top: 20px;
 }
 
-/* SIDEBAR FILTER */
 .filter-sidebar {
   display: flex;
   flex-direction: column;
@@ -610,7 +572,6 @@ function goToCourseDetail(course) {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* SEARCH BOX */
 .search-box {
   display: flex;
   align-items: center;
@@ -643,7 +604,6 @@ function goToCourseDetail(course) {
   border-radius: 32px;
 }
 
-/* FILTER LIST STYLES */
 .filter-item {
   display: flex;
   flex-direction: column;
@@ -675,8 +635,8 @@ function goToCourseDetail(course) {
   transition: all 0.2s ease;
   background: #f9fafb;
 
-  display: flex;          /* ➕ បន្ថែម */
-  align-items: center;    /* ➕ បន្ថែម */
+  display: flex;          
+  align-items: center;   
   gap: 8px;   
 }
 
@@ -737,7 +697,7 @@ function goToCourseDetail(course) {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* SECTION TITLE */
+
 .course-section {
   margin-bottom: 40px;
 }
@@ -751,14 +711,12 @@ function goToCourseDetail(course) {
   padding-left: 12px;
 }
 
-/* GRID */
 .courses-grid {
   display: grid;
     grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
-/* COURSE CARD */
 .course-card {
   background: #ffffff;
   border-radius: 12px;
@@ -772,7 +730,6 @@ function goToCourseDetail(course) {
  opacity: 0.8;
 }
 
-/* VERTICAL BANNER */
 .card-media-banner {
   position: relative;
   background: #4b5563;
@@ -835,7 +792,6 @@ function goToCourseDetail(course) {
   background: #06e86f;
 }
 
-/* BODY */
 .card-body {
   padding: 14px;
   display: flex;
@@ -1096,7 +1052,7 @@ function goToCourseDetail(course) {
 }
 
 .play-icon-btn svg {
-  margin-left: 3px; /* Visual balance សម្រាប់ play triangle */
+  margin-left: 3px;
 }
 
 
@@ -1122,4 +1078,6 @@ function goToCourseDetail(course) {
     position: static;
   }
 }
+
+
 </style>

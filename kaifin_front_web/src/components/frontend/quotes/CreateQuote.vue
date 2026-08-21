@@ -1,7 +1,5 @@
 <template>
     <div class="quote-card-form">
-      
-      <!-- Top Bar: Title Input, Drafts, Profile, Close -->
       <div class="quote-header">
         <div class="input-wrapper">
           <input 
@@ -27,8 +25,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Editor Box -->
       <div class="editor-box">
         <!-- Formatting Toolbar -->
         <div class="editor-toolbar">
@@ -65,8 +61,6 @@
             </span>
           </div>
         </div>
-
-        <!-- Rich Text Editable Content -->
         <div class="editor-textarea-wrapper">
           <div
             ref="editorRef"
@@ -81,7 +75,6 @@
         </div>
       </div>
 
-      <!-- Footer Actions: Public, Private, Post -->
       <div class="quote-footer">
         <div class="visibility-options">
           <label class="radio-card" :class="{ active: visibility === 'public' }">
@@ -131,9 +124,7 @@ const isSubmitting = ref(false)
 const editorRef = ref(null)
 const placeholderText = 'Write words that inspire, provoke thought, or capture a moment...'
 
-// HTML content ពិត (រក្សា bold/italic/etc ជា real markup)
 const quoteContentHTML = ref('')
-// ចំនួនតួអក្សរដែលមើលឃើញ (មិនរាប់ HTML tag) សម្រាប់ counter
 const plainTextLength = ref(0)
 
 const activeFormats = reactive({
@@ -144,7 +135,6 @@ const activeFormats = reactive({
   list: false
 })
 
-// ---- Core formatting commands (browser built-in execCommand) ----
 function exec(command, value = null) {
   editorRef.value?.focus()
   document.execCommand(command, false, value)
@@ -173,7 +163,6 @@ function wrapCode() {
   range.deleteContents()
   range.insertNode(code)
 
-  // ដាក់ cursor បន្ទាប់ពី code tag
   range.setStartAfter(code)
   range.collapse(true)
   sel.removeAllRanges()
@@ -198,7 +187,6 @@ function insertImage() {
   onInput()
 }
 
-// ---- Sync state ពី contenteditable DOM ----
 function onInput() {
   const el = editorRef.value
   if (!el) return
@@ -215,7 +203,7 @@ function updateActiveFormats() {
     activeFormats.h1 = document.queryCommandValue('formatBlock') === 'h1'
     activeFormats.quote = document.queryCommandValue('formatBlock') === 'blockquote'
   } catch {
-    // browser មិន support queryCommandState — ignore
+    // 
   }
 }
 
@@ -229,7 +217,6 @@ const saveDraft = () => {
 const submitPost = async () => {
   if (plainTextLength.value === 0 || isSubmitting.value) return
 
-  // ព្រមានបើ HTML markup ធ្វើឲ្យប្រវែងសរុបលើស limit server (100)
   if (quoteContentHTML.value.length > 399.5) {
     const proceed = window.confirm(
       `Content HTML វែង ${quoteContentHTML.value.length} Letter (server Set 399.5 full tag) — server failes no go?`
@@ -466,7 +453,7 @@ const submitPost = async () => {
   display: flex;
 }
 
-/* Contenteditable rich text area — ជំនួស textarea ដើម្បីអាចបង្ហាញ bold/italic ពិត */
+
 .rich-editor {
   width: 100%;
   min-height: 110px;

@@ -1,28 +1,211 @@
 <!-- File: Notification.vue -->
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import Phea from "@/assets/team_images/admin.jpg"
-import Heng from "@/assets/team_images/heng.jpg"
-import LyHeng from "@/assets/team_images/lyheng.jpg"
-import Mean from "@/assets/team_images/mean.jpg"
-import Nary from "@/assets/team_images/nary.jpg"
-import Nita from "@/assets/team_images/nita.jpg"
-import Pa from "@/assets/team_images/pa.jpg"
-import SoPhea from "@/assets/team_images/phea.jpg"
-import Roth from "@/assets/team_images/roth.jpg"
-import yuri from "@/assets/team_images/yuri.jpg"
-import Kaifin from "@/assets/logos/kaifin_l2.png"
-
-// Import Component ទាំងពីរមកទីនេះ
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import ArticleNotification from './ArticleNotification.vue'
 import NotificationCourse from './NotificationCourse.vue'
 
 const emit = defineEmits(['back', 'close'])
 
-const activeTab = ref('Feed')
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const POLL_INTERVAL = 8000
 
-// State សម្រាប់គ្រប់គ្រងການបង្ហាញ Dropdown Menu របស់ More
+function getAuthToken() {
+  return localStorage.getItem('token') || ''
+}
+
+function authHeaders() {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+function resolveAvatarUrl(raw) {
+  if (!raw) return ''
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
+  return `${BASE_URL}/uploads/${raw}`
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  const diffMs = Date.now() - d.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return 'Just now'
+  if (diffMin < 60) return `${diffMin}m`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}h`
+  const diffDay = Math.floor(diffHr / 24)
+  if (diffDay < 7) return `${diffDay}d`
+  return `${Math.floor(diffDay / 7)} week`
+}
+
+const activeTab = ref('Feed')
 const showDropdown = ref(false)
+const isLoading = ref(false)
+const isFullScreen = ref(false)
+
+// notification ដើម (flat list) ពី server
+const rawNotifications = ref([])
+
+// បំបែកជា New / Follower / A Week ដោយផ្អែកលើ type និង timestamp
+const notifications = computed(() => {
+  const now = Date.now()
+  const oneDay = 24 * 60 * 60 * 1000
+
+  const followerList = []
+  const weekList = []
+  const newList = []
+
+  for (const n of rawNotifications.value) {
+    const created = new Date(n.created_at).getTime()
+    const age = now - created
+
+    if (n.type === 'follow') {
+      followerList.push(n)
+    } else if (age > oneDay) {
+      weekList.push(n)
+    } else {
+      newList.push(n)
+    }
+  }
+
+  return { new: newList, follower: followerList, aWeek: weekList }
+})
+
+async function fetchFollowingIds() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/followers/show?type=following`, {
+      headers: { ...authHeaders() },
+    })
+    if (!res.ok) return new Set()
+    const json = await res.json()
+    const data = json?.data ?? json
+    const list = data.followers ?? data.Followers ?? []
+    return new Set(list.map((f) => f.user_id ?? f.id))
+  } catch (e) {
+    console.error('Failed to load following list', e)
+    return new Set()
+  }
+}
+
+async function fetchNotifications() {
+  isLoading.value = true
+  try {
+    const [notifRes, followingIds] = await Promise.all([
+      fetch(`${BASE_URL}/api/v1/front/notifications/show`, { headers: { ...authHeaders() } }),
+      fetchFollowingIds(),
+    ])
+    if (!notifRes.ok) return
+    const json = await notifRes.json()
+    const data = json?.data ?? json
+    const list = data.notifications ?? data.Notifications ?? []
+
+    rawNotifications.value = list.map((n) => ({
+      id: n.id,
+      username: n.actor_name,
+      avatar: resolveAvatarUrl(n.actor_avatar),
+      type: n.type,
+      text: notifText(n.type),
+      time: timeAgo(n.created_at),
+      created_at: n.created_at,
+      isRead: n.is_read,
+      actor_id: n.actor_id,
+      post_id: n.post_id,
+      isFollowingBack: followingIds.has(n.actor_id), // ✅ ត្រូវពី server, មិនបាត់ពេល refresh
+      announcementImage: n.announcement_image || '',
+      announcementText: n.announcement_text || '',
+      buttonText: n.button_text || '',
+    }))
+  } catch (e) {
+    console.error('Failed to load notifications', e)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function notifText(type) {
+  switch (type) {
+    case 'follow':
+      return 'started following you'
+    case 'react':
+      return 'reacted to your post'
+    case 'comment':
+      return 'commented on your article'
+    case 'share':
+      return 'shared your course'
+    case 'enroll':
+      return 'enrolled in your course'
+    case 'announcement':
+      return 'announced a new platform update'
+    default:
+      return 'sent you a notification'
+  }
+}
+
+async function markAsRead(item) {
+  if (item.isRead) return
+  item.isRead = true
+  try {
+    await fetch(`${BASE_URL}/api/v1/front/notifications/read`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+      },
+      body: JSON.stringify({ notification_id: item.id }),
+    })
+  } catch (e) {
+    console.error('Failed to mark notification as read', e)
+    item.isRead = false // rollback បើ fail
+  }
+}
+
+async function handleFollowBack(item) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/followers/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+      },
+      body: JSON.stringify({ user_id: item.actor_id }),
+    })
+    if (!res.ok) {
+      console.error('Follow back failed:', res.status)
+      return
+    }
+    item.isFollowingBack = true
+  } catch (e) {
+    console.error('Failed to follow back', e)
+  }
+}
+
+async function handleDeleteNotification(item) {
+  const prev = rawNotifications.value
+  rawNotifications.value = rawNotifications.value.filter((n) => n.id !== item.id)
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/front/notifications/${item.id}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() },
+    })
+    if (!res.ok) {
+      rawNotifications.value = prev // rollback បើ fail
+    }
+  } catch (e) {
+    console.error('Failed to delete notification', e)
+    rawNotifications.value = prev
+  }
+}
+
+let pollTimer = null
+function startPolling() {
+  pollTimer = setInterval(fetchNotifications, POLL_INTERVAL)
+}
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
 
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
@@ -34,15 +217,6 @@ const closeDropdown = (e) => {
   }
 }
 
-onMounted(() => {
-  document.addEventListener('click', closeDropdown)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', closeDropdown)
-})
-
-// Functions សម្រាប់ព្រឹត្តិការណ៍របស់ Menu ទាំងបី
 const handleAllPost = () => {
   console.log('All Post clicked')
 }
@@ -51,169 +225,25 @@ const handleNotificationSetting = () => {
   console.log('Notification Setting clicked')
 }
 
-// State និង Function សម្រាប់គ្រប់គ្រង Full Screen
-const isFullScreen = ref(false)
 const handleFullScreen = () => {
   isFullScreen.value = !isFullScreen.value
-  console.log('Full Screen toggled:', isFullScreen.value)
 }
 
-const notifications = ref({
-  new: [
-    {
-      id: 11,
-      username: 'OTres Technology',
-      avatar: Kaifin,
-      type: 'announcement',
-      text: 'announced a new platform update',
-      time: 'Just now',
-      isRead: false,
-      announcementImage: "", 
-      announcementText: '🎉 Special platform update! Explore our newest features and enhanced user experience designed for your daily workflow.',
-      buttonText: 'Update Version 2.0'
-    },
-    {
-      id: 1,
-      username: 'សុខ សុភា',
-      avatar: Phea,
-      type: 'react',
-      text: 'reacted to your post',
-      time: '12m',
-      isRead: true
-    },
-    {
-      id: 2,
-      username: 'Ly Heng',
-      avatar: Heng,
-      type: 'comment',
-      text: 'commented on your article',
-      time: '13m',
-      isRead: false
-    },
-    {
-      id: 3,
-      username: 'Ly Heng Zin',
-      avatar: LyHeng,
-      type: 'share',
-      text: 'shared your course',
-      time: '14m',
-      isRead: true
-    },
-    {
-      id: 4,
-      username: 'Mean',
-      avatar: Mean,
-      type: 'enroll',
-      text: 'enrolled in your course',
-      time: '15m',
-      isRead: false
-    }
-  ],
-  follower: [
-    {
-      id: 5,
-      username: 'Nary Sovan',
-      avatar: '',
-      type: 'follow',
-      text: 'started following you',
-      time: '12h',
-      isRead: false
-    },
-    {
-      id: 8,
-      username: 'Roth Roth',
-      avatar: Roth,
-      type: 'follow',
-      text: 'started following you',
-      time: '12h',
-      isRead: false
-    },
-    {
-      id: 10,
-      username: 'Yuri Babo',
-      avatar: yuri,
-      type: 'follow',
-      text: 'started following you',
-      time: '12h',
-      isRead: false
-    },
-    {
-      id: 10,
-      username: 'Yuri Babo',
-      avatar: yuri,
-      type: 'follow',
-      text: 'started following you',
-      time: '12h',
-      isRead: false
-    },
-    {
-      id: 10,
-      username: 'Yuri Babo',
-      avatar: yuri,
-      type: 'follow',
-      text: 'started following you',
-      time: '12h',
-      isRead: false
-    },
-    {
-      id: 10,
-      username: 'Yuri Babo',
-      avatar: yuri,
-      type: 'follow',
-      text: 'started following you',
-      time: '12h',
-      isRead: false
-    }
-  ],
-  aWeek: [
-    {
-      id: 6,
-      username: 'Nita Ta',
-      avatar: Nita,
-      type: 'birthday',
-      text: 'your friend has a birthday',
-      time: '1 week',
-      isRead: true
-    },
-    {
-      id: 6,
-      username: 'Nita Ta',
-      avatar: Nita,
-      type: 'birthday',
-      text: 'your friend has a birthday',
-      time: '1 week',
-      isRead: true
-    },
-    {
-      id: 6,
-      username: 'Nita Ta',
-      avatar: Nita,
-      type: 'birthday',
-      text: 'your friend has a birthday',
-      time: '1 week',
-      isRead: true
-    },
-    {
-      id: 6,
-      username: 'Nita Ta',
-      avatar: Nita,
-      type: 'birthday',
-      text: 'your friend has a birthday',
-      time: '1 week',
-      isRead: true
-    }
-  ]
+onMounted(() => {
+  document.addEventListener('click', closeDropdown)
+  fetchNotifications()
+  startPolling()
 })
 
-const markAsRead = (item) => {
-  item.isRead = true
-}
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown)
+  stopPolling()
+})
 </script>
 
 <template>
-  <!-- បន្ថែម Class fullscreen-mode ទៅតាមតម្លៃ biến isFullScreen -->
   <div class="notification-container" :class="{ 'fullscreen-mode': isFullScreen }">
-    
+
     <!-- Top Header -->
     <div class="notif-header">
       <div class="header-title-wrapper">
@@ -226,8 +256,8 @@ const markAsRead = (item) => {
         <h2>Notifications</h2>
       </div>
       <div class="header-right-actions">
-        
-        <!-- More Dots Button & Dropdown Menu -->
+
+        <!-- More Dots Dropdown Menu -->
         <div class="header-dots-wrapper">
           <div class="header-dots" @click.stop="toggleDropdown">
             <span></span><span></span><span></span>
@@ -240,7 +270,6 @@ const markAsRead = (item) => {
             <button class="dropdown-item" @click="handleNotificationSetting(); showDropdown = false">
               Notification Setting
             </button>
-            <!-- ប្ដូរអត្ថបទរវាង Full Screen និង Exit Full Screen ស្វ័យប្រវត្តិ -->
             <button class="dropdown-item" @click="handleFullScreen(); showDropdown = false">
               {{ isFullScreen ? 'Exit Full Screen' : 'Full Screen' }}
             </button>
@@ -258,7 +287,7 @@ const markAsRead = (item) => {
 
     <!-- Navigation Tabs -->
     <div class="tabs-row">
-      <button 
+      <button
         class="tab-btn"
         :class="{ active: activeTab === 'Feed' }"
         @click="activeTab = 'Feed'"
@@ -273,7 +302,7 @@ const markAsRead = (item) => {
         Feed
       </button>
 
-      <button 
+      <button
         class="tab-btn"
         :class="{ active: activeTab === 'Article' }"
         @click="activeTab = 'Article'"
@@ -288,7 +317,7 @@ const markAsRead = (item) => {
         Article
       </button>
 
-      <button 
+      <button
         class="tab-btn"
         :class="{ active: activeTab === 'Course' }"
         @click="activeTab = 'Course'"
@@ -301,24 +330,26 @@ const markAsRead = (item) => {
       </button>
     </div>
 
-    <!-- ករណីទី១៖ Tab 'Feed' -->
     <template v-if="activeTab === 'Feed'">
+
+      <p v-if="isLoading && !rawNotifications.length" class="notif-empty-state">Loading...</p>
+      <p v-else-if="!rawNotifications.length" class="notif-empty-state">No notifications yet</p>
+
       <!-- SECTION: New -->
-      <div class="section-block">
+      <div class="section-block" v-if="notifications.new.length">
         <div class="section-header">
           <h3>New</h3>
           <button class="see-all-btn">see all</button>
         </div>
 
         <div class="notif-list">
-          <div 
-            v-for="item in notifications.new" 
-            :key="item.id" 
-            class="notif-card" 
+          <div
+            v-for="item in notifications.new"
+            :key="item.id"
+            class="notif-card"
             :class="{ 'announcement-card-layout': item.type === 'announcement' }"
             @click="markAsRead(item)"
           >
-            <!-- ករណីជា Admin Announcement -->
             <template v-if="item.type === 'announcement'">
               <div class="announcement-content-wrapper">
                 <div class="announcement-top">
@@ -361,7 +392,7 @@ const markAsRead = (item) => {
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                 </div>
-                
+
                 <div class="badge-icon" :class="{ 'react-badge': item.type === 'react' }">
                   <svg v-if="item.type === 'react'" class="transparent-svg" viewBox="0 0 24 24" width="12" height="12" fill="currentColor" stroke="none">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -405,17 +436,17 @@ const markAsRead = (item) => {
       </div>
 
       <!-- SECTION: Follower -->
-      <div class="section-block">
+      <div class="section-block" v-if="notifications.follower.length">
         <div class="section-header">
           <h3>Follower</h3>
           <button class="see-all-btn">see all</button>
         </div>
 
         <div class="notif-list">
-          <div 
-            v-for="item in notifications.follower" 
-            :key="item.id" 
-            class="notif-card follower-card" 
+          <div
+            v-for="item in notifications.follower"
+            :key="item.id"
+            class="notif-card follower-card"
             @click="markAsRead(item)"
           >
             <div class="user-avatar-wrapper">
@@ -448,8 +479,15 @@ const markAsRead = (item) => {
               </div>
 
               <div class="follower-actions">
-                <button class="follow-back-btn" @click.stop>Follow back</button>
-                <button class="delete-btn" @click.stop>Delete</button>
+                <button
+                  v-if="!item.isFollowingBack"
+                  class="follow-back-btn"
+                  @click.stop="handleFollowBack(item)"
+                >
+                  Follow back
+                </button>
+                <span v-else class="follow-back-btn is-following">Following</span>
+                <button class="delete-btn" @click.stop="handleDeleteNotification(item)">Delete</button>
               </div>
             </div>
 
@@ -461,18 +499,18 @@ const markAsRead = (item) => {
         </div>
       </div>
 
-      <!-- SECTION: A Week -->
-      <div class="section-block">
+      <!-- SECTION A Week -->
+      <div class="section-block" v-if="notifications.aWeek.length">
         <div class="section-header">
           <h3>A Week</h3>
           <button class="see-all-btn">see all</button>
         </div>
 
         <div class="notif-list">
-          <div 
-            v-for="item in notifications.aWeek" 
-            :key="item.id" 
-            class="notif-card" 
+          <div
+            v-for="item in notifications.aWeek"
+            :key="item.id"
+            class="notif-card"
             @click="markAsRead(item)"
           >
             <div class="user-avatar-wrapper">
@@ -512,27 +550,32 @@ const markAsRead = (item) => {
           </div>
         </div>
       </div>
-
-      <!-- Footer Button -->
       <div class="footer-action">
         <button class="see-previous-btn">See more notification</button>
       </div>
     </template>
-
-    <!-- ករណីទីពីរ៖ Tab 'Article' -->
     <template v-else-if="activeTab === 'Article'">
       <div class="article-tab-content">
-        <ArticleNotification @previous="activeTab = 'Feed'" @close="$emit('close')" />
+        <ArticleNotification
+          :notifications="rawNotifications"
+          @previous="activeTab = 'Feed'"
+          @close="$emit('close')"
+          @delete="handleDeleteNotification"
+          @followBack="handleFollowBack"
+        />
       </div>
     </template>
-
-    <!-- ករណីទីបី៖ Tab 'Course' -->
     <template v-else-if="activeTab === 'Course'">
       <div class="course-tab-content">
-        <NotificationCourse @previous="activeTab = 'Feed'" @close="$emit('close')" />
+        <NotificationCourse
+          :notifications="rawNotifications"
+          @previous="activeTab = 'Feed'"
+          @close="$emit('close')"
+          @delete="handleDeleteNotification"
+          @followBack="handleFollowBack"
+        />
       </div>
     </template>
-
   </div>
 </template>
 
@@ -541,7 +584,6 @@ const markAsRead = (item) => {
   background-color: transparent !important;
 }
 
-/* ទំហំធម្មតា */
 .notification-container {
   background-color: #ffffff;
   color: #0f172a;
@@ -559,7 +601,6 @@ const markAsRead = (item) => {
   transition: all 0.3s ease-in-out;
 }
 
-/* ទំហំពេលចុច Full Screen (ម៉ាល្មមស្អាត ធំទូលាយល្មមមិនបាំងជិតអេក្រង់ខ្លាំងពេក) */
 .notification-container.fullscreen-mode {
   width: 1100px;
   max-height: 92vh;
@@ -1019,5 +1060,25 @@ const markAsRead = (item) => {
 .article-tab-content,
 .course-tab-content {
   width: 100%;
+}
+
+.notif-empty-state {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 32px 0;
+}
+
+.follow-back-btn.is-following {
+  background-color: transparent;
+  color: #94a3b8;
+  border: 1px solid #cbd5e1;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 32px;
+  font-size: 11px;
+  font-weight: 600;
 }
 </style>

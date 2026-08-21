@@ -28,8 +28,6 @@ func NewPlaylistRepoImpl(db *sqlx.DB) *PlaylistRepoImpl {
 	return &PlaylistRepoImpl{dbpool: db}
 }
 
-// ---------- Create ----------
-
 func (r *PlaylistRepoImpl) Create(userID int64, req CreatePlaylistRequest) (*PlaylistResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 
@@ -68,13 +66,10 @@ func (r *PlaylistRepoImpl) Create(userID int64, req CreatePlaylistRequest) (*Pla
 	return &resp, nil
 }
 
-// ---------- Show / List ----------
-
 func (r *PlaylistRepoImpl) Show(requesterID int64, req ShowPlaylistRequest) (*PlaylistListResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 	offset := (req.Page - 1) * req.Limit
 
-	// Visible if it's public, or it's the requester's own playlist.
 	baseQuery := `
 		FROM playlists p
 		WHERE (p.is_public = TRUE OR p.user_id = $1)
@@ -108,10 +103,6 @@ func (r *PlaylistRepoImpl) Show(requesterID int64, req ShowPlaylistRequest) (*Pl
 		Limit:     req.Limit,
 	}, nil
 }
-
-// ---------- Top ----------
-// Ranking: is_featured DESC, then songs_count DESC — agreed with the
-// product owner as the "Top Playlist" ordering (see conversation).
 
 func (r *PlaylistRepoImpl) Top(limit int) ([]PlaylistResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
@@ -150,8 +141,6 @@ func (r *PlaylistRepoImpl) Top(limit int) ([]PlaylistResponse, *error_responses.
 	return responses, nil
 }
 
-// ---------- GetByID ----------
-
 func (r *PlaylistRepoImpl) GetByID(id int64) (*Playlist, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
 
@@ -164,8 +153,6 @@ func (r *PlaylistRepoImpl) GetByID(id int64) (*Playlist, *error_responses.ErrorR
 	}
 	return &p, nil
 }
-
-// ---------- Update ----------
 
 func (r *PlaylistRepoImpl) Update(id int64, userID int64, req UpdatePlaylistRequest) (*PlaylistResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}
@@ -213,8 +200,6 @@ func (r *PlaylistRepoImpl) Update(id int64, userID int64, req UpdatePlaylistRequ
 	return &resp, nil
 }
 
-// ---------- Delete ----------
-
 func (r *PlaylistRepoImpl) Delete(id int64, userID int64) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 
@@ -246,12 +231,9 @@ func (r *PlaylistRepoImpl) Delete(id int64, userID int64) *error_responses.Error
 	return nil
 }
 
-// ---------- Add / Remove a single song ----------
-
 func (r *PlaylistRepoImpl) AddSong(playlistID int64, userID int64, songID int64) *error_responses.ErrorResponse {
 	msg := error_responses.ErrorResponse{}
 
-	// Ownership check first — only the playlist's owner can add songs to it.
 	var owns bool
 	if err := r.dbpool.Get(&owns, `SELECT EXISTS(SELECT 1 FROM playlists WHERE id = $1 AND user_id = $2)`, playlistID, userID); err != nil {
 		return msg.NewErrorResponse("database_error", err)
@@ -294,8 +276,6 @@ func (r *PlaylistRepoImpl) RemoveSong(playlistID int64, userID int64, songID int
 	return nil
 }
 
-// ---------- shared helpers ----------
-
 func insertPlaylistSongs(tx *sqlx.Tx, playlistID int64, songIDs []int64) (int, error) {
 	if len(songIDs) == 0 {
 		return 0, nil
@@ -322,32 +302,6 @@ func (r *PlaylistRepoImpl) attachSongsCount(playlists []Playlist) ([]PlaylistRes
 	}
 	return responses, nil
 }
-
-// func (r *PlaylistRepoImpl) GetDetailByID(id int64) (*PlaylistDetailResponse, *error_responses.ErrorResponse) {
-// 	msg := error_responses.ErrorResponse{}
-
-// 	var p Playlist
-// 	if err := r.dbpool.Get(&p, `SELECT id, user_id, name, cover_url, is_public, is_featured, created_at FROM playlists WHERE id = $1`, id); err != nil {
-// 		return nil, msg.NewErrorResponse("playlist_not_found", err)
-// 	}
-
-// 	var songs []PlaylistSongItem
-// 	query := `
-// 		SELECT s.id, s.title, s.singer_name, s.cover_url, s.file_url, s.duration, ps.sort_order
-// 		FROM playlist_songs ps
-// 		JOIN songs s ON s.id = ps.song_id
-// 		WHERE ps.playlist_id = $1
-// 		ORDER BY ps.sort_order ASC`
-// 	if err := r.dbpool.Select(&songs, query, id); err != nil {
-// 		return nil, msg.NewErrorResponse("database_error", err)
-// 	}
-
-// 	return &PlaylistDetailResponse{
-// 		ID: p.ID, UserID: p.UserID, Name: p.Name, CoverURL: p.CoverURL,
-// 		IsPublic: p.IsPublic, IsFeatured: p.IsFeatured,
-// 		SongsCount: len(songs), Songs: songs, CreatedAt: p.CreatedAt,
-// 	}, nil
-// }
 
 func (r *PlaylistRepoImpl) GetDetailByID(id int64) (*PlaylistDetailResponse, *error_responses.ErrorResponse) {
 	msg := error_responses.ErrorResponse{}

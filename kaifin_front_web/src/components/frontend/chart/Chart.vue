@@ -2,12 +2,8 @@
   <div class="chats-modal-wrapper">
     <div class="chats-container">
 
-      <!-- បង្ហាញផ្ទាំង Chat Setting ពេល showSetting ເປັນ true -->
       <ChatSetting v-if="showSetting" @close="showSetting = false" />
-
-      <!-- ករណីបង្ហាញផ្ទាំង Chats ធម្មតា (ពេល showSetting ເປັນ false) -->
       <template v-else>
-        <!-- ករណីបង្ហាញផ្ទាំង Chats ធម្មតា -->
         <template v-if="currentView === 'chats'">
           <!-- Header Section -->
           <div class="chats-header">
@@ -26,7 +22,6 @@
             </div>
           </div>
 
-          <!-- Content Body -->
           <div class="chats-body">
             <!-- Search Bar -->
             <div class="search-box">
@@ -36,7 +31,7 @@
               <input type="text" class="search-input" placeholder="Search Messenger..." v-model="searchQuery" />
             </div>
 
-            <!-- Facebook Style Tabs Navigation (All, Unread, Groups) -->
+
             <div class="messenger-tabs-nav">
               <button
                 class="messenger-tab-item"
@@ -67,7 +62,6 @@
               </button>
             </div>
 
-            <!-- New Message Request Banner (ចុចទីនេះដើម្បីប្ដូរទៅ Request View) -->
             <div class="request-banner" @click="currentView = 'request'">
               <div class="request-left">
                 <div class="request-icon-box">
@@ -80,7 +74,6 @@
               </span>
             </div>
 
-            <!-- Chat Items List with Mock Data & Avatars (Expanded to bottom) -->
             <div class="chat-list">
               <div
                 v-for="(chat, index) in filteredChats"
@@ -111,21 +104,51 @@
                     <MoreOption v-if="chat.showMenu" @close="chat.showMenu = false" @action="handleChatOption(chat, $event)" class="more-op" />
                   </div>
                   <div class="chat-info-bottom">
-                    <span class="chat-message" :class="{ 'voice-msg': chat.isVoice, 'unread-text': chat.unread }">{{ chat.message }}</span>
+                    <span class="chat-message" :class="{ 'voice-msg': chat.isVoice, 'unread-text': chat.unread }">
+                      {{ truncateText(chat.message, 30) }}
+                    </span>
                     <span class="chat-time">{{ chat.time }}</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Empty State -->
-              <div v-if="filteredChats.length === 0" class="empty-state">
+              <div v-if="usersWithoutChat.length > 0" class="sidebar-section-title" style="padding: 14px 16px 6px; font-size: 12px; font-weight: 700; color: #8a8d91; text-transform: uppercase; letter-spacing: 0.5px;">
+                All Users
+              </div>
+
+              <div
+                v-for="user in usersWithoutChat"
+                :key="'user-' + user.id"
+                class="chat-item"
+                @click="startChatWithUser(user)"
+              >
+                <div class="avatar-wrapper">
+                  <div class="avatar">
+                    <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="avatar-img" />
+                    <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  </div>
+                </div>
+                <div class="chat-info">
+                  <div class="chat-info-header">
+                    <span class="chat-name">{{ user.name }}</span>
+                  </div>
+                  <div class="chat-info-bottom">
+                    <span class="chat-message">Click to chats</span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="usersLoading" style="padding: 14px 16px; text-align: center; color: #8a8d91; font-size: 13px;">
+                please wait users...
+              </div>
+
+              <div v-if="filteredChats.length === 0 && usersWithoutChat.length === 0 && !usersLoading" class="empty-state">
                 <p>No chats found</p>
               </div>
             </div>
           </div>
         </template>
 
-        <!-- ករណីហៅ Component RequestView.vue មកបង្ហាញពេលចុចលើ Request Banner -->
         <template v-else-if="currentView === 'request'">
           <RequestView @back="currentView = 'chats'" />
         </template>
@@ -139,189 +162,196 @@
           />
         </template>
       </template>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import axios from 'axios'
 import RequestView from './RequestView.vue'
 import MoreOption from '../chart/MoreOption.vue'
 import ChartDetail from './ChartDetail.vue'
-import ChatSetting from './ChatSetting.vue' // <--- បន្ថែមការ Import ឯកសារ ChatSetting របស់អ្នក
+import ChatSetting from './ChatSetting.vue'
 
 defineEmits(['close'])
 
+const API_BASE = 'http://localhost:7070/api/v1/front'
+const FILE_BASE = 'http://localhost:7070'
+
 const currentView = ref('chats')
-const showSetting = ref(false) // <--- Variable សម្រាប់ប្ដូរទៅកាន់ផ្ទាំង Setting
+const showSetting = ref(false)
 
 const searchQuery = ref('')
-const activeTab = ref('all') // 'all' | 'unread' | 'groups'
+const activeTab = ref('all') 
 
-const chatList = ref([
-  {
-    name: 'Dara Chan',
-    message: 'Hey! Are we still meeting for project review?',
-    time: '10:45 AM',
-    online: true,
-    isGroup: false,
-    isVoice: false,
-    badge: null,
-    unread: false,
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlzLSIDO3ceFnP3Qyu0o6sNLmq7_A6l7JLSdJcS9pc7g&s=10',
-    showMenu: false,
-  },
-  {
-    name: 'Srey Nich',
-    message: 'Sent a voice message (0:14)',
-    time: '09:20 AM',
-    online: true,
-    isGroup: false,
-    isVoice: true,
-    badge: null,
-    unread: false,
-    avatar: 'https://cdn.hypetrace.com/file/ht/avtt/tiktok-influencer-971-20200304-4-ro0jp2.jpg',
-    showMenu: false,
-  },
-  {
-    name: 'Senior Capstone Group',
-    message: 'Vuthea: I pushed the latest API updates to GitHub.',
-    time: 'Yesterday',
-    online: true,
-    isGroup: true,
-    isVoice: false,
-    badge: '5',
-    unread: true,
-    avatar: 'https://cdn.hypetrace.com/file/ht/avtt/tiktok-influencer-2201-20200924-4-92w8ra.jpg',
-    showMenu: false,
-  },
-  {
-    name: 'Panha Rith',
-    message: 'Check out this new component layout structure.',
-    time: 'Yesterday',
-    online: false,
-    isGroup: false,
-    isVoice: false,
-    badge: '1',
-    unread: true,
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa28iNNqLJdEZ7aXrMJJUkFkz1CSFxXBVyqKYyMDf7MA&s=10',
-    showMenu: false,
-  },
-  {
-    name: 'Web Dev Team',
-    message: 'Meeting rescheduled to Monday afternoon.',
-    time: 'Aug 5',
-    online: true,
-    isGroup: true,
-    isVoice: false,
-    badge: null,
-    unread: false,
-    avatar: 'https://cdn.hypetrace.com/file/ht/avtt/tiktok-influencer-3856-20210419-4-ql7c88.jpg',
-    showMenu: false,
-  },
-  {
-    name: 'Panha Rith',
-    message: 'Check out this new component layout structure.',
-    time: 'Yesterday',
-    online: false,
-    isGroup: false,
-    isVoice: false,
-    badge: '1',
-    unread: true,
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa28iNNqLJdEZ7aXrMJJUkFkz1CSFxXBVyqKYyMDf7MA&s=10',
-    showMenu: false,
-  },
-  {
-    name: 'Panha Rith',
-    message: 'Check out this new component layout structure.',
-    time: 'Yesterday',
-    online: false,
-    isGroup: false,
-    isVoice: false,
-    badge: '1',
-    unread: true,
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa28iNNqLJdEZ7aXrMJJUkFkz1CSFxXBVyqKYyMDf7MA&s=10',
-    showMenu: false,
-  },
-  {
-    name: 'Panha Rith',
-    message: 'Check out this new component layout structure.',
-    time: 'Yesterday',
-    online: false,
-    isGroup: false,
-    isVoice: false,
-    badge: '1',
-    unread: true,
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa28iNNqLJdEZ7aXrMJJUkFkz1CSFxXBVyqKYyMDf7MA&s=10',
-    showMenu: false,
-  },
-  {
-    name: 'Panha Rith',
-    message: 'Check out this new component layout structure.',
-    time: 'Yesterday',
-    online: false,
-    isGroup: false,
-    isVoice: false,
-    badge: '1',
-    unread: true,
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa28iNNqLJdEZ7aXrMJJUkFkz1CSFxXBVyqKYyMDf7MA&s=10',
-    showMenu: false,
-  },
-  {
-    name: 'Panha Rith',
-    message: 'Check out this new component layout structure.',
-    time: 'Yesterday',
-    online: false,
-    isGroup: false,
-    isVoice: false,
-    badge: '1',
-    unread: true,
-    avatar: 'https://cdn.hypetrace.com/file/ht/avig/instagram-influencer-61355-20200302-4-1e8w3gk.jpg',
-    showMenu: false,
-  },
-  {
-    name: 'Panha Rith',
-    message: 'Check out this new component layout structure.',
-    time: 'Yesterday',
-    online: false,
-    isGroup: false,
-    isVoice: false,
-    badge: '1',
-    unread: true,
-    avatar: 'https://cdn.hypetrace.com/file/ht/avtt/tiktok-influencer-57374-20200316-4-1h7pxhv.jpg',
-    showMenu: false,
-  },
-])
+const chatList = ref([])
+const loading = ref(false)
+const errorMsg = ref('')
 
-const unreadCount = computed(() => {
-  return chatList.value.filter(chat => chat.unread).length
-})
+const allUsers = ref([])
+const usersLoading = ref(false)
 
-function markAsRead(chat) {
-  if (chat.unread) {
-    chat.unread = false
-    chat.badge = null
+async function fetchAllUsers() {
+  usersLoading.value = true
+  try {
+    const response = await axios.get(`${API_BASE}/chats/users/search`, {
+      headers: authHeaders(),
+      params: { search: searchQuery.value, limit: 200 },
+    })
+    if (response.data.success) {
+      const list = response.data.data.users || []
+      allUsers.value = list.map((u) => ({
+        id: u.id,
+        name: (u.first_name || u.last_name)
+          ? `${u.first_name || ''} ${u.last_name || ''}`.trim()
+          : u.user_name,
+        avatar: resolveUrl(u.profile_images),
+      }))
+    }
+  } catch (error) {
+    console.log('FETCH ALL USERS ERROR:', error)
+  } finally {
+    usersLoading.value = false
   }
 }
 
-const filteredChats = computed(() => {
-  return chatList.value.filter(chat => {
-    if (activeTab.value === 'unread' && !chat.unread) return false
-    if (activeTab.value === 'groups' && !chat.isGroup) return false
-
-    const matchesSearch =
-      chat.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      chat.message.toLowerCase().includes(searchQuery.value.toLowerCase())
-
-    return matchesSearch
-  })
+const usersWithoutChat = computed(() => {
+  const existingUserIds = new Set(
+    chatList.value.map((c) => c.otherUserId).filter(Boolean)
+  )
+  return allUsers.value.filter((u) => !existingUserIds.has(u.id))
 })
 
-function handleChatOption(chat, action) {
-  console.log('Chat:', chat.name)
-  console.log('Action:', action)
+const isStartingChat = ref(false)
 
+async function startChatWithUser(user) {
+  if (isStartingChat.value) return
+  isStartingChat.value = true
+  try {
+    const form = new URLSearchParams()
+    form.append('target_user_id', user.id)
+
+    const res = await axios.post(`${API_BASE}/chats/start`, form, {
+      headers: authHeaders(),
+    })
+    if (res.data.success) {
+      const conversationId = res.data.data.conversation_id
+      await fetchConversations()
+      const chat = chatList.value.find((c) => c.id === conversationId)
+      if (chat) {
+        openChat(chat)
+      }
+    }
+  } catch (error) {
+    console.log('START CHAT WITH USER ERROR:', error)
+  } finally {
+    isStartingChat.value = false
+  }
+}
+
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return { Authorization: `Bearer ${token}` }
+}
+
+function resolveUrl(path) {
+  if (!path) return ''
+  if (/^(https?:|blob:|data:)/.test(path)) return path
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${FILE_BASE}/uploads${cleanPath}`
+}
+
+async function fetchConversations() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const response = await axios.get(`${API_BASE}/chats/show`, {
+      headers: authHeaders(),
+      params: {
+        tab: activeTab.value,
+        search: searchQuery.value,
+      },
+    })
+
+    if (response.data.success) {
+      chatList.value = response.data.data.conversations.map((c) => ({
+        id: c.conversation_id,
+        name: c.name,
+        message: c.last_message || '',
+        time: formatTime(c.last_message_at),
+        online: c.online,
+        isGroup: c.is_group,
+        isVoice: c.last_message_type === 'voice',
+        badge: c.unread_count > 0 ? String(c.unread_count) : null,
+        unread: c.unread_count > 0,
+        avatar: resolveUrl(c.avatar), 
+        otherUserId: c.other_user_id,
+        showMenu: false,
+      }))
+    }
+  } catch (error) {
+    console.log('FETCH CONVERSATIONS ERROR:', error)
+    if (error.response) {
+      errorMsg.value = error.response.data.message || 'Failed to load chats'
+    } else {
+      errorMsg.value = 'Server error'
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday'
+  }
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+}
+
+const unreadCount = computed(() => {
+  return chatList.value.filter((chat) => chat.unread).length
+})
+
+const filteredChats = computed(() => chatList.value)
+let searchTimeout = null
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    fetchConversations()
+    fetchAllUsers() 
+  }, 400) 
+})
+
+watch(activeTab, () => {
+  fetchConversations()
+})
+
+async function markAsRead(chat) {
+  if (!chat.unread) return
+  try {
+    await axios.post(
+      `${API_BASE}/chats/${chat.id}/read`,
+      {},
+      { headers: authHeaders() }
+    )
+    chat.unread = false
+    chat.badge = null
+  } catch (error) {
+    console.log('MARK AS READ ERROR:', error)
+  }
+}
+
+async function handleChatOption(chat, action) {
   chat.showMenu = false
 
   switch (action) {
@@ -364,7 +394,7 @@ function handleOutsideClick(event) {
     return
   }
 
-  chatList.value.forEach(chat => {
+  chatList.value.forEach((chat) => {
     chat.showMenu = false
   })
 }
@@ -374,6 +404,7 @@ const selectedChat = ref(null)
 function openChat(chat) {
   selectedChat.value = chat
   currentView.value = 'detail'
+  markAsRead(chat) 
 }
 
 function goBackToChats() {
@@ -381,13 +412,20 @@ function goBackToChats() {
   selectedChat.value = null
 }
 
-// មុខងារពេលចុចលើប៊ូតុង 3-dots ក្នុង Header ដើម្បីបើកផ្ទាំង Setting
 function handleAction() {
   showSetting.value = true
 }
 
+function truncateText(text, maxLength = 200) {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength).trimEnd() + '...'
+}
+
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick)
+  fetchConversations() 
+   fetchAllUsers()
 })
 
 onBeforeUnmount(() => {

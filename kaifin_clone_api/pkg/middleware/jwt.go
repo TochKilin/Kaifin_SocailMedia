@@ -25,8 +25,6 @@ var publicPaths = []string{
 	"/api/v1/front/register/create",
 	"/api/v1/admin/auth/login",
 	"/api/v1/mobile/auth/login-mobile",
-	// TODO: បន្ថែម path login សម្រាប់ mobile នៅទីនេះ ពេលដឹងច្បាស់
-	// ឧ. "/api/v1/mobile/auth/login",
 }
 
 func isPublicPath(path string) bool {
@@ -51,7 +49,7 @@ func NewJwtMinddleWare(app *fiber.App, db_pool *sqlx.DB, redis *redis.Client) {
 
 	//  Middleware Step 1: Verification Gate
 	app.Use(func(c fiber.Ctx) error {
-		// ✅ Skip JWT ទាំងស្រុងសម្រាប់ public endpoints (login/register)
+
 		if isPublicPath(c.Path()) {
 			return c.Next()
 		}

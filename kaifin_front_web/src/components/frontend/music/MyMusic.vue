@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import CreatePlaylist from './CreatePlaylist.vue'
+import UploadMusic from './UploadMusic.vue'
 
 const props = defineProps({
   apiBase: String,
@@ -8,9 +9,8 @@ const props = defineProps({
   isPlaying: Boolean
 })
 
-const emit = defineEmits(['play-song', 'open-playlist', 'upload', 'upload-vk', 'upload-kaifin', 'create-collection'])
+const emit = defineEmits(['play-song', 'open-playlist', 'upload-vk', 'upload-kaifin', 'create-collection'])
 
-// បន្ថែម state សម្រាប់គ្រប់គ្រងការប្តូរផ្ទាំងរវាងទំព័រដើម និងផ្ទាំងបង្កើត Playlist
 const activeView = ref('main')
 
 const myPlaylists = ref([])
@@ -174,6 +174,19 @@ const fetchMyMusic = async () => {
   }, 300)
 }
 
+// ពេល upload ចម្រៀងជោគជ័យពី UploadMusic.vue, បន្ថែមវាទៅក្នុងបញ្ជីភ្លាមៗ
+const onSongUploaded = (song) => {
+  if (!song) return
+  mySongs.value.unshift({
+    id: song.id,
+    title: song.title,
+    singer_name: song.singer_name || 'You',
+    duration: song.duration,
+    cover_url: song.cover_url,
+    fileUrl: song.file_url
+  })
+}
+
 onMounted(() => {
   fetchMyMusic()
 })
@@ -181,11 +194,9 @@ onMounted(() => {
 
 <template>
   <div class="my-music-view">
-    <!-- Top Header containing Cover Image, Title, Genre Pills, and Action Buttons -->
     <div class="my-music-wrapper">
-      <!-- ផ្ទាំងទំព័រដើម (បង្ហាញនៅពេល activeView គឺ 'main') -->
-      <div v-if="activeView === 'main'">
-        <div class="box header-box">
+      <div v-if="activeView === 'main'" class="main-view">
+        <div class="box header-box card">
           <div class="header-top-row">
             <div class="header-left">
               <div class="header-image-wrap">
@@ -201,10 +212,8 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-
-            <!-- Action Buttons Row -->
             <div class="header-action-buttons">
-              <button class="action-btn" @click="$emit('upload')">
+              <button class="action-btn" @click="activeView = 'upload'">
                 <span class="icon-bg">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -214,8 +223,6 @@ onMounted(() => {
                 </span>
                 Upload
               </button>
-
-              <!-- ប៊ូតុងសម្រាប់ចុចបើកផ្ទាំង Create Playlist -->
               <button class="action-btn" @click="activeView = 'create-playlist'">
                 <span class="icon-bg">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -229,8 +236,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- My Playlist Section -->
-        <section class="box">
+        <section class="box card">
           <div class="box-header">
             <span class="box-title">My Playlist</span>
           </div>
@@ -242,15 +248,13 @@ onMounted(() => {
             <div 
               v-for="item in myPlaylists" 
               :key="item.id" 
-              class="card"
+              class=""
               @click="$emit('open-playlist', item)"
             >
               <div class="card-img-wrap">
                 <img :src="item.cover_url" alt="playlist" />
-                <!-- Floating "5 songs" badge inside top-right -->
                 <span class="song-badge">5 songs</span>
-                
-                <!-- Larger Play button always visible at the bottom-right corner of the thumbnail -->
+              
                 <button 
                   class="card-play-btn" 
                   @click.stop="$emit('play-song', item)"
@@ -269,7 +273,6 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- My Music Songs Section (10 Songs) -->
         <section class="box songs-box">
           <div class="box-header">
             <span class="box-title">10 Songs</span>
@@ -314,11 +317,15 @@ onMounted(() => {
           </div>
         </section>
       </div>
-
-      <!-- ផ្ទាំងបង្កើត Playlist (បង្ហាញនៅពេល activeView គឺ 'create-playlist') -->
       <CreatePlaylist 
         v-else-if="activeView === 'create-playlist'" 
         @back="activeView = 'main'" 
+      />
+      <UploadMusic
+        v-else-if="activeView === 'upload'"
+        :api-base="apiBase"
+        @back="activeView = 'main'"
+        @uploaded="onSongUploaded"
       />
     </div>
   </div>
@@ -333,8 +340,15 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 100%;
-  min-height: 100%;
+  height: 100vh;
+}
+
+.main-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  flex: 1;
 }
 
 .header-box {
@@ -343,6 +357,7 @@ onMounted(() => {
   gap: 12px;
   padding: 18px 20px !important;
   margin-bottom: 0 !important;
+
 }
 
 .header-top-row {
@@ -453,6 +468,7 @@ onMounted(() => {
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 0;
+
 }
 
 .songs-box {
@@ -486,12 +502,11 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
+
 }
 
 .card {
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  border-radius: 12px;
   overflow: visible;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -501,9 +516,6 @@ onMounted(() => {
   gap: 8px;
 }
 
-.card:hover {
-  transform: translateY(-4px);
-}
 
 .card-img-wrap {
   position: relative;

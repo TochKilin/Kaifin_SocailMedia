@@ -9,7 +9,7 @@ import (
 )
 
 type AuthLoginRequest struct {
-	UserName string `json:"user_name" validate:"required,min=4,max=30"`
+	UserName string `json:"user_name" validate:"required,min=4,max=100"`
 	Password string `json:"password" validate:"required,min=8"`
 	RoleID   int32  `json:"role_id" validate:"omitempty"`
 }

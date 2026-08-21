@@ -19,7 +19,6 @@
       </ul>
     </div>
 
-    <!-- Right Main Content Panel -->
     <div class="chat-setting-panel">
       <!-- Header -->
       <div class="setting-header">
@@ -32,7 +31,6 @@
         </button>
       </div>
 
-      <!-- Tab 1: Chat Settings Content -->
       <div class="setting-content" v-if="currentTab === 'chat-setting'">
         <!-- 1. Incoming call sound -->
         <div class="setting-item">
@@ -50,7 +48,7 @@
           </div>
         </div>
 
-        <!-- 2. Message sound -->
+        <!-- Message sound -->
         <div class="setting-item">
           <div class="setting-left">
             <div class="setting-icon message-sound-icon">
@@ -71,7 +69,7 @@
           </div>
         </div>
 
-        <!-- 3. Pop-up new messages -->
+        <!-- Pop-up new messages -->
         <div class="setting-item">
           <div class="setting-left">
             <div class="setting-icon popup-messages-icon">
@@ -87,7 +85,7 @@
           </div>
         </div>
 
-        <!-- 4. Active status -->
+        <!-- Active status -->
         <div class="setting-item">
           <div class="setting-left">
             <div class="setting-icon active-status-icon status-icon-wrap">
@@ -109,7 +107,7 @@
           </div>
         </div>
 
-        <!-- 5. Restricted account link -->
+        <!-- Restricted account link -->
         <div class="setting-item clickable" @click="currentTab = 'restricted-account'">
           <div class="setting-left">
             <div class="setting-icon restricted-account-icon">
@@ -122,7 +120,7 @@
           </div>
         </div>
 
-        <!-- 6. Block setting link -->
+        <!-- Block setting link -->
         <div class="setting-item clickable" @click="currentTab = 'block-setting'">
           <div class="setting-left">
             <div class="setting-icon block-setting-icon">
@@ -135,7 +133,7 @@
           </div>
         </div>
 
-        <!-- 7. Write to the Customer Support Team -->
+        <!-- Write to the Customer Support Team -->
         <div class="setting-item clickable support-item">
           <div class="setting-left">
             <div class="setting-icon support-icon">
@@ -148,7 +146,7 @@
         </div>
       </div>
 
-      <!-- Tab 2: Restricted Account Content -->
+      <!-- TabRestricted Account Content -->
       <div class="setting-content" v-if="currentTab === 'restricted-account'">
         <div class="setting-item block-user-card" v-for="user in mockRestrictedUsers" :key="user.id">
           <div class="setting-left">
@@ -201,7 +199,7 @@
         </div>
       </div>
 
-      <!-- Tab 3: Block Setting Content -->
+      <!-- TabBlock Setting Content -->
       <div class="setting-content" v-if="currentTab === 'block-setting'">
         <div class="setting-item block-user-card" v-for="user in mockBlockedUsers" :key="user.id">
           <div class="setting-left">
@@ -218,7 +216,7 @@
             </div>
           </div>
 
-          <!-- Right side: Date + More Options Menu -->
+          <!-- Right side: Date More Options Menu -->
           <div class="block-right-actions">
             <div class="block-date-badge">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -617,7 +615,6 @@ const vClickOutside = {
   opacity: 0.6;
 }
 
-/* Block & Restricted Right Actions & More Options Styles */
 .block-right-actions {
   display: flex;
   align-items: center;

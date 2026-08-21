@@ -6,16 +6,15 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'submit'])
 
-// backend base URL — used for every API call in this component so
-// requests always hit the Go server directly, regardless of Vite proxy setup.
+// Local host
 const API_BASE = 'http://localhost:7070'
 
 const title = ref('')
-const content = ref('')          // holds the final HTML (synced from the editor)
+const content = ref('')         
 const visibility = ref('Public')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
-const editorRef = ref(null)      // contenteditable element
+const editorRef = ref(null)   
 const imageInputRef = ref(null)
 const isUploadingImage = ref(false)
 const isEmpty = ref(true)
@@ -24,11 +23,7 @@ const isEmpty = ref(true)
 const category = ref('')
 const codeSubcategory = ref('')
 
-// ✅ FIXED: these values now match the backend's validator exactly —
-// CreateArticleRequest.Category validate:"required,oneof=general following code read"
-// (previously this list was news/tech/sport/entertainment/lifestyle/general,
-// none of which except "general" passed validation — that was the cause of
-// every non-"General" submission failing with "Invalid request" / 400).
+// Mock catego
 const CATEGORIES = [
   { value: 'general', label: 'General' },
   { value: 'following', label: 'Following' },
@@ -36,10 +31,7 @@ const CATEGORIES = [
   { value: 'read', label: 'Read' },
 ]
 
-// ✅ FIXED: CodeSubcategory validate:"omitempty,oneof=backend frontend ai tools"
-// only makes sense under the "code" category (matches Dashboard.vue's own
-// codeSubcategories list for the Code Life submenu). Other categories have
-// no subcategory, so the subcategory field simply won't render for them.
+// Mock sub catego
 const SUBCATEGORIES = {
   code: [
     { value: 'backend', label: 'Back End' },
@@ -54,7 +46,7 @@ const SUBCATEGORIES = {
 
 const availableSubcategories = computed(() => SUBCATEGORIES[category.value] || [])
 
-// reset subcategory ពេល category ប្តូរ
+// Change catego
 watch(category, () => {
   codeSubcategory.value = ''
 })
@@ -66,17 +58,13 @@ onUnmounted(() => {
   document.body.style.overflow = 'auto'
 })
 
-// ============ Sync contenteditable -> content ref ============
-
+// Tool editor
 function onEditorInput() {
   content.value = editorRef.value?.innerHTML || ''
   isEmpty.value = !editorRef.value?.textContent?.trim()
 }
 
-// ============ Toolbar: execCommand-based WYSIWYG formatting ============
-// @mousedown.prevent on buttons keeps the current text selection alive
-// (a normal click would shift focus away from the editor and clear it).
-
+// Focux editor
 function focusEditor() {
   editorRef.value?.focus()
 }
@@ -100,8 +88,6 @@ function applyLink() {
   exec('createLink', url)
 }
 
-// ============ Image upload (toolbar) — inserts a real rendered <img> ============
-
 function triggerImagePicker() {
   imageInputRef.value?.click()
 }
@@ -115,10 +101,7 @@ async function handleImageSelected(e) {
   try {
     const formData = new FormData()
     formData.append('image', file)
-
     const token = localStorage.getItem('token')
-
-    // Route confirmed against route.go: POST /articles/upload-image
     const res = await fetch(`${API_BASE}/api/v1/front/articles/upload-image`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
@@ -138,26 +121,19 @@ async function handleImageSelected(e) {
 
     const url = data?.data?.url
     if (!url) throw new Error('Server did not return an image URL')
-
-    // backend returns a relative path (e.g. "/uploads/articles/xyz.svg").
-    // Prepend the backend host so the <img> tag resolves against localhost:7070
-    // instead of the Vite dev server's own origin.
     const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`
-
     focusEditor()
     const html = `<img src="${fullUrl}" alt="${file.name}" style="max-width:100%;border-radius:8px;" />`
     document.execCommand('insertHTML', false, html)
     onEditorInput()
   } catch (err) {
     console.error(err)
-    errorMessage.value = err.message || 'មិនអាច upload រូបភាពបានទេ'
+    errorMessage.value = err.message || 'can not upload image'
   } finally {
     isUploadingImage.value = false
     e.target.value = ''
   }
 }
-
-// ============ Existing actions ============
 
 const handleDraft = () => {
   alert('Saved to Draft box!')
@@ -170,15 +146,15 @@ const handleProfile = () => {
 const handlePost = async () => {
   errorMessage.value = ''
   if (!title.value.trim()) {
-    errorMessage.value = 'សូមបញ្ចូលចំណងជើងអត្ថបទ'
+    errorMessage.value = 'please input title'
     return
   }
   if (isEmpty.value) {
-    errorMessage.value = 'សូមបញ្ចូលខ្លឹមសារអត្ថបទ'
+    errorMessage.value = 'please in put text'
     return
   }
   if (!category.value) {
-    errorMessage.value = 'សូមជ្រើសរើស Category'
+    errorMessage.value = 'choose Category'
     return
   }
 
@@ -342,7 +318,6 @@ const userProfile = ref({
           </div>
         </div>
 
-        <!-- WYSIWYG contenteditable editor: formatting renders live, no raw tags visible -->
         <div
           ref="editorRef"
           class="editor-textarea wysiwyg"

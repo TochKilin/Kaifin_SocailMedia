@@ -1,6 +1,6 @@
 <template>
   <div class="sidebar-wrapper">
-    <!-- ដុំទី ១៖ ប៊ូតុង Create Post -->
+
     <div class="sidebar-card border-create-post">
       <button class="post-btn" @click="handlePost">
         <div class="post-icon-wrapper">
@@ -13,7 +13,6 @@
       </button>
     </div>
 
-    <!-- ដុំទី ២៖ មីនុយមេ (Main Menu List) -->
     <div class="sidebar-card">
       <div class="menu-list">
         <router-link to="/feed" class="menu-item">
@@ -103,7 +102,6 @@
       </div>
     </div>
 
-    <!-- ដុំទី ៖ Invisible Mode និង Footer Links -->
     <div class="sidebar-card">
       <div class="menu-list">
         <div class="menu-item toggle-item">
@@ -147,7 +145,7 @@ function handlePost() {
 
 <style scoped>
 .sidebar-wrapper {
-  width: 155px; /* កាត់បន្ថយ Width ឱ្យតូចជាងមុនបន្ថែមទៀត (155px) ដោយរក្សាទំហំ Font ដើម */
+  width: 155px; 
   font-family: 'Plus Jakarta Sans', sans-serif;
   display: flex;
   flex-direction: column;
@@ -169,17 +167,12 @@ function handlePost() {
   color: #1e293b;
 }
 
-/* .border-create-post{
-  border: 2px solid #1976D2;
-} */
-
-/* Post Button */
 .post-btn {
   background-color: #1976D2;
   color: #ffffff;
   border: none;
   font-weight: 600;
-  font-size: 13px; /* រក្សាទំហំ Font ដើម */
+  font-size: 13px; 
   padding: 8px 6px;
   border-radius: 8px;
   cursor: pointer;
@@ -202,7 +195,6 @@ function handlePost() {
   flex-shrink: 0;
 }
 
-/* Menu List Layout */
 .menu-list {
   display: flex;
   flex-direction: column;
@@ -217,7 +209,7 @@ function handlePost() {
   border-radius: 8px;
   text-decoration: none;
   color: #475569;
-  font-size: 13px; /* រក្សាទំហំ Font ដើមមិនឱ្យតូចទេ */
+  font-size: 13px; 
   font-weight: 500;
   transition: background-color 0.2s ease, color 0.2s ease;
   overflow: hidden;
@@ -251,10 +243,9 @@ function handlePost() {
 .truncate {
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* អក្សរវែងពេកនឹងលេចចេញជាសញ្ញា ... ដោយស្វ័យប្រវត្តិ */
+  text-overflow: ellipsis; 
 }
 
-/* Toggle Switch Styling */
 .toggle-item {
   justify-content: space-between;
   cursor: pointer;
@@ -312,14 +303,13 @@ input:checked + .slider:before {
   transform: translateX(14px);
 }
 
-/* Dividers */
+
 .divider {
   height: 1px;
   background-color: #f1f5f9;
   margin: 8px 2px;
 }
 
-/* Footer Links */
 .sidebar-footer {
   padding: 4px 2px 2px 2px;
   font-size: 11px;

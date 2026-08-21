@@ -23,9 +23,8 @@ type ArticleComment struct {
 	UserName     *string `json:"user_name" db:"user_name"`
 	ProfileImage *string `json:"profile_images" db:"profile_images"`
 
-	// Raw comma-separated string ពី string_agg() — scan ត្រង់នេះ
 	ImageURLRaw *string `json:"-" db:"image_url"`
-	// Parsed array សម្រាប់ JSON response ទៅ frontend
+
 	ImageURLs []string `json:"image_urls" db:"-"`
 
 	StickerURL *string `json:"sticker_url" db:"sticker_url"`
@@ -37,15 +36,13 @@ type ArticleComment struct {
 	SavedImageURLs []string                `db:"-"`
 }
 
-// ---------- Create ----------
-
 type CreateCommentRequest struct {
 	ArticleID       int64                 `json:"article_id" form:"article_id" validate:"required"`
 	ParentCommentID *int64                `json:"parent_comment_id" form:"parent_comment_id"`
 	Text            string                `json:"text" form:"text"`
 	ImageID         *int64                `json:"image_id" form:"image_id"`
 	StickerID       *int64                `json:"sticker_id" form:"sticker_id"`
-	ImageFile       *multipart.FileHeader `form:"image_file"` // single-file legacy field, kept for backward compat
+	ImageFile       *multipart.FileHeader `form:"image_file"`
 
 	ImageFiles []*multipart.FileHeader `form:"-"`
 	StickerIDs []int64                 `form:"-"`
@@ -80,7 +77,6 @@ func (r *CreateCommentRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 			}
 		}
 
-		// Backward-compat fallback: single-file "image_file" / "image" key
 		if len(r.ImageFiles) == 0 {
 			file, ferr := c.FormFile("image_file")
 			if ferr != nil {
@@ -108,8 +104,6 @@ func (r *CreateCommentRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	return nil
 }
 
-// ---------- Update ----------
-
 type UpdateCommentRequest struct {
 	Text string `json:"text" validate:"required,min=1,max=2000"`
 }
@@ -123,8 +117,6 @@ func (r *UpdateCommentRequest) bind(c fiber.Ctx, v *utls.Validator) error {
 	}
 	return nil
 }
-
-// ---------- Show (list comments for an article) ----------
 
 type ShowCommentsRequest struct {
 	ArticleID int64        `query:"-"`
@@ -155,8 +147,6 @@ type CommentsResponse struct {
 	Page     int              `json:"page"`
 	PerPage  int              `json:"per_page"`
 }
-
-// ---------- helpers ----------
 
 func (cm *ArticleComment) new(articleID int64, req *CreateCommentRequest, uctx *share.UserContext) {
 	cm.ArticleID = articleID

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
+// Prop emit
 const emit = defineProps(['close'])
 const reportType = ref('bug')
 const reportText = ref('')
@@ -14,6 +15,7 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 
+// List Emoji report type
 const reportTypes = [
   { id: 'bug', label: 'Bug / Error', icon: '🐞' },
   { id: 'feedback', label: 'General Feedback', icon: '🗯️' },
@@ -21,6 +23,7 @@ const reportTypes = [
   { id: 'other', label: 'Other', icon: '🪡' }
 ]
 
+//Handler upload images
 const handleImageUpload = (event) => {
   const files = Array.from(event.target.files)
   if (uploadedImages.value.length + files.length <= 4) {
@@ -33,10 +36,12 @@ const handleImageUpload = (event) => {
   }
 }
 
+// Reamove images
 const removeImage = (index) => {
   uploadedImages.value.splice(index, 1)
 }
 
+// Submit report
 const handleSubmit = () => {
   console.log('Report submitted:', { type: reportType.value, text: reportText.value })
   alert('Your report has been submitted successfully!')
@@ -46,42 +51,32 @@ const handleSubmit = () => {
 <template>
   <div class="report-modal-overlay">
     <div class="report-modal-container">
-      
+      <!-- Button close  -->
       <button class="close-btn" @click="$emit('close')">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
-
+      <!-- Report  -->
       <div class="report-header">
         <h2>Report Feedback</h2>
         <p>Please provide your feedback or report an issue to us</p>
       </div>
-
+      Reprot group
       <div class="report-type-group">
         <label class="field-label">Report Type</label>
         <div class="chips-container">
-          <button 
-            v-for="type in reportTypes" 
-            :key="type.id"
-            type="button"
-            class="chip-btn"
-            :class="{ active: reportType === type.id }"
-            @click="reportType = type.id"
-          >
+          <button  v-for="type in reportTypes"   :key="type.id" type="button" class="chip-btn" :class="{ active: reportType === type.id }" @click="reportType = type.id" >
             <span>{{ type.icon }}</span>
             <span>{{ type.label }}</span>
           </button>
         </div>
       </div>
 
+      <!-- input text area  -->
       <div class="report-input-group">
-        <textarea 
-          v-model="reportText" 
-          placeholder="Write detailed information here..." 
-          rows="4"
-          class="report-textarea"
-        ></textarea>
+        <textarea  v-model="reportText"  placeholder="Write detailed information here..."  rows="4" class="report-textarea" ></textarea>
       </div>
 
+      <!-- Report upload section  -->
       <div class="report-upload-section">
         <div class="previews-container" v-if="uploadedImages.length > 0">
           <div v-for="(img, index) in uploadedImages" :key="index" class="preview-box">
@@ -96,7 +91,7 @@ const handleSubmit = () => {
           <span>Upload {{ uploadedImages.length }}/4</span>
         </label>
       </div>
-
+      <!-- Button cancel submit  -->
       <div class="report-actions">
         <button class="btn-cancel" @click="$emit('close')">Cancel</button>
         <button class="btn-submit" @click="handleSubmit" :disabled="!reportText.trim()">Submit</button>
@@ -107,6 +102,7 @@ const handleSubmit = () => {
 </template>
 
 <style scoped>
+/* Main contenter  */
 .report-modal-overlay {
   position: fixed;
   top: 60px;
@@ -122,6 +118,7 @@ const handleSubmit = () => {
   overflow: hidden;
 }
 
+/* Remort modal open  */
 .report-modal-container {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
@@ -365,6 +362,8 @@ const handleSubmit = () => {
   color: #94a3b8;
   cursor: not-allowed;
 }
+
+/* Animaiton  */
 
 @keyframes fadeIn {
   from { opacity: 0; }

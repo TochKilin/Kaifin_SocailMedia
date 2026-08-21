@@ -11,8 +11,6 @@ const props = defineProps({
 })
 
 defineEmits(['open-playlist', 'play-song', 'clear-history'])
-
-// គណនារយៈពេលសរុបនៃបទចម្រៀងទាំងអស់
 const totalHistoryDuration = computed(() => {
   if (!props.historySongs || props.historySongs.length === 0) return '0m'
   const totalSeconds = props.historySongs.reduce((acc, song) => acc + (song.duration || 0), 0)
@@ -24,7 +22,6 @@ const totalHistoryDuration = computed(() => {
   return `${minutes}m`
 })
 
-// ប្រមូលទិន្នន័យ Summary ដាក់ក្នុង Array ងាយស្រួល Map និងគ្រប់គ្រង
 const summaryItems = computed(() => [
   { id: 'songs', icon: '🎵', count: props.historySongs.length, label: 'Songs' },
   { id: 'playlists', icon: '📁', count: props.historyPlaylists.length, label: 'Playlists' },
@@ -46,8 +43,6 @@ const summaryItems = computed(() => [
           </div>
           <span>Listening History</span>
         </div>
-
-        <!-- បង្ហាញ Summary តាមរយៈ v-for Array -->
         <div class="history-summary-inline">
           <template v-for="(item, index) in summaryItems" :key="item.id">
             <div class="summary-item">
@@ -68,7 +63,6 @@ const summaryItems = computed(() => [
       </button>
     </div>
 
-    <!-- Scrollable Body Content -->
     <div class="history-scroll-body">
       <!-- My Playlist Section -->
       <div class="content-section">
@@ -102,7 +96,6 @@ const summaryItems = computed(() => [
         </div>
       </div>
 
-      <!-- My Music Section -->
       <div class="content-section flex-fill-section">
         <div class="section-header">
           <h3 class="section-title-text">My Music</h3>
@@ -131,7 +124,6 @@ const summaryItems = computed(() => [
               <span class="song-artist">{{ song.singer }}</span>
             </div>
 
-            <!-- Clock badge inside song-length -->
             <div class="song-length">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -150,8 +142,7 @@ const summaryItems = computed(() => [
 .my-history-view {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 100%;
+  height: 100vh;
   gap: 8px;
   padding: 0px 4px;
   width: 100%;
@@ -195,7 +186,6 @@ const summaryItems = computed(() => [
   align-items: center;
 }
 
-/* Inline Summary inside Top Bar */
 .history-summary-inline {
   display: flex;
   align-items: center;
@@ -226,8 +216,8 @@ const summaryItems = computed(() => [
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #fff5f5;
-  border: 1px solid #ffe3e3;
+  background-color: transparent;
+  border-color: transparent;
   color: #e03131;
   padding: 6px 14px;
   border-radius: 8px;
@@ -241,7 +231,6 @@ const summaryItems = computed(() => [
   background: #ffe3e3;
 }
 
-/* Scrollable Container for Content */
 .history-scroll-body {
   display: flex;
   flex-direction: column;
@@ -257,7 +246,6 @@ const summaryItems = computed(() => [
   scrollbar-width: none;
 }
 
-/* Sections */
 .content-section {
   display: flex;
   flex-direction: column;
@@ -280,7 +268,7 @@ const summaryItems = computed(() => [
   margin: 0;
 }
 
-/* Playlist Grid */
+
 .playlist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

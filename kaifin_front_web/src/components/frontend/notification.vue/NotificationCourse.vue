@@ -1,60 +1,36 @@
-<!-- File: CourseNotification.vue -->
+
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 
-defineEmits(['seeAllNew', 'seeAllFollow', 'seeAllWeek', 'followBack', 'seePrevious'])
-
-const newNotifications = ref([
-  {
-    type: 'course',
-    username: 'Ven Nary',
-    message: 'ចាប់ផ្តើមរៀន Coding ជាមួយ Python!, ',
-    timeAgo: '12m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAfFjNWjyhAMJhzeU-L2n9KFRheSfuN7XlqONxHYlaNA&s=10'
-  },
-  {
-    type: 'course',
-    username: 'Srey MonCode',
-    message: 'Update course',
-    timeAgo: '13m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZHxn2g3POCSoDXxTzTvSiA6VVkVf20NjZQsXk_o1-qg&s=10'
-  },
-  {
-    type: 'course',
-    username: 'Noch Phasin',
-    message: 'ចាប់ផ្តើមរៀន Python ថ្ងៃនេះ!',
-    timeAgo: '14m',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR6zBMxz00HQRI_wegCYFWpB51kRo9bwEeoC_w7x8Eas3EE-iHtbdBAXE&s=10'
-  },
-  {
-    type: 'course',
-    username: 'Instructor',
-    message: 'Instructor have Quiz',
-    timeAgo: '15m',
-    profileImage: ''
+const props = defineProps({
+  notifications: {
+    type: Array,
+    default: () => []
   }
-])
+})
 
-const followNotifications = ref([
-  {
-    username: 'Mong Mony',
-    message: 'New Instructor you can follow',
-    timeAgo: '12h',
-    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFhdSE_vaTvZJdaqultlMSsGicNITYgdofIKNCJOJomQ&s=10'
-  }
-])
+const emit = defineEmits(['seeAllNew', 'seeAllFollow', 'seeAllWeek', 'followBack', 'seePrevious', 'delete'])
 
-const weekNotifications = ref([
-  {
-    username: 'Sopheak SreyDav',
-    message: 'Have meeting',
-    timeAgo: '1 week',
-    profileImage: 'https://cdn.kiripost.com/static/images/Lin.width-960.jpg'
-  }
-])
+// បំបែក real data ជា 3 groups ដោយផ្អែកលើ type / created_at
+const newNotifications = computed(() =>
+  props.notifications.filter((n) => n.type === 'course' || n.type === 'enroll')
+)
 
-const deleteFollow = (index) => {
-  followNotifications.value.splice(index, 1)
+const followNotifications = computed(() =>
+  props.notifications.filter((n) => n.type === 'follow')
+)
+
+const weekNotifications = computed(() => {
+  const oneDay = 24 * 60 * 60 * 1000
+  const now = Date.now()
+  return props.notifications.filter((n) => {
+    const age = now - new Date(n.created_at).getTime()
+    return n.type !== 'follow' && n.type !== 'course' && n.type !== 'enroll' && age > oneDay
+  })
+})
+
+const deleteFollow = (item) => {
+  emit('delete', item)
 }
 </script>
 
@@ -177,7 +153,7 @@ const deleteFollow = (index) => {
       </div>
     </div>
 
-    <!-- Section: A Week -->
+    <!-- Section A Week -->
     <div class="section-header follower-header">
       <h2 class="section-title">A Week</h2>
       <button class="see-all-btn" @click="$emit('seeAllWeek')">see all</button>
@@ -453,7 +429,6 @@ const deleteFollow = (index) => {
   border-radius: 50px;
 }
 
-/* Footer */
 .footer-action {
   margin-top: 4px;
   display: flex;

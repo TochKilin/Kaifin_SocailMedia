@@ -5,13 +5,12 @@ const emit = defineEmits(['close', 'submit']);
 
 const courseTitle = ref('');
 const courseDescription = ref('');
-const courseContent = ref(''); // ផ្ទុក HTML ពី rich text editor
+const courseContent = ref(''); 
 const uploadedFileName = ref('');
 const uploadedFileSize = ref('');
 const fileThumbnail = ref('');
 const isUploaded = ref(false);
 const showMoreTools = ref(false);
-
 const fileInputRef = ref(null);
 const editorRef = ref(null);
 const imageInputRef = ref(null);
@@ -59,7 +58,6 @@ const toggleMoreTools = () => {
   showMoreTools.value = !showMoreTools.value;
 };
 
-/* ==================== Rich Text Editor Logic ==================== */
 
 const focusEditor = () => {
   editorRef.value?.focus();
@@ -79,7 +77,6 @@ const updateActiveStates = () => {
     activeStates.value.insertUnorderedList = document.queryCommandState('insertUnorderedList');
     activeStates.value.insertOrderedList = document.queryCommandState('insertOrderedList');
   } catch (e) {
-    /* browser មិនអនុញ្ញាត queryCommandState ក្នុងករណីខ្លះ */
   }
 };
 
@@ -114,8 +111,6 @@ const escapeHtml = (str) => {
   div.innerText = str;
   return div.innerHTML;
 };
-
-/* ---- Toolbar Actions (ដំណើរការពិត) ---- */
 
 const applyHeading = () => {
   focusEditor();
@@ -188,7 +183,7 @@ const applyTask = () => {
   document.execCommand('insertHTML', false, `
     <div class="task-item-block">
       <input type="checkbox" id="${id}" />
-      <label for="${id}" contenteditable="true">កិច្ចការថ្មី</label>
+      <label for="${id}" contenteditable="true">New Work</label>
     </div><p><br></p>`);
   syncContent();
 };
@@ -220,7 +215,7 @@ const applyPageBreak = () => {
 };
 
 const applyMath = () => {
-  const formula = window.prompt('បញ្ចូលរូបមន្តគណិតវិទ្យា:', 'x^2 + y^2 = z^2');
+  const formula = window.prompt('Please input math:', 'x^2 + y^2 = z^2');
   if (formula) {
     focusEditor();
     document.execCommand('insertHTML', false, `<span class="math-tag" contenteditable="false">∑ ${escapeHtml(formula)}</span>&nbsp;`);
@@ -242,8 +237,6 @@ const applyFlowchart = () => {
   syncContent();
 };
 
-/* ==================== Submit ==================== */
-
 const handleSubmit = () => {
   if (!courseTitle.value.trim()) {
     alert('Please enter the course title');
@@ -264,7 +257,7 @@ const handleSubmit = () => {
   <div class="create-course-container">
     <div class="create-course-wrapper">
 
-      <!-- Modal Header -->
+      <!-- Modal header-->
       <div class="modal-header">
         <div class="modal-header-text">
           <h3 class="modal-title">Create New Course</h3>
@@ -278,7 +271,6 @@ const handleSubmit = () => {
         </button>
       </div>
 
-      <!-- ផ្នែកទី១: Course Title & File Upload -->
       <div class="form-section-card">
         <label class="form-label">Course Title & File</label>
         <div class="input-group text-input-wrapper">
@@ -330,7 +322,6 @@ const handleSubmit = () => {
         </div>
       </div>
 
-      <!-- ផ្នែកទី២: Course Description -->
       <div class="form-section-card">
         <label class="form-label">Course Description</label>
         <div class="textarea-wrapper">
@@ -342,7 +333,6 @@ const handleSubmit = () => {
         </div>
       </div>
 
-      <!-- ផ្នែកទី៣: Detailed Content (Rich Text Editor ដំណើរការពិត) -->
       <div class="form-section-card">
         <label class="form-label">Detailed Content</label>
         <div class="editor-container">
@@ -438,7 +428,6 @@ const handleSubmit = () => {
             </div>
           </div>
 
-          <!-- Contenteditable Rich Text Area (ដំណើរការពិត) -->
           <div class="editor-textarea-area">
             <div
               ref="editorRef"
@@ -454,7 +443,6 @@ const handleSubmit = () => {
         </div>
       </div>
 
-      <!-- Action Buttons -->
       <div class="form-action-row">
         <button class="cancel-btn" type="button" @click="emit('close')">Cancel</button>
         <button class="submit-btn" type="button" @click="handleSubmit">
@@ -854,7 +842,6 @@ const handleSubmit = () => {
   margin: 0;
 }
 
-/* ==== Contenteditable Rich Text Area ==== */
 .editor-real-textarea {
   width: 100%;
   height: 220px;

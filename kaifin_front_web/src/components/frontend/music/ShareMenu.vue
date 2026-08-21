@@ -27,7 +27,6 @@ const shareText = ref('')
 
 const showStickerPanel = ref(false)
 
-// 📁 បញ្ជី Array Object សម្រាប់ Sticker
 const stickerList = ref([
   { id: 1, name: 'Song', path: '/src/assets/json_lot/bsong.json' },
   { id: 2, name: 'Crazy', path: '/src/assets/json_lot/crazy_1.json' },
@@ -41,11 +40,8 @@ const stickerList = ref([
 
 const selectedSticker = ref(stickerList.value[0]?.path || '')
 
-// 🎵 States សម្រាប់បង្កើត Playlist Name
 const showCreatePlaylistInput = ref(false)
 const playlistName = ref('')
-
-// ⚙️ States សម្រាប់ Dropdown បន្ថែមនៅផ្នែកខាងក្រោមខាងឆ្វេង (Settings & Status)
 const showAudienceDropdown = ref(false)
 const selectedAudience = ref('Public')
 const audienceOptions = [
@@ -102,7 +98,6 @@ const confirmCreatePlaylist = () => {
   showCreatePlaylistInput.value = false
 }
 
-// 📌 មុខងារបិទប្រអប់បង្កើត Playlist
 const cancelCreatePlaylist = () => {
   playlistName.value = ''
   showCreatePlaylistInput.value = false
@@ -120,7 +115,6 @@ const cancelCreatePlaylist = () => {
     @click.stop
   >
     
-    <!-- ፩. ម៉ឺនុយដើម (Main Menu) -->
     <template v-if="currentView === 'main'">
       <button class="popup-item">
         <span class="popup-icon play-next-icon">
@@ -159,7 +153,6 @@ const cancelCreatePlaylist = () => {
       </button>
     </template>
 
-    <!-- ፪. ម៉ឺនុយ Add to playlist -->
     <template v-else-if="currentView === 'playlist'">
       <div class="popup-header">
         <button class="popup-back-btn" @click="currentView = 'main'; showCreatePlaylistInput = false;">
@@ -201,7 +194,6 @@ const cancelCreatePlaylist = () => {
       </div>
     </template>
 
-    <!-- ፫. ម៉ឺនុយ Share -->
     <template v-else-if="currentView === 'share'">
       <div class="popup-header">
         <button class="popup-back-btn" @click="currentView = 'main'">
@@ -240,7 +232,6 @@ const cancelCreatePlaylist = () => {
       </button>
     </template>
 
-    <!-- ፬. ទិដ្ឋភាពផ្ទាំង Add your own text -->
     <template v-else-if="currentView === 'add-text'">
       <div class="popup-header">
         <button class="popup-back-btn" @click="currentView = 'share'">
@@ -300,7 +291,6 @@ const cancelCreatePlaylist = () => {
           </span>
         </div>
 
-        <!-- 🌟 បន្ថែម Setting និង Status Dropdown พร้อม SVG icon និង background ថ្លា (border-radius: 50%) -->
         <div class="bottom-controls-container">
           <!-- Status Dropdown -->
           <div class="custom-dropdown-wrapper">
@@ -327,7 +317,6 @@ const cancelCreatePlaylist = () => {
             </div>
           </div>
 
-          <!-- Setting Dropdown -->
           <div class="custom-dropdown-wrapper">
             <button class="dropdown-trigger-btn" @click="showSettingsDropdown = !showSettingsDropdown; showAudienceDropdown = false;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -341,7 +330,6 @@ const cancelCreatePlaylist = () => {
                 class="dropdown-menu-item"
                 @click="selectedSettingOption = opt.name; showSettingsDropdown = false;"
               >
-                <!-- 🌟 SVG Icon ក្នុង list item ដែលមាន Background ថ្លា និង border-radius: 50% -->
                 <span class="dropdown-item-icon-bg">
                   <svg v-if="opt.icon === 'sliders'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
                   <svg v-else-if="opt.icon === 'message-circle'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
@@ -352,7 +340,6 @@ const cancelCreatePlaylist = () => {
             </div>
           </div>
 
-          <!-- ប៊ូតុង Share នៅខាងស្ដាំដដែល -->
           <button class="share-submit-btn" @click="handleShare">
             <span class="share-icon-bg">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -367,7 +354,6 @@ const cancelCreatePlaylist = () => {
       </div>
     </template>
 
-    <!-- ፭. ទិដ្ឋភាពផ្ទាំង Send as a message -->
     <template v-else-if="currentView === 'message-box'">
       <div class="popup-header">
         <button class="popup-back-btn" @click="currentView = 'share'">
@@ -443,7 +429,6 @@ const cancelCreatePlaylist = () => {
         </div>
       </div>
     </template>
-
   </div>
 </template>
 
@@ -836,7 +821,6 @@ const cancelCreatePlaylist = () => {
   flex-shrink: 0;
 }
 
-/* 🌟 ស្តាយសម្រាប់ផ្ទាំងបញ្ជាផ្នែកខាងក្រោម (Bottom Controls Layout) */
 .bottom-controls-container {
   display: flex;
   align-items: center;
@@ -899,7 +883,6 @@ const cancelCreatePlaylist = () => {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 🌟 រចនាប័ទ្ម background ថ្លា និង border-radius: 50% សម្រាប់ Icon ក្នុង Dropdown Menu Items */
 .dropdown-item-icon-bg {
   display: flex;
   align-items: center;

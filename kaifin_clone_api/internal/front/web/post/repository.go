@@ -126,328 +126,8 @@ func (r *PostRepoImpl) Create(req *CreatePostRequest, uctx *share.UserContext) *
 	return nil
 }
 
-// func (r *PostRepoImpl) Show(postRequest ShowPostRequest) (*PostResponse, *error_responses.ErrorResponse) {
-// 	var per_page = postRequest.PageOption.Perpage
-// 	var page = postRequest.PageOption.Page
-// 	var offset = (page - 1) * per_page
-// 	var limit_clause = fmt.Sprintf(" LIMIT %d OFFSET %d", per_page, offset)
-// 	var sql_orderby string
-
-// 	if len(postRequest.Sorts) == 0 {
-// 		sql_orderby = "ORDER BY sort_at DESC"
-// 	} else {
-// 		sql_orderby = custom_sql.BuildSQLSort(postRequest.Sorts)
-// 	}
-
-// 	sql_filters, args_filters := custom_sql.BuildSQLFilter(postRequest.Filters)
-
-// 	branch1Filters := ""
-// 	branch2Filters := ""
-
-// 	if len(args_filters) > 0 {
-// 		branch1Filters = " AND " + sql_filters
-// 		branch2Filters = " AND " + strings.ReplaceAll(sql_filters, "p.user_id", "shr.user_id")
-// 	}
-
-// 	if searchClause, searchArgs := custom_sql.BuildSQLSearch(
-// 		[]string{"p.caption"},
-// 		postRequest.Search, len(args_filters)+1,
-// 	); searchClause != "" {
-// 		branch1Filters += " AND " + searchClause
-// 		branch2Filters += " AND " + searchClause
-// 		args_filters = append(args_filters, searchArgs...)
-// 	}
-
-// 	fmt.Println("branch1:", branch1Filters, "branch2:", branch2Filters)
-// 	msg := error_responses.ErrorResponse{}
-// 	var posts []Post
-
-// 	query := fmt.Sprintf(`
-//     WITH combined AS (
-//         SELECT
-//             p.id, p.user_id, u.user_name AS user_name, u.profile_images AS profile_images,
-//             p.community_id, p.caption, p.post_type, p.code_content, p.link_url,
-//             p.views_count, p.created_at, p.updated_at,
-//             STRING_AGG(DISTINCT pi.image_url, ',') AS images,
-//             STRING_AGG(
-//                 DISTINCT ph.tag_name || '::' || COALESCE(ph.sticker_id::text, ''),
-//                 ',' ORDER BY ph.tag_name || '::' || COALESCE(ph.sticker_id::text, '')
-//             ) AS tag_data,
-//             STRING_AGG(DISTINCT ps.sticker_id::text, ',') AS sticker_ids,
-//             STRING_AGG(DISTINCT ph.sticker_id::text, ',') AS tag_sticker_ids,
-//             pv.video_path AS video_path, pv.duration AS duration, pv.thumbnail_path AS thumbnail_path,
-//             COALESCE(cc.comment_count, 0) AS comment_count,
-//             NULL::bigint AS repost_id,
-//             NULL::bigint AS reposted_by_user_id,
-//             NULL::text AS reposted_by_username,
-//             NULL::text AS reposted_by_profile_images,
-//             NULL::timestamp AS reposted_at,
-//             p.created_at AS sort_at
-//         FROM tbl_posts p
-//         LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
-//         LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
-//         LEFT JOIN tbl_post_stickers ps ON ps.post_id = p.id
-//         LEFT JOIN tbl_users u ON u.id = p.user_id
-//         LEFT JOIN (SELECT post_id, COUNT(*) AS comment_count FROM tbl_comments GROUP BY post_id) cc ON cc.post_id = p.id
-//         LEFT JOIN tbl_post_videos pv ON pv.post_id = p.id
-//         WHERE 1=1 %s
-//         GROUP BY p.id, u.user_name, u.profile_images, cc.comment_count, pv.video_path, pv.duration, pv.thumbnail_path
-
-//         UNION ALL
-
-//         SELECT
-//             p.id, p.user_id, u.user_name AS user_name, u.profile_images AS profile_images,
-//             p.community_id, p.caption, p.post_type, p.code_content, p.link_url,
-//             p.views_count, p.created_at, p.updated_at,
-//             STRING_AGG(DISTINCT pi.image_url, ',') AS images,
-//             STRING_AGG(
-//                 DISTINCT ph.tag_name || '::' || COALESCE(ph.sticker_id::text, ''),
-//                 ',' ORDER BY ph.tag_name || '::' || COALESCE(ph.sticker_id::text, '')
-//             ) AS tag_data,
-//             STRING_AGG(DISTINCT ps.sticker_id::text, ',') AS sticker_ids,
-//             STRING_AGG(DISTINCT ph.sticker_id::text, ',') AS tag_sticker_ids,
-//             pv.video_path AS video_path, pv.duration AS duration, pv.thumbnail_path AS thumbnail_path,
-//             COALESCE(cc.comment_count, 0) AS comment_count,
-//             shr.id AS repost_id,
-//             shr.user_id AS reposted_by_user_id,
-//             ru.user_name AS reposted_by_username,
-//             ru.profile_images AS reposted_by_profile_images,
-//             shr.created_at AS reposted_at,
-//             shr.created_at AS sort_at
-//         FROM tbl_post_shares shr
-//         JOIN tbl_posts p ON p.id = shr.post_id
-//         JOIN tbl_users ru ON ru.id = shr.user_id
-//         LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
-//         LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
-//         LEFT JOIN tbl_post_stickers ps ON ps.post_id = p.id
-//         LEFT JOIN tbl_users u ON u.id = p.user_id
-//         LEFT JOIN (SELECT post_id, COUNT(*) AS comment_count FROM tbl_comments GROUP BY post_id) cc ON cc.post_id = p.id
-//         LEFT JOIN tbl_post_videos pv ON pv.post_id = p.id
-//         WHERE 1=1 %s
-//         GROUP BY p.id, u.user_name, u.profile_images, cc.comment_count, pv.video_path, pv.duration, pv.thumbnail_path,
-//                  shr.id, shr.user_id, ru.user_name, ru.profile_images, shr.created_at
-//     )
-//     SELECT
-//         id, user_id, user_name, profile_images, community_id, caption,
-//         post_type, code_content, link_url, views_count, created_at, updated_at,
-//         images, tag_data, sticker_ids, tag_sticker_ids, video_path, duration, thumbnail_path,
-//         comment_count, repost_id, reposted_by_user_id, reposted_by_username,
-//         reposted_by_profile_images, reposted_at
-//     FROM combined
-//     %s
-//     %s`,
-// 		branch1Filters,
-// 		branch2Filters,
-// 		sql_orderby,
-// 		limit_clause,
-// 	)
-
-// 	err := r.dbpool.Select(&posts, query, args_filters...)
-// 	if err != nil {
-// 		return nil, msg.NewErrorResponse("database_error", err)
-// 	}
-
-// 	var total int
-// 	countQuery := fmt.Sprintf(`
-//         SELECT
-//             (SELECT COUNT(DISTINCT p.id) FROM tbl_posts p
-//              LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
-//              LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
-//              WHERE 1=1 %s) +
-//             (SELECT COUNT(*) FROM tbl_post_shares shr WHERE 1=1 %s)
-//     `, branch1Filters, branch2Filters)
-
-// 	err = r.dbpool.Get(&total, countQuery, args_filters...)
-// 	if err != nil {
-// 		return nil, msg.NewErrorResponse("database_error", err)
-// 	}
-
-//		return &PostResponse{Posts: posts, Total: total}, nil
-//	}
-
-// =====================================
-// func (r *PostRepoImpl) Show(postRequest ShowPostRequest) (*PostResponse, *error_responses.ErrorResponse) {
-// 	var per_page = postRequest.PageOption.Perpage
-// 	var page = postRequest.PageOption.Page
-// 	var offset = (page - 1) * per_page
-// 	var limit_clause = fmt.Sprintf(" LIMIT %d OFFSET %d", per_page, offset)
-// 	var sql_orderby string
-
-// 	if len(postRequest.Sorts) == 0 {
-// 		sql_orderby = "ORDER BY sort_at DESC"
-// 	} else {
-// 		sql_orderby = custom_sql.BuildSQLSort(postRequest.Sorts)
-// 	}
-
-// 	sql_filters, args_filters := custom_sql.BuildSQLFilter(postRequest.Filters)
-
-// 	branch1Filters := ""
-// 	branch2Filters := ""
-// 	branch3Filters := "" // NEW
-// 	if len(args_filters) > 0 {
-// 		branch1Filters = " AND " + sql_filters
-// 		branch2Filters = " AND " + strings.ReplaceAll(sql_filters, "p.user_id", "shr.user_id")
-// 		branch3Filters = " AND " + strings.ReplaceAll(sql_filters, "p.user_id", "qs.user_id") // NEW
-// 	}
-
-// 	if searchClause, searchArgs := custom_sql.BuildSQLSearch(
-// 		[]string{"p.caption"},
-// 		postRequest.Search, len(args_filters)+1,
-// 	); searchClause != "" {
-// 		branch1Filters += " AND " + searchClause
-// 		branch2Filters += " AND " + searchClause
-// 		branch3Filters += " AND " + strings.ReplaceAll(searchClause, "p.caption", "q.title") // NEW
-// 		args_filters = append(args_filters, searchArgs...)
-// 	}
-
-// 	msg := error_responses.ErrorResponse{}
-// 	var posts []Post
-
-// 	query := fmt.Sprintf(`
-//     WITH combined AS (
-//         SELECT
-//             p.id, p.user_id, u.user_name AS user_name, u.profile_images AS profile_images,
-//             p.community_id, p.caption, p.post_type, p.code_content, p.link_url,
-//             p.views_count, p.created_at, p.updated_at,
-//             STRING_AGG(DISTINCT pi.image_url, ',') AS images,
-//             STRING_AGG(
-//                 DISTINCT ph.tag_name || '::' || COALESCE(ph.sticker_id::text, ''),
-//                 ',' ORDER BY ph.tag_name || '::' || COALESCE(ph.sticker_id::text, '')
-//             ) AS tag_data,
-//             STRING_AGG(DISTINCT ps.sticker_id::text, ',') AS sticker_ids,
-//             STRING_AGG(DISTINCT ph.sticker_id::text, ',') AS tag_sticker_ids,
-//             pv.video_path AS video_path, pv.duration AS duration, pv.thumbnail_path AS thumbnail_path,
-//             COALESCE(cc.comment_count, 0) AS comment_count,
-//             NULL::bigint AS repost_id,
-//             NULL::bigint AS reposted_by_user_id,
-//             NULL::text AS reposted_by_username,
-//             NULL::text AS reposted_by_profile_images,
-//             NULL::timestamp AS reposted_at,
-//             p.created_at AS sort_at
-//         FROM tbl_posts p
-//         LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
-//         LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
-//         LEFT JOIN tbl_post_stickers ps ON ps.post_id = p.id
-//         LEFT JOIN tbl_users u ON u.id = p.user_id
-//         LEFT JOIN (SELECT post_id, COUNT(*) AS comment_count FROM tbl_comments GROUP BY post_id) cc ON cc.post_id = p.id
-//         LEFT JOIN tbl_post_videos pv ON pv.post_id = p.id
-//         WHERE 1=1 %s
-//         GROUP BY p.id, u.user_name, u.profile_images, cc.comment_count, pv.video_path, pv.duration, pv.thumbnail_path
-
-//         UNION ALL
-
-//         SELECT
-//             p.id, p.user_id, u.user_name AS user_name, u.profile_images AS profile_images,
-//             p.community_id, p.caption, p.post_type, p.code_content, p.link_url,
-//             p.views_count, p.created_at, p.updated_at,
-//             STRING_AGG(DISTINCT pi.image_url, ',') AS images,
-//             STRING_AGG(
-//                 DISTINCT ph.tag_name || '::' || COALESCE(ph.sticker_id::text, ''),
-//                 ',' ORDER BY ph.tag_name || '::' || COALESCE(ph.sticker_id::text, '')
-//             ) AS tag_data,
-//             STRING_AGG(DISTINCT ps.sticker_id::text, ',') AS sticker_ids,
-//             STRING_AGG(DISTINCT ph.sticker_id::text, ',') AS tag_sticker_ids,
-//             pv.video_path AS video_path, pv.duration AS duration, pv.thumbnail_path AS thumbnail_path,
-//             COALESCE(cc.comment_count, 0) AS comment_count,
-//             shr.id AS repost_id,
-//             shr.user_id AS reposted_by_user_id,
-//             ru.user_name AS reposted_by_username,
-//             ru.profile_images AS reposted_by_profile_images,
-//             shr.created_at AS reposted_at,
-//             shr.created_at AS sort_at
-//         FROM tbl_post_shares shr
-//         JOIN tbl_posts p ON p.id = shr.post_id
-//         JOIN tbl_users ru ON ru.id = shr.user_id
-//         LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
-//         LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
-//         LEFT JOIN tbl_post_stickers ps ON ps.post_id = p.id
-//         LEFT JOIN tbl_users u ON u.id = p.user_id
-//         LEFT JOIN (SELECT post_id, COUNT(*) AS comment_count FROM tbl_comments GROUP BY post_id) cc ON cc.post_id = p.id
-//         LEFT JOIN tbl_post_videos pv ON pv.post_id = p.id
-//         WHERE 1=1 %s
-//         GROUP BY p.id, u.user_name, u.profile_images, cc.comment_count, pv.video_path, pv.duration, pv.thumbnail_path,
-//                  shr.id, shr.user_id, ru.user_name, ru.profile_images, shr.created_at
-
-//         UNION ALL
-
-//         SELECT
-//             (2000000000 + qs.id) AS id,
-//             qs.user_id AS user_id,
-//             sharer.user_name AS user_name,
-//             sharer.profile_images AS profile_images,
-//             q.id AS community_id,
-//             q.title AS caption,
-//             'quote_share' AS post_type,
-//             q.content AS code_content,
-//             NULL::text AS link_url,
-//             0 AS views_count,
-//             qs.created_at AS created_at,
-//             qs.created_at AS updated_at,
-//             NULL::text AS images,
-//             NULL::text AS tag_data,
-//             NULL::text AS sticker_ids,
-//             NULL::text AS tag_sticker_ids,
-//             NULL::text AS video_path,
-//             NULL::int AS duration,
-//             NULL::text AS thumbnail_path,
-//             0 AS comment_count,
-//             qs.id AS repost_id,
-//             qs.user_id AS reposted_by_user_id,
-//             sharer.user_name AS reposted_by_username,
-//             sharer.profile_images AS reposted_by_profile_images,
-//             qs.created_at AS reposted_at,
-//             qs.created_at AS sort_at
-//         FROM quote_shares qs
-//         JOIN quotes q ON q.id = qs.quote_id
-//         JOIN tbl_users sharer ON sharer.id = qs.user_id
-//         WHERE qs.channel = 'feed' %s
-//     )
-//     SELECT
-//         id, user_id, user_name, profile_images, community_id, caption,
-//         post_type, code_content, link_url, views_count, created_at, updated_at,
-//         images, tag_data, sticker_ids, tag_sticker_ids, video_path, duration, thumbnail_path,
-//         comment_count, repost_id, reposted_by_user_id, reposted_by_username,
-//         reposted_by_profile_images, reposted_at
-//     FROM combined
-//     %s
-//     %s`,
-// 		branch1Filters,
-// 		branch2Filters,
-// 		branch3Filters,
-// 		sql_orderby,
-// 		limit_clause,
-// 	)
-
-// 	allArgs := append(append(append([]any{}, args_filters...), args_filters...), args_filters...)
-
-// 	err := r.dbpool.Select(&posts, query, allArgs...)
-// 	if err != nil {
-// 		return nil, msg.NewErrorResponse("database_error", err)
-// 	}
-
-// 	var total int
-// 	countQuery := fmt.Sprintf(`
-//         SELECT
-//             (SELECT COUNT(DISTINCT p.id) FROM tbl_posts p
-//              LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
-//              LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
-//              WHERE 1=1 %s) +
-//             (SELECT COUNT(*) FROM tbl_post_shares shr WHERE 1=1 %s) +
-//             (SELECT COUNT(*) FROM quote_shares qs WHERE qs.channel = 'feed' %s)
-//     `, branch1Filters, branch2Filters, branch3Filters)
-
-// 	countArgs := append(append(append([]any{}, args_filters...), args_filters...), args_filters...)
-
-// 	err = r.dbpool.Get(&total, countQuery, countArgs...)
-// 	if err != nil {
-// 		return nil, msg.NewErrorResponse("database_error", err)
-// 	}
-
-// 	return &PostResponse{Posts: posts, Total: total}, nil
-// }
-
-// =========================================
 func (r *PostRepoImpl) Show(postRequest ShowPostRequest) (*PostResponse, *error_responses.ErrorResponse) {
+	fmt.Println("🔥🔥🔥 MARKER V2 🔥🔥🔥")
 	var per_page = postRequest.PageOption.Perpage
 	var page = postRequest.PageOption.Page
 	var offset = (page - 1) * per_page
@@ -464,11 +144,21 @@ func (r *PostRepoImpl) Show(postRequest ShowPostRequest) (*PostResponse, *error_
 
 	branch1Filters := ""
 	branch2Filters := ""
-	branch3Filters := "" // NEW — quote shares
+	branch3Filters := ""
+
 	if len(args_filters) > 0 {
 		branch1Filters = " AND " + sql_filters
 		branch2Filters = " AND " + strings.ReplaceAll(sql_filters, "p.user_id", "shr.user_id")
-		branch3Filters = " AND " + strings.ReplaceAll(sql_filters, "p.user_id", "qs.user_id") // NEW
+
+		branch3Sql := strings.ReplaceAll(sql_filters, "p.user_id", "qs.user_id")
+		branch3Sql = strings.ReplaceAll(branch3Sql, "p.community_id", "NULL::bigint")
+		branch3Filters = " AND " + branch3Sql
+	}
+
+	if postRequest.FeedOnly {
+		branch1Filters += " AND p.community_id IS NULL"
+		branch2Filters += " AND p.community_id IS NULL"
+
 	}
 
 	if searchClause, searchArgs := custom_sql.BuildSQLSearch(
@@ -479,6 +169,7 @@ func (r *PostRepoImpl) Show(postRequest ShowPostRequest) (*PostResponse, *error_
 		branch2Filters += " AND " + searchClause
 		branch3Filters += " AND " + strings.ReplaceAll(searchClause, "p.caption", "q.title") // NEW
 		args_filters = append(args_filters, searchArgs...)
+
 	}
 
 	msg := error_responses.ErrorResponse{}
@@ -599,24 +290,31 @@ func (r *PostRepoImpl) Show(postRequest ShowPostRequest) (*PostResponse, *error_
 		limit_clause,
 	)
 
-	// ✅ args_filters ត្រូវផ្ញើតែម្តងគត់ — $1,$2... ដដែលត្រូវបានប្រើឡើងវិញរាល់ branch
 	err := r.dbpool.Select(&posts, query, args_filters...)
 	if err != nil {
+		fmt.Println("🚨🚨🚨 ENTERED ERROR BLOCK 🚨🚨🚨")
+		fmt.Println("=== SQL QUERY ERROR ===")
+		fmt.Println(err)
+		fmt.Println("=== FULL QUERY ===")
+		fmt.Println(query)
+		fmt.Println("=== ARGS ===")
+		fmt.Println(args_filters)
 		return nil, msg.NewErrorResponse("database_error", err)
 	}
 
 	var total int
 	countQuery := fmt.Sprintf(`
-        SELECT
-            (SELECT COUNT(DISTINCT p.id) FROM tbl_posts p
-             LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
-             LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
-             WHERE 1=1 %s) +
-            (SELECT COUNT(*) FROM tbl_post_shares shr WHERE 1=1 %s) +
-            (SELECT COUNT(*) FROM quote_shares qs WHERE qs.channel = 'feed' %s)
-    `, branch1Filters, branch2Filters, branch3Filters)
+    SELECT
+        (SELECT COUNT(DISTINCT p.id) FROM tbl_posts p
+         LEFT JOIN tbl_post_images pi ON pi.post_id = p.id
+         LEFT JOIN tbl_post_hashtags ph ON ph.post_id = p.id
+         WHERE 1=1 %s) +
+        (SELECT COUNT(*) FROM tbl_post_shares shr
+         JOIN tbl_posts p ON p.id = shr.post_id
+         WHERE 1=1 %s) +
+        (SELECT COUNT(*) FROM quote_shares qs WHERE qs.channel = 'feed' %s)
+`, branch1Filters, branch2Filters, branch3Filters)
 
-	// ✅ ដូចគ្នា — args_filters តែម្តងគត់
 	err = r.dbpool.Get(&total, countQuery, args_filters...)
 	if err != nil {
 		return nil, msg.NewErrorResponse("database_error", err)

@@ -13,10 +13,7 @@
     </div>
 
     <div class="editor-panel">
-      <!-- ផ្ទៃ Upload រូបភាព ឬ ផ្ទាំង Tool ផ្សេងៗ -->
       <div class="main-content-area">
-        
-        <!-- ករណីធម្មតា ឬ Upload Sticker -->
         <div v-show="activeTool === 'sticker' && !imagePreview" class="image-box" @click.stop="triggerFileInput">
           <div class="upload-placeholder">
             <div class="icon-circle">
@@ -32,8 +29,6 @@
             @change="handleImageSelected" 
           />
         </div>
-
-        <!-- បង្ហាញ Preview រូបភាពធម្មតា -->
         <div v-show="activeTool === 'sticker' && imagePreview" class="image-box" @click.stop="triggerFileInput">
           <img :src="imagePreview" alt="Sticker Preview" class="preview-image" />
           <input 
@@ -45,14 +40,11 @@
           />
         </div>
 
-        <!-- ផ្ទាំង Crop -->
         <div v-if="activeTool === 'crop'" class="tool-active-panel">
           <h3>Crop Image Settings</h3>
           <p class="crop-desc">$ shape (Square Crop)</p>
           <button class="fx-btn active-fx" @click="applySquareCrop">Cut and trim (Crop Square)</button>
         </div>
-
-        <!-- ផ្ទាំង Text -->
         <div v-if="activeTool === 'text'" class="tool-active-panel">
           <h3>Add Custom Text</h3>
           <input type="text" v-model="stickerText" class="sub-input" placeholder="Type text on sticker..." />
@@ -64,8 +56,6 @@
             <input type="color" v-model="textColor" />
           </div>
         </div>
-
-        <!-- ផ្ទាំង Effect (ស្អាតដូចរូប UI) -->
         <div v-if="activeTool === 'effect'" class="tool-active-panel">
           <h3>Choose Sticker Effects</h3>
           <div class="effects-grid">
@@ -86,8 +76,6 @@
           <p>↩Action undone successfully!</p>
         </div>
       </div>
-
-      <!-- ប្រអប់ដាក់ឈ្មោះ Sticker -->
       <input 
         type="text" 
         v-model="stickerName" 
@@ -95,7 +83,6 @@
         placeholder="Name your sticker..." 
       />
 
-      <!-- Toolbar ខាងក្រោម -->
       <div class="toolbar">
         <div class="tool-icons">
           <button 
@@ -144,7 +131,6 @@
           </button>
         </div>
         
-        <!-- ប៊ូតុង Check (Save) -->
         <div class="action-buttons">
           <button class="check-btn" @click="submitSticker" data-tooltip="Save">
             <span class="check-bg-circle"></span>

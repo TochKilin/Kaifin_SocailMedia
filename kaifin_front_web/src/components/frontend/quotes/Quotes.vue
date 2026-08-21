@@ -16,12 +16,12 @@
 
           <div class="create-btn-wrap">
             <button
-  class="btn-create"
-  @click.stop="openCreateQuote"
->
-  <span class="icon-circle-create">+</span>
-  Create Quotes
-</button>
+            class="btn-create"
+            @click.stop="openCreateQuote"
+          >
+            <span class="icon-circle-create">+</span>
+            Create Quotes
+          </button>
           </div>
         </div>
 
@@ -40,10 +40,8 @@
 
       </aside>
 
-      <!-- Main Content Area (Right Side) -->
       <main class="main-content">
 
-        <!-- Filter Tabs (Popular / The Latest) -->
         <nav class="tabs-nav">
           <button 
             @click="activeTab = 'popular'" 
@@ -57,8 +55,7 @@
           </button>
         </nav>
 
-        <!-- Loading / Error / Empty States -->
-        <div v-if="loading" class="state-msg">កំពុងផ្ទុក...</div>
+        <div v-if="loading" class="state-msg">waiting...</div>
         <div v-else-if="errorMsg" class="state-msg error">{{ errorMsg }}</div>
         <div v-else-if="filteredQuotes.length === 0" class="state-msg">មិនមាន quote ទេ</div>
 
@@ -66,7 +63,6 @@
         <div class="quotes-feed" v-else>
           <div class="quote-card-post" v-for="(quote, index) in filteredQuotes" :key="quote.id ?? index">
             
-            <!-- Quote Header Text Container -->
             <div class="quote-header-text">
               <div class="quote-badge-icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.998v10h-9.998z"/></svg>
@@ -79,29 +75,29 @@
             
             <div class="quote-footer">
               <div class="user-profile">
-  <div class="avatar">
-    <img
-      v-if="quote.userAvatarUrl"
-      :src="quote.userAvatarUrl"
-      class="avatar-img"
-      alt="avatar"
-    />
+              <div class="avatar">
+                <img
+                  v-if="quote.userAvatarUrl"
+                  :src="quote.userAvatarUrl"
+                  class="avatar-img"
+                  alt="avatar"
+                />
 
-    <svg
-      v-else
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  </div>
-  <span class="username">{{ quote.username }}</span>
-</div>
+                <svg
+                  v-else
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <span class="username">{{ quote.username }}</span>
+            </div>
 
               <div class="quote-actions">
                 <button class="action-pill">
@@ -109,43 +105,40 @@
                   <span>{{ quote.views }} View</span>
                 </button>
                 
-                <!-- Like Button & Reaction Wrapper -->
-                <!-- Like Button & Reaction Wrapper -->
-<div class="like-container" @mouseleave="quote.showReactions = false">
-  <button 
-  class="action-pill like-btn" 
-  :class="{ 'is-active': quote.selectedReaction }"
-  @click="handleLikeClick(quote)"
-  @mouseenter="quote.showReactions = true"
-  :disabled="quote.reactionLoading"
->
-  <span class="icon-circle" v-if="!quote.selectedReaction">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-  </span>
-  
-  <span class="reaction-display-label">
-    <template v-if="quote.selectedReaction">
-      <span v-if="quote.selectedReaction.type === 'emoji'" class="selected-emoji">{{ quote.selectedReaction.content }}</span>
-      <span v-else-if="quote.selectedReaction.type === 'image'" class="selected-img-wrap">
-        <img :src="quote.selectedReaction.content" class="selected-img" />
-      </span>
-      <span v-else-if="quote.selectedReaction.type === 'svg'" class="selected-svg-wrap" v-html="quote.selectedReaction.content"></span>
-    </template>
-    <template v-else>
-      Like
-    </template>
-  </span>
+                <div class="like-container" @mouseleave="quote.showReactions = false">
+                  <button 
+                  class="action-pill like-btn" 
+                  :class="{ 'is-active': quote.selectedReaction }"
+                  @click="handleLikeClick(quote)"
+                  @mouseenter="quote.showReactions = true"
+                  :disabled="quote.reactionLoading"
+                >
+                  <span class="icon-circle" v-if="!quote.selectedReaction">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                  </span>
+                  
+                  <span class="reaction-display-label">
+                    <template v-if="quote.selectedReaction">
+                      <span v-if="quote.selectedReaction.type === 'emoji'" class="selected-emoji">{{ quote.selectedReaction.content }}</span>
+                      <span v-else-if="quote.selectedReaction.type === 'image'" class="selected-img-wrap">
+                        <img :src="quote.selectedReaction.content" class="selected-img" />
+                      </span>
+                      <span v-else-if="quote.selectedReaction.type === 'svg'" class="selected-svg-wrap" v-html="quote.selectedReaction.content"></span>
+                    </template>
+                    <template v-else>
+                      Like
+                    </template>
+                  </span>
+                  <span v-if="quote.likes > 0" class="like-count">{{ quote.likes }}</span>
+                </button>
 
-  <span v-if="quote.likes > 0" class="like-count">{{ quote.likes }}</span>
-</button>
-
-  <QuoteReaction 
-    v-if="quote.showReactions" 
-    :reactions="reactions" 
-    @close="quote.showReactions = false" 
-    @select="selectReaction(quote, $event)" 
-  />
-</div>
+                  <QuoteReaction 
+                    v-if="quote.showReactions" 
+                    :reactions="reactions" 
+                    @close="quote.showReactions = false" 
+                    @select="selectReaction(quote, $event)" 
+                  />
+                </div>
 
                 <div class="share-container" @mouseleave="quote.showShare = false">
                   <button 
@@ -163,7 +156,6 @@
                   />
                 </div>
 
-                <!-- More Options Button & Menu Wrapper -->
                 <div class="options-container" @mouseleave="quote.showOptions = false">
                   <button 
                     class="icon-btn dots-btn" 
@@ -183,29 +175,24 @@
             </div>
           </div>
         </div>
-
       </main>
-
     </div>
-
-    <!-- Centered Fixed Modal Popup -->
     <Teleport to="body">
-  <Transition name="quote-modal">
-    <div
-      v-if="showCreateQuote"
-      class="quote-overlay"
-      @click.self="closeCreateQuote"
-    >
-      <CreateQuote
-        :avatar-url="avatarUrl"
-        @close="closeCreateQuote"
-        @post-quote="handlePostQuote"
-        @save-draft="handleSaveDraft"
-      />
-    </div>
-  </Transition>
-</Teleport>
-
+      <Transition name="quote-modal">
+        <div
+          v-if="showCreateQuote"
+          class="quote-overlay"
+          @click.self="closeCreateQuote"
+        >
+          <CreateQuote
+            :avatar-url="avatarUrl"
+            @close="closeCreateQuote"
+            @post-quote="handlePostQuote"
+            @save-draft="handleSaveDraft"
+          />
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -218,7 +205,6 @@ import QuoteReaction from './QuoteReaction.vue'
 import QuoteShare from './QuoteShare.vue'
 import QuoteOptions from './QuoteOptions.vue'
 
-// ---- API setup ----
 const SERVER_ROOT = 'http://localhost:7070'
 const API_BASE = `${SERVER_ROOT}/api/v1/front`
 
@@ -238,14 +224,12 @@ const createQuote = (payload) =>
 
 const getProfile = () => api.get('/profile/show')
 
-// reaction APIs
 const listReactionTypes = () => api.get('/reaction-types')
 const reactToQuote = (quoteId, reactionTypeId) =>
   api.post('/quote-reactions/create', { quote_id: quoteId, reaction_type_id: reactionTypeId })
 const unreactQuote = (quoteId) =>
   api.delete(`/quote-reactions/${quoteId}`)
 
-// ---- UI state ----
 const searchQuery = ref('')
 const activeTab = ref('popular')
 const showCreateModal = ref(false)
@@ -261,14 +245,14 @@ onBeforeUnmount(() => {
   document.body.style.overflow = ''
 })
 
-// ---- REACTIONS: ទាញពី API ជំនួស hardcode ----
-const reactions = ref([]) // [{ id, name, type, content, sortOrder }]
+
+const reactions = ref([]) 
 
 const normalizeReactionType = (rt) => ({
-  id: rt.id,               // reaction_type_id ត្រូវផ្ញើទៅ backend
+  id: rt.id,
   name: rt.name,
-  type: rt.icon_type,       // ត្រូវត្រូវនឹង 'svg' | 'emoji' | 'image' (QuoteReaction.vue ត្រូវការតម្លៃនេះ)
-  content: rt.icon_value,   // SVG raw string / emoji char / image URL
+  type: rt.icon_type,      
+  content: rt.icon_value,  
   sortOrder: rt.sort_order
 })
 
@@ -282,12 +266,10 @@ const fetchReactionTypes = async () => {
   }
 }
 
-// default reaction ពេល click ធម្មតា (មិន hover popup) — ព្យាយាមរក "Like", fallback ទៅ item ដំបូង
 const defaultReaction = computed(() =>
   reactions.value.find(r => r.name?.toLowerCase() === 'like') || reactions.value[0] || null
 )
 
-// ---- Quotes data (from real API) ----
 const quotes = ref([])
 
 const topQuotes = ref([
@@ -364,13 +346,6 @@ watch(searchQuery, () => {
 
 const filteredQuotes = computed(() => quotes.value)
 
-// ================================
-// SHARE TO FEED — reuses the existing quote_shares tracking table
-// (channel = 'feed' marks it as a "repost to feed" instead of a plain
-// external-share click like telegram/whatsapp/copy).
-// Route is registered as v1.Post("/quote-shares", h.Track) under the
-// same /api/v1 group as quote-views (not /api/v1/front).
-// ================================
 const shareQuoteApi = axios.create({ baseURL: `${SERVER_ROOT}/api/v1` })
 shareQuoteApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
@@ -389,30 +364,25 @@ const handleShareAction = async (quote, actionType) => {
   } else if (actionType === 'feed') {
     try {
       await repostQuoteToFeed(quote.id)
-      alert('បាន Share ទៅ Feed ដោយជោគជ័យ!')
+      alert('share sucess')
     } catch (err) {
       console.error('Failed to repost quote to feed:', err)
-      alert('Share to feed failed, សូមព្យាយាមម្តងទៀត')
+      alert('Share to feed failed, try again')
     }
   } else {
     console.log(`Action selected: ${actionType} for quote:`, quote.title)
   }
 }
-// ================================
-
-// ---- Click ធម្មតា (មិនចាំបាច់បើក popup) ---- ប្រើ default reaction (Like)
 const handleLikeClick = async (quote) => {
   if (quote.reactionLoading || !defaultReaction.value) return
   quote.reactionLoading = true
 
   try {
     if (!quote.selectedReaction) {
-      // REACT: ហៅ POST /quote-reactions/create
       await reactToQuote(quote.id, defaultReaction.value.id)
       quote.selectedReaction = defaultReaction.value
       quote.likes++
     } else {
-      // UNREACT: ហៅ DELETE /quote-reactions/:quote_id
       await unreactQuote(quote.id)
       quote.selectedReaction = null
       quote.likes--
@@ -425,7 +395,6 @@ const handleLikeClick = async (quote) => {
   }
 }
 
-// ---- ជ្រើសរើស reaction ជាក់លាក់ពី popup ----
 const selectReaction = async (quote, reaction) => {
   if (quote.reactionLoading) return
   quote.reactionLoading = true
@@ -434,13 +403,12 @@ const selectReaction = async (quote, reaction) => {
   const hadReactionBefore = !!quote.selectedReaction
 
   try {
-    // Upsert: បើមាន reaction ស្រាប់ វានឹង update ទៅ reaction_type_id ថ្មី
     await reactToQuote(quote.id, reaction.id)
     quote.selectedReaction = reaction
     if (!hadReactionBefore) {
       quote.likes++
     }
-    // បើប្តូរពី reaction មួយទៅមួយទៀត (មិនមែនដំបូង) count មិនប្តូរ (upsert តែមួយកំណត់ត្រា)
+
   } catch (err) {
     console.error('Failed to select reaction:', err)
     alert('Reaction failed, please try again.')
@@ -503,7 +471,6 @@ viewApi.interceptors.request.use((config) => {
 const trackQuoteView = (quoteId) =>
   viewApi.post('/quote-views', { quote_id: quoteId })
 
-// កត់ត្រា quote id ណាដែល track រួច ក្នុង session នេះ (backend គ្មាន dedupe ដូច្នេះ frontend ត្រូវទប់ស្កាត់ការ track ស្ទួន)
 const trackedViewIds = new Set()
 
 const trackViewsForList = (list) => {
@@ -512,7 +479,7 @@ const trackViewsForList = (list) => {
     trackedViewIds.add(q.id)
     trackQuoteView(q.id).catch((err) => {
       console.error('Failed to track view for quote', q.id, err)
-      trackedViewIds.delete(q.id) // អនុញ្ញាតឲ្យ retry លើកក្រោយបើ fail
+      trackedViewIds.delete(q.id) 
     })
   })
 }
@@ -536,9 +503,7 @@ const handlePostQuote = async (quote) => {
     })
 
     await fetchQuotes(activeTab.value)
-
     showCreateQuote.value = false
-
     alert('Quote created successfully!')
   } catch (err) {
     console.error('Create quote error:', err)
@@ -555,8 +520,6 @@ const handlePostQuote = async (quote) => {
 </script>
 
 <style scoped>
-
-/* Main App Container */
 .quote-app {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -738,8 +701,8 @@ const handlePostQuote = async (quote) => {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  /* background-color: #ffffff; */
+  /* border: 1px solid #e2e8f0; */
   padding: 16px;
 }
 
@@ -747,6 +710,9 @@ const handlePostQuote = async (quote) => {
   display: flex;
   gap: 24px;
   border-bottom: 2px solid #e2e8f0;
+  background-color: #ffffff;
+  padding: 7px 12px;
+  border-radius: 12px;
 }
 
 .tab-btn {
@@ -808,7 +774,8 @@ const handlePostQuote = async (quote) => {
 }
 
 .quote-card-post:hover {
-  background-color: #0000000b;
+  /* background-color: #00000000; */
+  opacity: 0.8;
 }
 
 .quote-header-text {
@@ -910,13 +877,13 @@ const handlePostQuote = async (quote) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #1976d2;
+  background: #ECEAE4;
   border: none;
   padding: 7px 12px 7px 7px;
   border-radius: 32px;
   font-size: 13px;
   font-weight: 500;
-  color: #ffffff;
+  color: #000;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
@@ -933,22 +900,22 @@ const handlePostQuote = async (quote) => {
 }
 
 .icon-circle svg {
-  color: #ffffff;
+  color: #000;
 }
 
 .action-pill:hover {
-  background: #1565c0;
+  opacity: 0.8;
 }
 
 .icon-btn {
-  background: #1976d2;
+  background: #ECEAE4;
   border: none;
   padding: 7px 14px;
   border-radius: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #000;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
@@ -1011,24 +978,26 @@ const handlePostQuote = async (quote) => {
 .like-count {
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: #000;
   margin-left: 2px;
 }
 
 .action-pill.like-btn.is-active {
   background: #fff;
-  border: 1.5px solid #f0b87a;
+  border: 1.5px solid #1b77d219;
+  background-color: #1b77d219;
 }
 
 .action-pill.like-btn.is-active .selected-svg-wrap,
 .action-pill.like-btn.is-active .selected-img-wrap,
 .action-pill.like-btn.is-active .selected-emoji {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
 
 .action-pill.like-btn.is-active .like-count {
-  color: #e8743a;
+  color: #1B75D2;
+
   font-weight: 700;
 }
 
