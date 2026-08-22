@@ -11,7 +11,7 @@
         playsinline
         poster="https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&auto=format&fit=crop&q=60"
       >
-        <source src="../../../assets/videos/games-banner.mp4" type="video/mp4" />
+        <source src="" type="video/mp4" />
       </video>
       <div class="page-title-overlay"></div>
       <h1 class="page-title-text">Games</h1>
