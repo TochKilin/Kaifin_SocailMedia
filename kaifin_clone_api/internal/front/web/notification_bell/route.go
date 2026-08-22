@@ -1,7 +1,6 @@
 package notificationbell
 
 import (
-	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v3"
 	"github.com/jmoiron/sqlx"
 
@@ -20,7 +19,7 @@ func NewNotiRoute(app *fiber.App, db *sqlx.DB, ws *wsManager.WebSocketManager) *
 	grp.Get("/show", h.Show)
 	grp.Post("/read", h.MarkAsRead)
 
-	grp.Get("/ws", websocket.New(h.HandleWS))
+	// grp.Get("/ws", websocket.New(h.HandleWS))
 
 	return &NotiRouteImpl{
 		lh: h,
