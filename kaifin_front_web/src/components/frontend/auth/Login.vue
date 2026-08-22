@@ -22,6 +22,7 @@ function selectType(t) {
   typeOpen.value = false;
 }
 
+// ប្រើ Render URL ជា Fallback ដាច់ខាត (ការពារករណី Vite អាន Env មិនទាន់)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://kaifin-socailmedia.onrender.com";
 
 // login API
@@ -45,13 +46,13 @@ async function onSignIn() {
   try {
     const payload = {
       user_name: inputIdentity,
-      // user_name: user_name.value,
       password: password.value,
       role_id: 4
     }
 
     console.log("SEND DATA:", payload);
 
+    // ប្រើការត String (+) ដើម្បីជៀសវាងបញ្ហា Quote ផ្សេងៗ
     const response = await axios.post(
       API_BASE_URL + "/api/v1/front/auth/login-user",
       payload
