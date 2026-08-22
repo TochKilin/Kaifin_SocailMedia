@@ -671,7 +671,7 @@ const currentUser = ref({
 
 async function fetchProfile() {
   try {
-    const res = await axios.get(`${API_BASE}/auth/profile`, {
+    const res = await axios.get(`${API_BASE}/api/auth/profile`, {
       headers: authHeaders(),
     })
     if (res.data.success) {
@@ -696,7 +696,7 @@ const mockChats = ref([])
 async function fetchConversations() {
   chatsLoading.value = true
   try {
-    const res = await axios.get(`${API_BASE}/chats/show`, {
+    const res = await axios.get(`${API_BASE}/api/chats/show`, {
       headers: authHeaders(),
       params: { tab: 'all', search: searchQuery.value },
     })
@@ -744,7 +744,7 @@ const usersLoading = ref(false)
 async function fetchAllUsers() {
   usersLoading.value = true
   try {
-    const res = await axios.get(`${API_BASE}/chats/users/search`, {
+    const res = await axios.get(`${API_BASE}/api/chats/users/search`, {
       headers: authHeaders(),
       params: { search: searchQuery.value, limit: 30 },
     })
@@ -809,7 +809,7 @@ async function startChatWithUser(user) {
     const form = new FormData()
     form.append('target_user_id', user.id)
 
-    const res = await axios.post(`${API_BASE}/chats/start`, form, {
+    const res = await axios.post(`${API_BASE}/api/chats/start`, form, {
       headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
     })
     if (res.data.success) {
@@ -894,7 +894,7 @@ function formatTime(dateStr) {
 async function fetchMessages(chat, beforeId = 0) {
   messagesLoading.value = true
   try {
-    const res = await axios.get(`${API_BASE}/chats/${chat.id}/messages`, {
+    const res = await axios.get(`${API_BASE}/api/chats/${chat.id}/messages`, {
       headers: authHeaders(),
       params: { before_id: beforeId, limit: 30 },
     })
@@ -933,7 +933,7 @@ function startMessagePolling(chat) {
   pollInterval = setInterval(async () => {
     if (!chat || !selectedChat.value || selectedChat.value.id !== chat.id) return
     try {
-      const res = await axios.get(`${API_BASE}/chats/${chat.id}/messages`, {
+      const res = await axios.get(`${API_BASE}/api/chats/${chat.id}/messages`, {
         headers: authHeaders(),
         params: { before_id: 0, limit: 30 },
       })
@@ -1004,7 +1004,7 @@ async function markAsRead(chat) {
   if (!chat.badge) return
   try {
     await axios.post(
-      `${API_BASE}/chats/${chat.id}/read`,
+      `${API_BASE}/api/chats/${chat.id}/read`,
       {},
       { headers: authHeaders() }
     )
@@ -1027,7 +1027,7 @@ async function sendMessage() {
     })
 
     try {
-      const res = await axios.post(`${API_BASE}/chats/send`, form, {
+      const res = await axios.post(`${API_BASE}/api/chats/send`, form, {
         headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
       })
       if (res.data.success) {
@@ -1050,7 +1050,7 @@ async function sendMessage() {
     form.append('type', 'text')
 
     try {
-      const res = await axios.post(`${API_BASE}/chats/send`, form, {
+      const res = await axios.post(`${API_BASE}/api/chats/send`, form, {
         headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
       })
       if (res.data.success) {
@@ -1083,7 +1083,7 @@ async function handleSendVoice(audioBlob) {
   form.append('attachments', audioBlob, 'voice.webm')
 
   try {
-    const res = await axios.post(`${API_BASE}/chats/send`, form, {
+    const res = await axios.post(`${API_BASE}/api/chats/send`, form, {
       headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
     })
     if (res.data.success) {
@@ -1197,7 +1197,7 @@ async function handleSelectSticker(sticker) {
 
   try {
     const res = await axios.post(
-      `${API_BASE}/chats/send`,
+      `${API_BASE}/api/chats/send`,
       (() => {
         const form = new FormData()
         form.append('conversation_id', selectedChat.value.id)
@@ -1286,7 +1286,7 @@ async function handleForwardSubmit(payload) {
       if (message.id) form.append('forwarded_from_id', message.id)
 
       try {
-        const res = await axios.post(`${API_BASE}/chats/send`, form, {
+        const res = await axios.post(`${API_BASE}/api/chats/send`, form, {
           headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
         })
         if (res.data.success) {

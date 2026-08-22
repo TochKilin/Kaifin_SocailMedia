@@ -106,7 +106,7 @@ const currentPackId = ref(null)
 async function fetchPacks() {
   packsLoading.value = true
   try {
-    const res = await axios.get(`${API_BASE}/stickers/packs`, {
+    const res = await axios.get(`${API_BASE}/api/stickers/packs`, {
       headers: authHeaders(),
     })
     if (res.data.success) {
