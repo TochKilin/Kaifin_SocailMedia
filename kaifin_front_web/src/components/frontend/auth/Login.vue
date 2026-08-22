@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
+import api from "@/api/axios";
 
 const router = useRouter();
 
@@ -51,7 +52,7 @@ async function onSignIn() {
     console.log("SEND DATA:", payload);
 
     const response = await axios.post(
-      "http://localhost:7070/api/v1/front/auth/login-user",
+      "/api/v1/front/auth/login-user",
       payload
     );
 
