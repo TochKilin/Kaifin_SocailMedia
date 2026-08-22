@@ -23,7 +23,7 @@ import PaymentMethod from "@/components/frontend/course/home/PaymentMethod.vue"
 import About from "@/components/frontend/about_us/About.vue"
 import Quotes from "@/components/frontend/quotes/Quotes.vue"
 import GroupDetail from "@/components/frontend/sidebar_left_feed/GroupDetail.vue"
-import Chart from "@/components/frontend/chart/chart.vue"
+import Chart from "@/components/frontend/chart/Chart.vue"
 
 const router = createRouter({
     history:createWebHistory(),
