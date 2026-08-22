@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 // Comment host api
-const API_BASE = 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
 
 // Author headers token
 function authHeaders() {

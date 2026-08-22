@@ -7,7 +7,7 @@ import PostComposer from '../PostComposer/PostComposer.vue'
 import Comments from '../comments/Comments.vue'
 import { REACTIONS } from '@/components/reaction/reactions.js'
 
-const BASE_URL = 'http://localhost:7070'
+const BASE_URL = import.meta.env.VITE_API_URL
 
 function resolveImageUrl(path) {
   if (!path) return ''

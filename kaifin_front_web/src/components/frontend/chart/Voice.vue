@@ -61,7 +61,7 @@ const emit = defineEmits(['close', 'send'])
 const isPlaying = ref(false)
 const isSending = ref(false)
 const durationSeconds = ref(0)
-const activeWidth = ref(0) // ទទឹងគិតជា Pixel (ពី 0 ដល់ 1000) សម្រាប់គ្របដណ្តប់ Pattern ពណ៌ខៀវ
+const activeWidth = ref(0) 
 
 let mediaRecorder = null
 let audioChunks = []
@@ -103,8 +103,6 @@ onMounted(async () => {
       }
       const average = sum / dataArray.length
 
-      // បំប្លែងកម្រិតសំឡេងពិត (average) ឱ្យទៅជាទទឹង pixel ក្នុង viewBox 1000
-      // ធានាថាវា dynamically រត់ឡើងចុះតាមការនិយាយ
       const targetWidth = (average / 128) * 1000
       activeWidth.value = Math.min(1000, Math.max(50, targetWidth))
 
@@ -113,8 +111,7 @@ onMounted(async () => {
 
     updateWaveform()
 
-    // ✅ ត្រូវប្រើ timeslice ដើម្បីអោយ ondataavailable fire ជាបន្តបន្ទាប់
-    // (មិនមែនតែម្ដងគត់ពេល stop()) — ធានាថា audioChunks មិនទទេ
+
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) audioChunks.push(event.data)
     }
@@ -136,12 +133,12 @@ onMounted(async () => {
       }
     }
 
-    mediaRecorder.start(250) // timeslice 250ms — ធានាថា ondataavailable fire ជាទៀងទាត់
+    mediaRecorder.start(250)
     timerInterval = setInterval(() => { durationSeconds.value++ }, 1000)
 
   } catch (error) {
     console.error('Mic permission error:', error)
-    alert('សូមអនុញ្ញាតឱ្យប្រើប្រាស់មីក្រូហ្វូនជាមុនសិន!')
+    alert('please allow mic!')
   }
 })
 

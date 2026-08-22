@@ -5,7 +5,7 @@ import NavBar from '../navbar/NavBar.vue'
 import CourseDetaile from './CourseDetaile.vue'
 import AIAssistant from './AIAssistant.vue'
 
-const BASE_URL = 'http://localhost:7070'
+const BASE_URL = import.meta.env.VITE_API_URL
 
 function authHeaders() {
   const token = localStorage.getItem('token')

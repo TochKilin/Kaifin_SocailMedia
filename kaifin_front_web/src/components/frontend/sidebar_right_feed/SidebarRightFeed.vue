@@ -246,7 +246,7 @@ function goToProfile() {
   router.push(`/profile/${currentId}`)
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const BASE_URL = import.meta.env.VITE_API_URL
 const showAvatarMenu = ref(false)
 let avatarMenuCloseTimer = null
 

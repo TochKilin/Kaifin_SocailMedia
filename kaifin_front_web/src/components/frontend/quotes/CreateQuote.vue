@@ -172,7 +172,7 @@ function wrapCode() {
 }
 
 function insertLink() {
-  const url = window.prompt('បញ្ចូល URL:')
+  const url = window.prompt('input URL:')
   if (!url) return
   editorRef.value?.focus()
   document.execCommand('createLink', false, url)
@@ -180,7 +180,7 @@ function insertLink() {
 }
 
 function insertImage() {
-  const url = window.prompt('បញ្ចូល Image URL:')
+  const url = window.prompt('input Image URL:')
   if (!url) return
   editorRef.value?.focus()
   document.execCommand('insertImage', false, url)

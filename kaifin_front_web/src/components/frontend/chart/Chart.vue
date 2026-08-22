@@ -176,8 +176,8 @@ import ChatSetting from './ChatSetting.vue'
 
 defineEmits(['close'])
 
-const API_BASE = 'http://localhost:7070/api/v1/front'
-const FILE_BASE = 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
+const FILE_BASE = import.meta.env.VITE_API_URL
 
 const currentView = ref('chats')
 const showSetting = ref(false)

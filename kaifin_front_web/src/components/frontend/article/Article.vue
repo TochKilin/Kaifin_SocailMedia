@@ -5,7 +5,7 @@ import CreateArticle from './CreateArticle.vue'
 import ArticleDetail from './ArticleDetail.vue'
 
 // Backend local host
-const API_BASE = 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
 
 const selectedArticle = ref(null)
 

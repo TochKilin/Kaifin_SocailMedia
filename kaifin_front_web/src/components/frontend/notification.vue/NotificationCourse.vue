@@ -11,7 +11,7 @@ const props = defineProps({
 
 const emit = defineEmits(['seeAllNew', 'seeAllFollow', 'seeAllWeek', 'followBack', 'seePrevious', 'delete'])
 
-// បំបែក real data ជា 3 groups ដោយផ្អែកលើ type / created_at
+
 const newNotifications = computed(() =>
   props.notifications.filter((n) => n.type === 'course' || n.type === 'enroll')
 )

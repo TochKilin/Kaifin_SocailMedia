@@ -280,7 +280,7 @@ function stopPreviewG() {
   previewAudioG?.pause()
 }
 
-// const API_BASE = 'http://localhost:7070/api/v1/front'
+
 const route = useRoute()
 const router = useRouter()
 const emit = defineEmits(['search', 'icon-click'])

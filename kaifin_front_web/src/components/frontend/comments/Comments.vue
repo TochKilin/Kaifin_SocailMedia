@@ -8,7 +8,7 @@ const props = defineProps({
   },
 })
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
 function authHeaders() {
   const token = localStorage.getItem('token') || ''
   return token ? { Authorization: `Bearer ${token}` } : {}

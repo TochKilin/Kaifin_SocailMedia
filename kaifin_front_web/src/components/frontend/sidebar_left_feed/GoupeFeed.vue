@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import GroupCreateForm from './GroupCreateForm.vue'
-const BASE_URL = 'http://localhost:7070'
+const BASE_URL = import.meta.env.VITE_API_URL
 
 function resolveImageUrl(path) {
   if (!path) return ''

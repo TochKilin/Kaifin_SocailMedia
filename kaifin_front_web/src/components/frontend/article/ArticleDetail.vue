@@ -16,7 +16,7 @@ const props = defineProps({
 })
 
 // Api hosts
-const API_BASE = 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
 
 // Key reaction type in article
 const REACTION_STORAGE_KEY = computed(() => `article_reaction_${props.articleData.id}`)

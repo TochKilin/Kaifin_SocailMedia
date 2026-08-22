@@ -849,7 +849,7 @@ const selectedGroup = ref(null)
 const showGroupPicker = ref(false)
 const isSubmitting = ref(false)
 const submitError = ref('')
-const API_BASE = 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
 
 async function fetchGroups() {
   try {

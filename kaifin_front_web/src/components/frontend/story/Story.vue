@@ -173,7 +173,7 @@ import Congrate from "../../../assets/animate/congrate.svg"
 import Cool from "../../../assets/animate/cool.svg"
 import Thinking from "../../../assets/animate/Thinking.svg"
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const BASE_URL = import.meta.env.VITE_API_URL
 const IMAGE_DURATION_MS = 5000 
 
 const stories = ref([])

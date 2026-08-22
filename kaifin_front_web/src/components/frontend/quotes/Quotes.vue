@@ -205,7 +205,7 @@ import QuoteReaction from './QuoteReaction.vue'
 import QuoteShare from './QuoteShare.vue'
 import QuoteOptions from './QuoteOptions.vue'
 
-const SERVER_ROOT = 'http://localhost:7070'
+const SERVER_ROOT = import.meta.env.VITE_API_URL
 const API_BASE = `${SERVER_ROOT}/api/v1/front`
 
 const api = axios.create({ baseURL: API_BASE })

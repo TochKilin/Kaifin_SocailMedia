@@ -53,7 +53,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const router = useRouter()
-const API_BASE = 'http://localhost:7070/api/v1/front'
+const API_BASE = import.meta.env.VITE_API_URL
 function authHeaders() {
   const token = localStorage.getItem('token')
   return { Authorization: `Bearer ${token}` }

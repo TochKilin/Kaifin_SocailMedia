@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import api from '@/api/axios'
 
 const route = useRoute()
 const menuItems = ref([])
@@ -36,8 +37,8 @@ async function fetchMenus() {
   const token = localStorage.getItem('token')
 
   try {
-    const response = await axios.get(
-      'http://localhost:7070/api/v1/front/menus/show',
+    const response = await api.get(
+      '/api/v1/front/menus/show',
       { headers: { Authorization: `Bearer ${token}` } }
     )
 
@@ -62,8 +63,8 @@ async function fetchProfile() {
   if (!token) return
 
   try {
-    const response = await axios.get(
-      "http://localhost:7070/api/v1/front/profile/show",
+    const response = await api.get(
+      "/api/v1/front/profile/show",
       {
         headers: {
           Authorization: `Bearer ${token}`

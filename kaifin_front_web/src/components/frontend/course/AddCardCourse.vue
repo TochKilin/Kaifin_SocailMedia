@@ -110,7 +110,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NavBar from '../navbar/NavBar.vue'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
 
 function getAuthToken() {
   return localStorage.getItem('token') || ''

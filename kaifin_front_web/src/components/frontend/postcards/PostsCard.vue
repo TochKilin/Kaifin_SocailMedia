@@ -340,7 +340,7 @@ import gsap from 'gsap'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.css'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const BASE_URL = import.meta.env.VITE_API_URL
 const PER_PAGE = 50
 const posts = ref([])
 const currentPage = ref(1)

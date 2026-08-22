@@ -7,7 +7,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'submit'])
 
 // Local host
-const API_BASE = 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
 
 const title = ref('')
 const content = ref('')         
@@ -194,7 +194,7 @@ const handlePost = async () => {
     handleCancel()
   } catch (err) {
     console.error(err)
-    errorMessage.value = err.message || 'មានបញ្ហាកើតឡើងពេលបង្កើតអត្ថបទ'
+    errorMessage.value = err.message || 'error'
   } finally {
     isSubmitting.value = false
   }

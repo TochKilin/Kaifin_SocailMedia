@@ -5,7 +5,7 @@ import NotificationCourse from './NotificationCourse.vue'
 
 const emit = defineEmits(['back', 'close'])
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
+const BASE_URL = import.meta.env.VITE_API_URL
 const POLL_INTERVAL = 8000
 
 function getAuthToken() {

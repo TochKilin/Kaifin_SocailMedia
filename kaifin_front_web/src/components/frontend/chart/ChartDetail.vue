@@ -648,8 +648,8 @@ function handleMessagesScroll() {
 
 const route = useRoute()
 const router = useRouter()
-const API_BASE = 'http://localhost:7070/api/v1/front'
-const FILE_BASE = 'http://localhost:7070'
+const API_BASE = import.meta.env.VITE_API_URL
+const FILE_BASE = import.meta.env.VITE_API_URL
 
 function authHeaders() {
   const token = localStorage.getItem('token')
