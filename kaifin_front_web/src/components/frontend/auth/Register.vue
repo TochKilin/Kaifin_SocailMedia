@@ -2,6 +2,8 @@
 import { ref, reactive } from 'vue'
 import axios from 'axios'
 import router from '@/router'
+import api from '@/api/axios'
+
 
 const fileInput = ref(null)
 const profileImage = ref(null)
@@ -79,8 +81,8 @@ async function handleSubmit() {
   }
 
   try {
-    const response = await axios.post(
-      'http://localhost:7070/api/v1/front/register/create',
+    const response = await api.post(
+      '/api/v1/front/register/create',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     )
