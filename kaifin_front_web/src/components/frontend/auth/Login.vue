@@ -22,7 +22,7 @@ function selectType(t) {
   typeOpen.value = false;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:7070";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://kaifin-socailmedia.onrender.com";
 
 // login API
 async function onSignIn() {
@@ -53,7 +53,7 @@ async function onSignIn() {
     console.log("SEND DATA:", payload);
 
     const response = await axios.post(
-      `${API_BASE_URL}/api/v1/front/auth/login-user`,
+      API_BASE_URL + "/api/v1/front/auth/login-user",
       payload
     );
 
