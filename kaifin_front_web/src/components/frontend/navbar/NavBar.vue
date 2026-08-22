@@ -180,7 +180,8 @@ import axios from 'axios'
 import AccountMenu from '../account_menu/AccountMenu.vue'
 import Music from '../music/Music.vue'
 import Notification from '../notification.vue/Notification.vue'
-import Chart from '../chart/chart.vue'
+import Chart from '../chart/Chart.vue'
+// import Chart from '../chart/chart.vue'
 
 const MUSIC_API_BASE = 'http://localhost:7070/api/v1/front'
 
