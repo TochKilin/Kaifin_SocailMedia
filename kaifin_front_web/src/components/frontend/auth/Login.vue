@@ -22,6 +22,8 @@ function selectType(t) {
   typeOpen.value = false;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:7070";
+
 // login API
 async function onSignIn() {
   const inputIdentity = user_name.value.trim();
@@ -51,7 +53,7 @@ async function onSignIn() {
     console.log("SEND DATA:", payload);
 
     const response = await axios.post(
-      "http://localhost:7070/api/v1/front/auth/login-user",
+      "${API_BASE_URL}/api/v1/front/auth/login-user",
       payload
     );
 
