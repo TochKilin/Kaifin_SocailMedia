@@ -195,7 +195,7 @@ const usersLoading = ref(false)
 async function fetchAllUsers() {
   usersLoading.value = true
   try {
-    const response = await axios.get(`${API_BASE}/chats/users/search`, {
+    const response = await axios.get(`${API_BASE}/api/chats/users/search`, {
       headers: authHeaders(),
       params: { search: searchQuery.value, limit: 200 },
     })
@@ -232,7 +232,7 @@ async function startChatWithUser(user) {
     const form = new URLSearchParams()
     form.append('target_user_id', user.id)
 
-    const res = await axios.post(`${API_BASE}/chats/start`, form, {
+    const res = await axios.post(`${API_BASE}/api/chats/start`, form, {
       headers: authHeaders(),
     })
     if (res.data.success) {
@@ -266,7 +266,7 @@ async function fetchConversations() {
   loading.value = true
   errorMsg.value = ''
   try {
-    const response = await axios.get(`${API_BASE}/chats/show`, {
+    const response = await axios.get(`${API_BASE}/api/chats/show`, {
       headers: authHeaders(),
       params: {
         tab: activeTab.value,
@@ -340,7 +340,7 @@ async function markAsRead(chat) {
   if (!chat.unread) return
   try {
     await axios.post(
-      `${API_BASE}/chats/${chat.id}/read`,
+      `${API_BASE}/api/chats/${chat.id}/read`,
       {},
       { headers: authHeaders() }
     )
