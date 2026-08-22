@@ -183,7 +183,8 @@ import Notification from '../notification.vue/Notification.vue'
 import Chart from '../chart/Chart.vue'
 // import Chart from '../chart/chart.vue'
 
-const MUSIC_API_BASE = 'http://localhost:7070/api/v1/front'
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1/front`
+const MUSIC_API_BASE = API_BASE  
 
 const previewSongsG = ref([])
 const previewSongG = ref(null)
@@ -279,7 +280,7 @@ function stopPreviewG() {
   previewAudioG?.pause()
 }
 
-const API_BASE = 'http://localhost:7070/api/v1/front'
+// const API_BASE = 'http://localhost:7070/api/v1/front'
 const route = useRoute()
 const router = useRouter()
 const emit = defineEmits(['search', 'icon-click'])
@@ -384,7 +385,7 @@ const avatarUrl = computed(() => {
   const raw = profile.value?.profile_images
   if (!raw) return ''
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
-  return `http://localhost:7070/uploads/${raw}`
+  return `${import.meta.env.VITE_API_URL}/uploads/${raw}`
 })
 
 const accountMenuUser = computed(() => ({
