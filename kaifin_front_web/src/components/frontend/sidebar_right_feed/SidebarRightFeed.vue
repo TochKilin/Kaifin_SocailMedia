@@ -124,10 +124,23 @@
 </div>
         
       </div>
-      <div class="badge-row">
+      <!-- <div class="badge-row">
         <span class="badge">Level {{ user.level }}</span>
-        <span class="badge badge-streak">🔥 {{ user.streak }} streak</span>
-      </div>
+          <img :src= "FishStreak" alt="img">
+        <span class="badge badge-streak">{{ user.streak }} streak</span>
+      </div> -->
+      <div class="streak-card-wrapper">
+
+  <div class="badge-column">
+    <span class="badge">Level {{ user.level }}</span>
+    <span class="badge badge-streak">{{ user.streak }} streak</span>
+  </div>
+
+
+  <div class="fish-illustration">
+    <img :src="FishStreak" alt="Fish Streak" />
+  </div>
+</div>
       <!-- Line -->
       <hr class="divider" />
       <div class="nav-row">
@@ -168,7 +181,7 @@
   <p class="description">
     {{ selectedGroup ? selectedGroup.description : 'Join a group to see its description here.' }}
   </p>
-  <!-- ✅ ជំនួស Like/Comment ដោយ Member count + badges -->
+
   <div class="stat-row" v-if="selectedGroup">
     <span class="stat-chip">{{ formatMemberCount(selectedGroup.memberCount) }} Members</span>
     <span class="stat-chip" v-if="selectedGroup.isVerified">✓ Verified</span>
@@ -221,6 +234,7 @@
 import { ref, onMounted } from 'vue'
 
 import { useRouter } from 'vue-router'
+import FishStreak from "@/assets/streak/Goldfish.svg"
 const router = useRouter()
 
 function goToProfile() {
@@ -645,10 +659,13 @@ scrollbar-width: none;
 
 
 
+
 .badge-row {
   display: flex;
   gap: 8px;
   margin-top: 12px;
+
+  align-items: center;
 }
 
 .badge {
@@ -659,11 +676,22 @@ scrollbar-width: none;
   font-size: 11.5px;
   padding: 4px 10px;
   border-radius: 999px;
+  display: inline-flex;
+  gap: 5px;
+  
 }
 
 .badge-streak {
   background: #fff4e5;
   color: #c2760a;
+
+
+}
+
+.badge img{
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .nav-row {

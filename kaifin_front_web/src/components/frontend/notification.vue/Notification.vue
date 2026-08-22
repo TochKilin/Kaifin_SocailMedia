@@ -1,4 +1,3 @@
-<!-- File: Notification.vue -->
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import ArticleNotification from './ArticleNotification.vue'

@@ -1,234 +1,247 @@
 <template>
-  <div class="notif-wrap" v-click-outside="closeDropdown">
-    <button class="notif-btn" @click="toggleDropdown">
-      <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-      <span v-if="unreadCount > 0" class="notif-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-    </button>
+  <div class="article-notification-container">
+    <!-- Section New -->
+    <div class="section-header">
+      <h2 class="section-title">New</h2>
+      <button class="see-all-btn" @click="$emit('seeAllNew')">see all</button>
+    </div>
 
-    <div v-if="isOpen" class="notif-dropdown">
-      <div class="notif-header">
-        <span>Notifications</span>
-      </div>
-
-      <div class="notif-list">
-        <p v-if="isLoading" class="notif-state">Loading...</p>
-        <p v-else-if="!notifications.length" class="notif-state">No notifications yet</p>
-
-        <div
-          v-for="n in notifications"
-          :key="n.id"
-          class="notif-item"
-          :class="{ unread: !n.is_read }"
-          @click="onNotifClick(n)"
-        >
-          <div class="notif-avatar">
-            <img v-if="n.actor_avatar" :src="n.actor_avatar" alt="" />
-            <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
+    <div class="notification-list">
+      <div 
+        v-for="(item, index) in newNotifications" 
+        :key="'new-' + index" 
+        class="notification-card"
+      >
+        <!-- User Avatar with Badge Icon -->
+        <div class="avatar-container">
+          <div class="avatar-placeholder">
+            <img v-if="item.profileImage" :src="item.profileImage" alt="Avatar" class="avatar-img" />
+            <svg v-else viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
           </div>
-          <div class="notif-body">
-            <p class="notif-text">
-              <strong>{{ n.actor_name }}</strong>
-              {{ notifText(n.type) }}
-            </p>
-            <span class="notif-time">{{ formatDatetime(n.created_at) }}</span>
+          <div class="action-badge-icon" :class="item.type">
+            <!-- Dynamic icons based on type -->
+            <svg v-if="item.type === 'react'" viewBox="0 0 24 24" width="12" height="12" fill="currentColor" stroke="none">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <svg v-else-if="item.type === 'comment'" viewBox="0 0 24 24" width="12" height="12" fill="currentColor" stroke="none">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            </svg>
+            <svg v-else-if="item.type === 'share'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
           </div>
-          <span v-if="!n.is_read" class="notif-dot"></span>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-wrapper">
+          <div class="content-container">
+            <div class="top-row">
+              <span class="username">{{ item.username }}</span>
+              <span class="message-text">{{ item.message }}</span>
+            </div>
+            <div class="time-badge">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              {{ item.timeAgo }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side Icon -->
+        <div class="right-icon">
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
       </div>
     </div>
-    <Teleport to="body">
-  <div class="toast-stack">
-    <div v-for="t in toasts" :key="t.id" class="toast-item" @click="onNotifClick(t); toasts = toasts.filter(x => x.id !== t.id)">
-      <div class="toast-avatar">
-        <img v-if="t.actor_avatar" :src="t.actor_avatar" alt="" />
-        <svg v-else viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
-      </div>
-      <p class="toast-text"><strong>{{ t.actor_name }}</strong> {{ notifText(t.type) }}</p>
+
+    <!-- Section Follower -->
+    <div class="section-header follower-header">
+      <h2 class="section-title">Follower</h2>
+      <button class="see-all-btn" @click="$emit('seeAllFollower')">see all</button>
     </div>
-  </div>
-</Teleport>
+
+    <div class="notification-list">
+      <div 
+        v-for="(item, index) in followerNotifications" 
+        :key="'follower-' + index" 
+        class="notification-card"
+      >
+        <!-- User Avatar with-->
+        <div class="avatar-container">
+          <div class="avatar-placeholder">
+            <img v-if="item.profileImage" :src="item.profileImage" alt="Avatar" class="avatar-img" />
+            <svg v-else viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="action-badge-icon follow">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-wrapper">
+          <div class="content-container">
+            <div class="top-row">
+              <span class="username">{{ item.username }}</span>
+              <span class="message-text">{{ item.message }}</span>
+            </div>
+            <div class="time-badge">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              {{ item.timeAgo }}
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="card-actions">
+            <button class="follow-back-btn" @click.stop="$emit('followBack', item)">
+              Follow back
+            </button>
+            <button class="delete-btn" @click.stop="deleteFollower(index)" title="Delete">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Side Icon (Dots) -->
+        <div class="right-icon">
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    </div>
+    <!-- Footer Action -->
+    <div class="footer-action">
+      <button class="see-previous-btn" @click="$emit('seePrevious')">See more notification</button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7070'
-// លែងត្រូវការ WS_URL ទៀតហើយ
+defineEmits(['seeAllNew', 'seeAllFollower', 'followBack'])
 
-const router = useRouter()
-const notifications = ref([])
-const unreadCount = ref(0)
-const isOpen = ref(false)
-const isLoading = ref(false)
-
-let pollTimer = null
-const POLL_INTERVAL = 8000 // 8 វិនាទី — លៃតម្រូវបានតាមចង់
-
-function getAuthToken() {
-  return localStorage.getItem('token') || ''
-}
-
-function authHeaders() {
-  const token = getAuthToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
-function resolveAvatarUrl(raw) {
-  if (!raw) return ''
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
-  return `${BASE_URL}/uploads/${raw}`
-}
-
-function formatDatetime(value) {
-  if (!value) return ''
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return String(value)
-  return d.toLocaleString('km-KH', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function notifText(type) {
-  switch (type) {
-    case 'follow':
-      return 'started following you'
-    case 'new_post':
-      return 'shared a new post'
-    case 'like':
-      return 'liked your post'
-    case 'comment':
-      return 'commented on your post'
-    default:
-      return 'sent you a notification'
-  }
-}
-
-// ចាំ id ចុងក្រោយដែលធ្លាប់ឃើញ ដើម្បីដឹងថា notification ណាថ្មី
-let lastSeenId = 0
-
-async function fetchNotifications(isPoll = false) {
-  if (!isPoll) isLoading.value = true
-  try {
-    const res = await fetch(`${BASE_URL}/api/v1/front/notifications/show`, {
-      headers: { ...authHeaders() },
-    })
-    if (!res.ok) return
-    const json = await res.json()
-    const data = json?.data ?? json
-    const list = data.notifications ?? data.Notifications ?? []
-    const mapped = list.map((n) => ({
-      ...n,
-      actor_avatar: resolveAvatarUrl(n.actor_avatar),
-    }))
-
-    // បើកំពុង poll → ស្វែងរក notification ថ្មីៗ ដើម្បីបង្ហាញ toast
-    if (isPoll && lastSeenId > 0) {
-      const newOnes = mapped.filter((n) => n.id > lastSeenId)
-      newOnes.forEach((n) => pushToast(n))
-    }
-
-    if (mapped.length > 0) {
-      lastSeenId = Math.max(...mapped.map((n) => n.id))
-    }
-
-    notifications.value = mapped
-    unreadCount.value = data.unread_count ?? data.UnreadCount ?? 0
-  } catch (e) {
-    console.error('Failed to load notifications', e)
-  } finally {
-    if (!isPoll) isLoading.value = false
-  }
-}
-
-async function markAsRead(notificationId) {
-  try {
-    await fetch(`${BASE_URL}/api/v1/front/notifications/read`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders(),
-      },
-      body: JSON.stringify({ notification_id: notificationId }),
-    })
-  } catch (e) {
-    console.error('Failed to mark notification as read', e)
-  }
-}
-
-function onNotifClick(n) {
-  if (!n.is_read) {
-    n.is_read = true
-    unreadCount.value = Math.max(0, unreadCount.value - 1)
-    markAsRead(n.id)
-  }
-
-  isOpen.value = false
-  if (n.type === 'follow' && n.actor_id) {
-    router.push(`/profile/${n.actor_id}`)
-  } else if (n.type === 'new_post' && n.post_id) {
-    router.push(`/posts/${n.post_id}`)
-  }
-}
-
-const toasts = ref([])
-let toastSeq = 0
-
-function pushToast(n) {
-  const id = ++toastSeq
-  toasts.value.push({ id: `t${id}`, ...n })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter((t) => t.id !== `t${id}`)
-  }, 5000)
-}
-
-function toggleDropdown() {
-  isOpen.value = !isOpen.value
-}
-
-function closeDropdown() {
-  isOpen.value = false
-}
-
-function startPolling() {
-  pollTimer = setInterval(() => {
-    fetchNotifications(true)
-  }, POLL_INTERVAL)
-}
-
-function stopPolling() {
-  if (pollTimer) {
-    clearInterval(pollTimer)
-    pollTimer = null
-  }
-}
-
-const vClickOutside = {
-  mounted(el, binding) {
-    el.__clickOutsideHandler = (e) => {
-      if (!el.contains(e.target)) binding.value()
-    }
-    document.addEventListener('click', el.__clickOutsideHandler)
+const newNotifications = ref([
+  {
+    type: 'react',
+    username: 'សី សីុកា',
+    message: 'reacted to your post',
+    timeAgo: '12m',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHl3jp1gX_Y_k79ShEt6Rxet3AGCC0j2G-VgLVF6UUbde6rb1mYYJD_KQ&s=10'
   },
-  unmounted(el) {
-    document.removeEventListener('click', el.__clickOutsideHandler)
+  {
+    type: 'comment',
+    username: 'Ly Heng',
+    message: 'commented on your article',
+    timeAgo: '13m',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPdf6ZUWk9JoqCHl3LWZp1tKUb74YX9Ku_vrChs0uvU_zberBOwG6rUSA&s=10'
   },
+  {
+    type: 'share',
+    username: 'Ly Heng Zin',
+    message: 'shared your course',
+    timeAgo: '14m',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuUFwfa3MQ_svuorOuJ-aURHw-al2WayoSPUZ3shSBTUceLS1dGMfqP4c&s=10'
+  },
+  {
+    type: 'enroll',
+    username: 'Mean',
+    message: 'enrolled in your course',
+    timeAgo: '15m',
+    profileImage: 'https://media.licdn.com/dms/image/v2/D5603AQEXEdGLPUTabw/profile-displayphoto-scale_400_400/B56Z1reuHPGoAk-/0/1775624709989?e=2147483647&v=beta&t=tp9dlXocXlkxK-hVej_uxrwittuA3yiRX-lA1akTdlk'
+  },
+  {
+    type: 'react',
+    username: 'Mai Malai',
+    message: 'reacted to your post',
+    timeAgo: '20m',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHl3jp1gX_Y_k79ShEt6Rxet3AGCC0j2G-VgLVF6UUbde6rb1mYYJD_KQ&s=10'
+  },
+  {
+    type: 'comment',
+    username: 'Va Vondy',
+    message: 'commented on your article',
+    timeAgo: '32m',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPdf6ZUWk9JoqCHl3LWZp1tKUb74YX9Ku_vrChs0uvU_zberBOwG6rUSA&s=10'
+  },
+  {
+    type: 'share',
+    username: 'AhZa AhXa',
+    message: 'shared your course',
+    timeAgo: '1h',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuUFwfa3MQ_svuorOuJ-aURHw-al2WayoSPUZ3shSBTUceLS1dGMfqP4c&s=10'
+  },
+  {
+    type: 'enroll',
+    username: 'Udom PangThea',
+    message: 'enrolled in your course',
+    timeAgo: '2h',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_ZWDQFG1-zwSrlKgaBB__Znl1Qd_yvKKzlg-VeaaOEA&s=10'
+  }
+])
+
+const followerNotifications = ref([
+  {
+    username: 'Nary Sovan',
+    message: 'started following you',
+    timeAgo: '12h',
+    profileImage: ''
+  },
+  {
+    username: 'Roth Roth',
+    message: 'started following you',
+    timeAgo: '12h',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBMlSC1pqRvEynrEUiSQGNI-Eqw9ftuCBOWah2qSykSg&s=10'
+  },
+  {
+    username: 'Yuri Babo',
+    message: 'started following you',
+    timeAgo: '12h',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_ZWDQFG1-zwSrlKgaBB__Znl1Qd_yvKKzlg-VeaaOEA&s=10'
+  },
+  {
+    username: 'Vong VuthThea',
+    message: 'started following you',
+    timeAgo: '1d',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfZvMX8nfvk9XPYxiuPRqmmU8OYpYOdF8QNrPHktGDpA&s=10'
+  },
+  {
+    username: 'Nar Nar',
+    message: 'started following you',
+    timeAgo: '1d',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQplUwsYBXGSupgB-bKH7O1Bf97O5EgSFkBnZB7cxgCKw&s=10'
+  },
+  {
+    username: 'Bros Har',
+    message: 'started following you',
+    timeAgo: '2d',
+    profileImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1c66WJConDWtSjTt6i22PDCGzfT4v79jjKPyjIGCY5O52-hLxAS9H7wc&s=10'
+  }
+])
+
+const deleteFollower = (index) => {
+  followerNotifications.value.splice(index, 1)
 }
-
-onMounted(() => {
-  fetchNotifications()
-  startPolling()
-})
-
-onUnmounted(() => {
-  stopPolling()
-})
 </script>
-
 <style scoped>
 .notif-wrap {
   position: relative;
