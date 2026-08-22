@@ -18,6 +18,9 @@ const isSubmitting = ref(false)
 const successMessage = ref(false)
 const serverError = ref('')
 
+// កំណត់ Render Backend URL ដាច់ខាត
+const RENDER_BACKEND_URL = "https://kaifin-socailmedia.onrender.com"
+
 const errors = reactive({
   profileImage: '',
   firstName: '',
@@ -79,8 +82,9 @@ async function handleSubmit() {
   }
 
   try {
+    // ប្តូរពី http://localhost:7070 មក Render Backend URL
     const response = await axios.post(
-      'http://localhost:7070/api/v1/front/register/create',
+      `${RENDER_BACKEND_URL}/api/v1/front/register/create`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     )

@@ -6,6 +6,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const userTypes = ["Student"];
+
 const userType = ref("");
 const typeOpen = ref(false);
 
@@ -15,14 +16,13 @@ const password = ref("");
 const showPassword = ref(false);
 const remember = ref(false);
 
-// Hardcode Render URL ដោយផ្ទាល់តែម្តង ដើម្បីការពារករណី Vite Build Error
-const RENDER_BACKEND_URL = "https://kaifin-socailmedia.onrender.com";
-
+// choose user type
 function selectType(t) {
   userType.value = t;
   typeOpen.value = false;
 }
 
+// login API
 async function onSignIn() {
   const inputIdentity = user_name.value.trim();
   if (!user_name.value) {
@@ -43,34 +43,34 @@ async function onSignIn() {
   try {
     const payload = {
       user_name: inputIdentity,
+      // user_name: user_name.value,
       password: password.value,
       role_id: 4
-    };
+    }
 
-    // ប្រើ Full URL ទៅកាន់ Render ដាច់ខាត
-    const fullApiUrl = `${RENDER_BACKEND_URL}/api/v1/front/auth/login-user`;
-    
-    console.log("SENDING POST TO:", fullApiUrl);
     console.log("SEND DATA:", payload);
 
-    const response = await axios.post(fullApiUrl, payload);
+    const response = await axios.post(
+      "http://localhost:7070/api/v1/front/auth/login-user",
+      payload
+    );
 
     console.log("LOGIN RESPONSE:", response.data);
 
-    if (response.data.success) {
+    if(response.data.success){
       const token = response.data.data.auth.token;
       localStorage.setItem("token", token);
       alert("Login success");
       router.push("/home");
     }
 
-  } catch (error) {
+  } catch(error) {
     console.log("ERROR:", error);
-    if (error.response) {
-      console.log("FULL RESPONSE DATA:", error.response.data);
-      alert(error.response.data.message || "Login failed");
-    } else {
-      alert("Server error or Network error");
+    if(error.response){
+       console.log("FULL RESPONSE DATA:", error.response.data);
+      alert(error.response.data.message);
+    }else{
+      alert("Server error");
     }
   }
 }
